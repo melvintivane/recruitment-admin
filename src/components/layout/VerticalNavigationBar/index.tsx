@@ -15,8 +15,8 @@ const VerticalNavigationBar = () => {
     <div className="main-nav" id="leftside-menu-container">
       <LogoBox
         containerClassName="logo-box"
-        squareLogo={{ className: 'logo-sm', height: 24, width: 26 }}
-        textLogo={{ className: 'logo-lg', height: 15, width: 68 }}
+        squareLogo={{ className: 'logo-sm', height: 33, width: 40 }}
+        // textLogo={{ className: 'logo-lg', height: 15, width: 68 }}
       />
 
       <HoverMenuToggle />

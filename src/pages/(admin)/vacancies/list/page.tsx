@@ -4,22 +4,38 @@ import { Link } from "react-router-dom";
 
 import PageMetaData from "@/components/PageTitle";
 import IconifyIcon from "@/components/wrappers/IconifyIcon";
-import { getAllPosts } from "@/helpers/data";
-import type { BlogPost } from "@/types/data";
+import { getAllVacancies } from "@/helpers/data"; // You'll need to create this helper
+import type { VacancyType } from "@/types/data"; // Define this type
 
-const BlogPosts = () => {
-  const [allPosts, setAllPosts] = useState<BlogPost[]>();
+const VacanciesList = () => {
+  const [vacancies, setVacancies] = useState<VacancyType[]>();
+  const [filteredVacancies, setFilteredVacancies] = useState<VacancyType[]>();
 
   useEffect(() => {
     (async () => {
-      const data = await getAllPosts();
-      setAllPosts(data);
+      const data = await getAllVacancies();
+      setVacancies(data);
+      setFilteredVacancies(data);
     })();
   }, []);
 
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const searchTerm = e.target.value.toLowerCase();
+    if (vacancies) {
+      setFilteredVacancies(
+        vacancies.filter(
+          (vacancy) =>
+            vacancy.title.toLowerCase().includes(searchTerm) ||
+            vacancy.department.toLowerCase().includes(searchTerm) ||
+            vacancy.location.toLowerCase().includes(searchTerm)
+        )
+      );
+    }
+  };
+
   return (
     <>
-      <PageMetaData title="Blog Posts" />
+      <PageMetaData title="Job Vacancies" />
 
       <Row>
         <Col>
@@ -34,18 +50,15 @@ const BlogPosts = () => {
                     type="search"
                     className="form-control"
                     id="search"
-                    placeholder="Search posts..."
+                    placeholder="Search vacancies..."
+                    onChange={handleSearch}
                   />
                 </div>
                 <div>
-                  <Button 
-                    variant="success" 
-                    // as={Link}
-                    // to="/posts/create"
-                  >
+                  <Link to="/vacancies/create" className="btn btn-success ms-2">
                     <IconifyIcon icon="bx:plus" className="me-1" />
-                    Create Post
-                  </Button>
+                    Post New Job
+                  </Link>
                 </div>
               </div>
             </CardBody>
@@ -54,61 +67,47 @@ const BlogPosts = () => {
                 <table className="table text-nowrap mb-0">
                   <thead className="bg-light bg-opacity-50">
                     <tr>
-                      <th className="border-0 py-2">Post ID</th>
-                      <th className="border-0 py-2">Title</th>
-                      <th className="border-0 py-2">Author</th>
-                      <th className="border-0 py-2">Category</th>
-                      <th className="border-0 py-2">Created Date</th>
+                      <th className="border-0 py-2">Job Title</th>
+                      <th className="border-0 py-2">Department</th>
+                      <th className="border-0 py-2">Location</th>
+                      <th className="border-0 py-2">Type</th>
+                      <th className="border-0 py-2">Posted Date</th>
                       <th className="border-0 py-2">Status</th>
-                      <th className="border-0 py-2">Views</th>
+                      <th className="border-0 py-2">Applications</th>
                       <th className="border-0 py-2">Action</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {allPosts?.map((post, idx) => (
+                    {filteredVacancies?.map((vacancy, idx) => (
                       <tr key={idx}>
                         <td>
                           <Link
-                            to={`/posts/${post.id}`}
+                            to={`/vacancies/${vacancy.id}`}
                             className="fw-medium"
                           >
-                            #{post.id}
+                            {vacancy.title}
                           </Link>
                         </td>
-                        <td>{post.title}</td>
+                        <td>{vacancy.department}</td>
+                        <td>{vacancy.location}</td>
+                        <td>{vacancy.type}</td>
                         <td>
-                          <div className="d-flex align-items-center">
-                            {post.author && (
-                              <>
-                                <img
-                                  src={post.avatar}
-                                  alt="author"
-                                  className="avatar-xs rounded-circle me-2"
-                                />
-                                <span>{post.author}</span>
-                              </>
-                            )}
-                          </div>
-                        </td>
-                        <td>
-                          <span className="badge bg-primary">
-                            {post.category}
-                          </span>
-                        </td>
-                        <td>
-                          {post.createdAt && 
-                            new Date(post.createdAt).toLocaleDateString()}
+                          {new Date(vacancy.postedDate).toLocaleDateString()}
                         </td>
                         <td>
                           <span
                             className={`badge badge-soft-${
-                              post.status === "Draft" ? "warning" : "success"
+                              vacancy.status === "Closed"
+                                ? "danger"
+                                : vacancy.status === "Draft"
+                                  ? "warning"
+                                  : "success"
                             }`}
                           >
-                            {post.status}
+                            {vacancy.status}
                           </span>
                         </td>
-                        <td>{post.views?.toLocaleString()}</td>
+                        <td>{vacancy.applicationCount}</td>
                         <td>
                           <Button
                             variant="soft-secondary"
@@ -116,7 +115,7 @@ const BlogPosts = () => {
                             type="button"
                             className="me-2"
                             // as={Link}
-                            // to={`/posts/edit/${post.id}`}
+                            // to={`/vacancies/edit/${vacancy.id}`}
                           >
                             <IconifyIcon icon="bx:edit" className="fs-16" />
                           </Button>
@@ -136,8 +135,12 @@ const BlogPosts = () => {
                 <div className="col-sm">
                   <div className="text-muted">
                     Showing&nbsp;
-                    <span className="fw-semibold">10</span>&nbsp; of&nbsp;
-                    <span className="fw-semibold">{allPosts?.length}</span>&nbsp; posts
+                    <span className="fw-semibold">
+                      {filteredVacancies?.length}
+                    </span>
+                    &nbsp;of&nbsp;
+                    <span className="fw-semibold">{vacancies?.length}</span>
+                    &nbsp;jobs
                   </div>
                 </div>
                 <Col sm="auto" className="mt-3 mt-sm-0">
@@ -178,4 +181,4 @@ const BlogPosts = () => {
   );
 };
 
-export default BlogPosts;
+export default VacanciesList;

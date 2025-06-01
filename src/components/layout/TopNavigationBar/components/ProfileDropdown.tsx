@@ -3,7 +3,7 @@ import { Dropdown, DropdownDivider, DropdownHeader, DropdownItem, DropdownMenu, 
 
 import IconifyIcon from '@/components/wrappers/IconifyIcon'
 
-import avatar1 from '@/assets/images/users/avatar-1.jpg'
+import avatar from '@/assets/images/users/dummy-avatar.jpg'
 import { useAuthContext } from '@/context/useAuthContext'
 
 const ProfileDropdown = () => {
@@ -19,23 +19,11 @@ const ProfileDropdown = () => {
         aria-haspopup="true"
         aria-expanded="false">
         <span className="d-flex align-items-center">
-          <img className="rounded-circle" width={32} height={32} src={avatar1} alt="avatar-3" />
+          <img className="rounded-circle" width={32} height={32} src={avatar} alt="avatar" />
         </span>
       </DropdownToggle>
       <DropdownMenu>
-        <DropdownHeader as="h6">Welcome Gaston!</DropdownHeader>
-        <DropdownItem as={Link} to="/apps/chat">
-          <IconifyIcon icon="bx:message-dots" className="text-muted fs-18 align-middle me-1" />
-          <span className="align-middle">Messages</span>
-        </DropdownItem>
-        <DropdownItem as={Link} to="/pages/pricing">
-          <IconifyIcon icon="bx:wallet" className="text-muted fs-18 align-middle me-1" />
-          <span className="align-middle">Pricing</span>
-        </DropdownItem>
-        <DropdownItem as={Link} to="/pages/faqs">
-          <IconifyIcon icon="bx:help-circle" className="text-muted fs-18 align-middle me-1" />
-          <span className="align-middle">Help</span>
-        </DropdownItem>
+        <DropdownHeader as="h6">Welcome Melvin!</DropdownHeader>
         <DropdownItem as={Link} to="/auth/lock-screen">
           <IconifyIcon icon="bx:lock" className="text-muted fs-18 align-middle me-1" />
           <span className="align-middle">Lock screen</span>

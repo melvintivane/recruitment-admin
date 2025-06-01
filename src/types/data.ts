@@ -372,3 +372,17 @@ export type FeaturedPost = {
   featuredImage: string;
 };
 
+export interface VacancyType {
+  id: string;
+  title: string;
+  department: string;
+  location: string;
+  type: string; // "Full-time", "Part-time", etc.
+  postedDate: string | Date;
+  status: "Open" | "Closed" | "Draft";
+  applicationCount: number;
+  salaryRange?: string; // e.g., "$50,000 - $70,000"
+  description?: string; // Detailed job description
+  // Add other fields as needed
+}
+

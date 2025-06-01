@@ -1,15 +1,23 @@
-import SimplebarReactClient from '@/components/wrappers/SimplebarReactClient'
-import { toAlphaNumber } from '@/utils/change-casing'
-import type { ApexOptions } from 'apexcharts'
-import ReactApexChart from 'react-apexcharts'
-import { Button, Card, CardBody, CardTitle, Col, Row } from 'react-bootstrap'
-import { onlineUsers } from '../data'
+import SimplebarReactClient from "@/components/wrappers/SimplebarReactClient";
+import type { ApexOptions } from "apexcharts";
+import ReactApexChart from "react-apexcharts";
+import {
+  Badge,
+  Button,
+  Card,
+  CardBody,
+  CardTitle,
+  Col,
+  Row,
+} from "react-bootstrap";
+import { topJobs } from "../data";
+import { Link } from "react-router-dom";
 
-const Conversions = () => {
-  const conversionChartOpts: ApexOptions = {
+const RecruitmentMetrics = () => {
+  const hireRateChartOpts: ApexOptions = {
     chart: {
       height: 292,
-      type: 'radialBar',
+      type: "radialBar",
     },
     plotOptions: {
       radialBar: {
@@ -17,29 +25,28 @@ const Conversions = () => {
         endAngle: 135,
         dataLabels: {
           name: {
-            fontSize: '14px',
-            color: 'undefined',
+            fontSize: "14px",
+            color: "undefined",
             offsetY: 100,
           },
           value: {
             offsetY: 55,
-            fontSize: '20px',
+            fontSize: "20px",
             color: undefined,
             formatter: function (val) {
-              return val + '%'
+              return val + "%";
             },
           },
         },
         track: {
-          background: 'rgba(170,184,197, 0.2)',
+          background: "rgba(170,184,197, 0.2)",
           margin: 0,
         },
       },
     },
     fill: {
       gradient: {
-        // enabled: true,
-        shade: 'dark',
+        shade: "dark",
         shadeIntensity: 0.2,
         inverseColors: false,
         opacityFrom: 1,
@@ -50,9 +57,9 @@ const Conversions = () => {
     stroke: {
       dashArray: 4,
     },
-    colors: ['#1bb394', '#1bb394'],
-    series: [65.2],
-    labels: ['Returning Customer'],
+    colors: ["#1bb394", "#1bb394"],
+    series: [72.5],
+    labels: ["Successful Hires"],
     responsive: [
       {
         breakpoint: 380,
@@ -71,24 +78,24 @@ const Conversions = () => {
         left: 0,
       },
     },
-  }
+  };
 
-  const performanceChartOpts: ApexOptions = {
+  const hiringTrendsChartOpts: ApexOptions = {
     series: [
       {
-        name: 'Page Views',
-        type: 'bar',
-        data: [34, 65, 46, 68, 49, 61, 42, 44, 78, 52, 63, 67],
+        name: "Applications",
+        type: "bar",
+        data: [45, 68, 52, 89, 76, 58, 49, 72, 65, 88, 76, 92],
       },
       {
-        name: 'Clicks',
-        type: 'area',
-        data: [8, 12, 7, 17, 21, 11, 5, 9, 7, 29, 12, 35],
+        name: "Hires",
+        type: "area",
+        data: [5, 8, 6, 10, 9, 7, 5, 8, 7, 11, 9, 12],
       },
     ],
     chart: {
       height: 313,
-      type: 'line',
+      type: "line",
       toolbar: {
         show: false,
       },
@@ -96,13 +103,13 @@ const Conversions = () => {
     stroke: {
       dashArray: [0, 0],
       width: [0, 2],
-      curve: 'smooth',
+      curve: "smooth",
     },
     fill: {
       opacity: [1, 1],
-      type: ['solid', 'gradient'],
+      type: ["solid", "gradient"],
       gradient: {
-        type: 'vertical',
+        type: "vertical",
         inverseColors: false,
         opacityFrom: 0.5,
         opacityTo: 0,
@@ -117,7 +124,20 @@ const Conversions = () => {
       },
     },
     xaxis: {
-      categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+      categories: [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+      ],
       axisTicks: {
         show: false,
       },
@@ -153,7 +173,7 @@ const Conversions = () => {
     },
     legend: {
       show: true,
-      horizontalAlign: 'center',
+      horizontalAlign: "center",
       offsetX: 0,
       offsetY: 5,
       markers: {
@@ -168,34 +188,34 @@ const Conversions = () => {
     },
     plotOptions: {
       bar: {
-        columnWidth: '30%',
-        barHeight: '70%',
+        columnWidth: "30%",
+        barHeight: "70%",
         borderRadius: 3,
       },
     },
-    colors: ['#1bb394', '#1e84c4'],
+    colors: ["#1bb394", "#1e84c4"],
     tooltip: {
       shared: true,
       y: [
         {
           formatter: function (y) {
-            if (typeof y !== 'undefined') {
-              return y.toFixed(1) + 'k'
+            if (typeof y !== "undefined") {
+              return y.toFixed(0);
             }
-            return y
+            return y;
           },
         },
         {
           formatter: function (y) {
-            if (typeof y !== 'undefined') {
-              return y.toFixed(1) + 'k'
+            if (typeof y !== "undefined") {
+              return y.toFixed(0);
             }
-            return y
+            return y;
           },
         },
       ],
     },
-  }
+  };
 
   return (
     <Card>
@@ -203,21 +223,30 @@ const Conversions = () => {
         <Row className="g-0">
           <Col lg={3}>
             <div className="p-3">
-              <CardTitle>Conversions</CardTitle>
-              <ReactApexChart height={255} options={conversionChartOpts} series={conversionChartOpts.series} type="radialBar" className="mb-2 mt-4" />
+              <CardTitle>Hire Rate</CardTitle>
+              <ReactApexChart
+                height={255}
+                options={hireRateChartOpts}
+                series={hireRateChartOpts.series}
+                type="radialBar"
+                className="mb-2 mt-4"
+              />
               <Row className="text-center">
                 <Col xs={6}>
-                  <p className="text-muted mb-2">This Week</p>
-                  <h3 className="text-dark mb-3">23.5k</h3>
+                  <p className="text-muted mb-2">This Month</p>
+                  <h3 className="text-dark mb-3">18</h3>
                 </Col>
                 <Col xs={6}>
-                  <p className="text-muted mb-2">Last Week</p>
-                  <h3 className="text-dark mb-3">41.05k</h3>
+                  <p className="text-muted mb-2">Last Month</p>
+                  <h3 className="text-dark mb-3">14</h3>
                 </Col>
               </Row>
               <div className="text-center">
-                <button type="button" className="btn btn-light shadow-none w-100">
-                  View Details
+                <button
+                  type="button"
+                  className="btn btn-light shadow-none w-100"
+                >
+                  View Hiring Report
                 </button>
               </div>
             </div>
@@ -225,53 +254,80 @@ const Conversions = () => {
           <Col lg={6} className="border-start border-end">
             <div className="p-3">
               <div className="d-flex justify-content-between align-items-center">
-                <CardTitle as="h4">Performance</CardTitle>
+                <CardTitle as="h4">Hiring Trends</CardTitle>
                 <div className="icons-center gap-1">
                   <Button variant="outline-light" size="sm">
                     ALL
                   </Button>
                   <Button variant="outline-light" size="sm">
-                    1M
+                    Q1
                   </Button>
                   <Button variant="outline-light" size="sm">
-                    6M
+                    Q2
                   </Button>
                   <Button variant="outline-light" size="sm" active>
-                    1Y
+                    YTD
                   </Button>
                 </div>
               </div>
-              <div className="alert  alert-warning mt-3 text text-truncate mb-0" role="alert">
-                We regret to inform you that our server is currently experiencing technical difficulties.
+              <div
+                className="alert alert-info mt-3 text text-truncate mb-0"
+                role="alert"
+              >
+                Hiring goal for Q3: 25 new team members across all departments.
               </div>
               <div dir="ltr">
-                <ReactApexChart height={313} options={performanceChartOpts} series={performanceChartOpts.series} type="line" />
+                <ReactApexChart
+                  height={313}
+                  options={hiringTrendsChartOpts}
+                  series={hiringTrendsChartOpts.series}
+                  type="line"
+                />
               </div>
             </div>
           </Col>
           <Col lg={3}>
             <div className="d-flex justify-content-between p-3">
-              <CardTitle>Session By Browser</CardTitle>
+              <CardTitle>Top Job Openings</CardTitle>
             </div>
-            <SimplebarReactClient className="px-3" style={{ maxHeight: 310, height: 'auto', overflow: 'hidden, scroll' }}>
-              {onlineUsers.map((user, idx) => (
+            <SimplebarReactClient
+              className="px-3"
+              style={{
+                maxHeight: 310,
+                height: "auto",
+                overflow: "hidden, scroll",
+              }}
+            >
+              {topJobs.map((job, idx) => (
                 <div className="row p-2" key={idx}>
-                  <span className="col-4  fw-medium">{user.name}</span>
-                  <span className="col-4 text-center fw-medium">{user.percentage}</span>
-                  <span className="col-4 text-end fw-medium">&nbsp;{toAlphaNumber(user.amount)}</span>
+                  <span
+                    className="col-6 fw-medium text-truncate"
+                    title={job.title}
+                  >
+                    {job.title}
+                  </span>
+                  <span className="col-3 text-center fw-medium">
+                    {job.applications}
+                  </span>
+                  <span className="col-3 text-end fw-medium">
+                    <Badge bg="success">{job.hireRate}%</Badge>
+                  </span>
                 </div>
               ))}
             </SimplebarReactClient>
             <div className="text-center p-3">
-              <button type="button" className="btn btn-light shadow-none w-100">
-                View All
-              </button>
+              <Link
+                to={"/vacancies"}
+                className="btn btn-light shadow-none w-100"
+              >
+                View All Positions
+              </Link>
             </div>
           </Col>
         </Row>
       </CardBody>
     </Card>
-  )
-}
+  );
+};
 
-export default Conversions
+export default RecruitmentMetrics;

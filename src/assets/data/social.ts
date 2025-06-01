@@ -773,7 +773,7 @@ for (const user of socialUsersData) {
       from: user,
       message: {
         type: 'text',
-        value: "Hi Gaston, thanks for joining the meeting. Let's dive into our quarterly performance review.",
+        value: "Hi Melvin, thanks for joining the meeting. Let's dive into our quarterly performance review.",
       },
       sentOn: addOrSubtractMinutesFromDate(110),
     },

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
@@ -117,9 +118,9 @@ const ChatLeftSidebar = ({ users, onUserSelect, selectedUser }: ChatUsersProps) 
                   <IconifyIcon icon="bx:qr-scan" className="fs-20" />
                 </span>
               </div>
-              <h5 className="my-0 fs-14">Gaston Lapierre</h5>
+              <h5 className="my-0 fs-14">Melvin Lapierre</h5>
               <p className="mt-1 mb-0 text-muted">
-                <span className="w-75">Hey there! I am using Rasket Chat.</span>
+                <span className="w-75">Hey there! I am using EP Chat.</span>
               </p>
             </div>
           </div>

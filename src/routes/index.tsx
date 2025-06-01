@@ -2,6 +2,20 @@ import BlogPosts from "@/pages/(admin)/blog/page";
 import { lazy } from "react";
 import { Navigate, type RouteProps } from "react-router-dom";
 
+
+const VacanciesList = lazy(() => import("@/pages/(admin)/vacancies/list/page"));
+const VacanciesCreate = lazy(() => import("@/pages/(admin)/vacancies/create/page"));
+const VacancyDetails = lazy(() => import("@/pages/(admin)/vacancies/details/page"));
+
+// const VacanciesCreate = lazy(() => import("@/pages/(admin)/vacancies/create/page"));
+// const VacanciesCategories = lazy(() => import("@/pages/(admin)/vacancies/categories/page"));
+// const VacanciesSkills = lazy(() => import("@/pages/(admin)/vacancies/skills/page"));
+
+// const UserList = lazy(() => import("@/pages/(admin)/users/list/page"));
+// const UserCreate = lazy(() => import("@/pages/(admin)/users/create/page"));
+// const UserRoles = lazy(() => import("@/pages/(admin)/users/roles/page"));
+// const UserProfile = lazy(() => import("@/pages/(admin)/users/profile/page"));
+
 // Dashboard Routes
 const Analytics = lazy(
   () => import("@/pages/(admin)/dashboard/analytics/page")
@@ -120,7 +134,7 @@ const NotFound = lazy(
 
 // Auth Routes
 const AuthSignIn2 = lazy(() => import("@/pages/(other)/auth/sign-in-2/page"));
-const AuthSignUp2 = lazy(() => import("@/pages/(other)/auth/sign-up-2/page"));
+// const AuthSignUp2 = lazy(() => import("@/pages/(other)/auth/sign-up-2/page"));
 const ResetPassword2 = lazy(() => import("@/pages/(other)/auth/reset-pass-2/page"));
 const LockScreen2 = lazy(() => import("@/pages/(other)/auth/lock-screen-2/page")
 );
@@ -146,59 +160,9 @@ const generalRoutes: RoutesProps[] = [
     name: "Analytics",
     element: <Analytics />,
   },
-  //   {
-  //     path: '/dashboard/finance',
-  //     name: 'Finance',
-  //     element: <Finance />,
-  //   },
-  //   {
-  //     path: '/dashboard/sales',
-  //     name: 'Sales',
-  //     element: <Sales />,
-  //   },
 ];
 
 const appsRoutes: RoutesProps[] = [
-  //   {
-  //     name: 'Products',
-  //     path: '/ecommerce/products',
-  //     element: <EcommerceProducts />,
-  //   },
-  //   {
-  //     name: 'Product Details',
-  //     path: '/ecommerce/products/:productId',
-  //     element: <EcommerceProductDetails />,
-  //   },
-  //   {
-  //     name: 'Create Product',
-  //     path: '/ecommerce/products/create',
-  //     element: <EcommerceProductCreate />,
-  //   },
-  //   {
-  //     name: 'Customers',
-  //     path: '/ecommerce/customers',
-  //     element: <EcommerceCustomers />,
-  //   },
-  //   {
-  //     name: 'Sellers',
-  //     path: '/ecommerce/sellers',
-  //     element: <EcommerceSellers />,
-  //   },
-  //   {
-  //     name: 'Orders',
-  //     path: '/ecommerce/orders',
-  //     element: <EcommerceOrders />,
-  //   },
-  //   {
-  //     name: 'Order Details',
-  //     path: '/ecommerce/orders/:orderId',
-  //     element: <EcommerceOrderDetails />,
-  //   },
-  //   {
-  //     name: 'Inventory',
-  //     path: '/ecommerce/inventory',
-  //     element: <EcommerceInventory />,
-  //   },
   {
     name: "Chat",
     path: "/apps/chat",
@@ -219,31 +183,11 @@ const appsRoutes: RoutesProps[] = [
     path: "/calendar/integration",
     element: <Integration />,
   },
-  // {
-  //   path: '/posts/create',
-  //   element: <CreatePost />,
-  // },
-  // {
-  //   path: '/posts/edit/:id',
-  //   element: <EditPost />,
-  // }
-  //   {
-
   {
     name: "Todo",
     path: "/apps/todo",
     element: <Todo />,
   },
-  //   {
-  //     name: 'Social',
-  //     path: '/apps/social',
-  //     element: <Social />,
-  //   },
-  //   {
-  //     name: 'Contacts',
-  //     path: '/apps/contacts',
-  //     element: <Contacts />,
-  //   },
   {
     name: "Invoices List",
     path: "/invoices",
@@ -255,8 +199,23 @@ const appsRoutes: RoutesProps[] = [
     element: <BlogPosts />,
   },
   {
+    name: "Vacancies List",
+    path: "/vacancies",
+    element: <VacanciesList />,
+  },
+  {
+    name: "Vacancy Create",
+    path: "/vacancies/create",
+    element: <VacanciesCreate />,
+  },
+  {
+    name: "Vacancy Details",
+    path: "/vacancies/:vacancyId",
+    element: <VacancyDetails />,
+  },
+  {
     name: "Invoices Details",
-    path: "/invoices/:invoiceId",
+    path: "/invoices/teste",
     element: <InvoiceDetails />,
   },
 ];
@@ -613,11 +572,11 @@ export const authRoutes: RoutesProps[] = [
     path: "/auth/sign-in",
     element: <AuthSignIn2 />,
   },
-  {
-    name: "Sign Up",
-    path: "/auth/sign-up",
-    element: <AuthSignUp2 />,
-  },
+  // {
+  //   name: "Sign Up",
+  //   path: "/auth/sign-up",
+  //   element: <AuthSignUp2 />,
+  // },
 
   {
     name: "Reset Password",

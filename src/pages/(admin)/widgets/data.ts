@@ -57,7 +57,7 @@ export const scheduleData: ScheduleType[] = [
   },
   {
     time: '10:00',
-    title: 'Design Review - Rasket Admin',
+    title: 'Design Review - MyMobiSolutions Admin',
     variant: 'success',
     duration: '10:00 - 10:30',
   },

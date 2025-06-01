@@ -17,7 +17,7 @@ const InvoiceDetail = () => {
   const navigate = useNavigate()
 
   useEffect(() => {
-    ;(async () => {
+    (async () => {
       if (invoiceId) {
         const data = await getInvoiceById(invoiceId)
         if (data) setInvoice(data)

@@ -18,7 +18,7 @@ const ResetPassword2 = () => {
                 height: 24,
                 width: 110,
               }}
-              squareLogo={{ className: 'me-2', width: 33, height: 28 }}
+              squareLogo={{ className: 'me-2', width: 50, height: 33 }}
               containerClassName="mx-auto mb-4 text-center auth-logo"
             />
             <h2 className="fw-bold text-center fs-18">Reset Password</h2>

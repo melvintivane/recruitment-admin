@@ -31,7 +31,7 @@ const StatCard = ({ change, icon, stat, title, variant }: StatType) => {
             <span className="text-muted ms-1 fs-12">&nbsp;Last Month</span>
           </div>
           <Link to="" className="text-reset fw-medium fs-12">
-            View More
+            View Details
           </Link>
         </div>
       </CardFooter>
@@ -41,13 +41,6 @@ const StatCard = ({ change, icon, stat, title, variant }: StatType) => {
 
 const Stats = () => {
   return (
-    // <Row>
-    //   {stateData.map((stat, idx) => (
-    //     <Col md={6} xxl={12} key={idx}>
-    //       <StatCard {...stat} />
-    //     </Col>
-    //   ))}
-    // </Row>
     <Row>
       {statData.map((stat, idx) => (
         <Col md={6} xl={3} key={idx}>

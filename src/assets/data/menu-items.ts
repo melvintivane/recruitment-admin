@@ -10,10 +10,10 @@ export const MENU_ITEMS: MenuItemType[] = [
     key: "dashboard",
     icon: "solar:home-2-broken",
     label: "Dashboard",
-    badge: {
-      text: "9+",
-      variant: "success",
-    },
+    // badge: {
+    //   text: "9+",
+    //   variant: "success",
+    // },
     url: "/dashboard/analytics",
   },
   {
@@ -39,51 +39,70 @@ export const MENU_ITEMS: MenuItemType[] = [
     label: "Blogs",
     url: "/blogs",
   },
-  // {
-  //   key: 'apps-calendar',
-  //   icon: 'solar:calendar-broken',
-  //   label: 'Calendar',
-  //   children: [
-  //     {
-  //       key: 'calendar-schedule',
-  //       label: 'Schedule',
-  //       url: '/calendar/schedule',
-  //       parentKey: 'apps-calendar',
-  //     },
-  //     {
-  //       key: 'calendar-integration',
-  //       label: 'Integration',
-  //       url: '/calendar/integration',
-  //       parentKey: 'apps-calendar',
-  //     },
-  //   ],
-  // },
-  // {
-  //   key: 'apps-todo',
-  //   icon: 'solar:list-heart-minimalistic-broken',
-  //   label: 'Todo',
-  //   url: '/apps/todo',
-  // },
-
-  // {
-  //   key: 'apps-invoices',
-  //   icon: 'solar:bill-list-broken',
-  //   label: 'Invoices',
-  //   children: [
-  //     {
-  //       key: 'invoices',
-  //       label: 'Invoices',
-  //       url: '/invoices',
-  //       parentKey: 'apps-invoices',
-  //     },
-  //     {
-  //       key: 'invoices-details',
-  //       label: 'Invoices Details',
-  //       url: '/invoices/RB6985',
-  //       parentKey: 'apps-invoices',
-  //     },
-  //   ],
-  // },
+  {
+    key: "page-vacancies",
+    label: "Vacancies",
+    isTitle: false,
+    icon: "solar:case-broken",
+    children: [
+      {
+        key: "vacancies-list",
+        label: "Job Listings",
+        url: "/vacancies",
+        parentKey: "page-vacancies",
+      },
+      {
+        key: "vacancies-create",
+        label: "Create Job",
+        url: "/vacancies/create",
+        parentKey: "page-vacancies",
+      },
+      {
+        key: "vacancies-categories",
+        label: "Categories",
+        url: "/vacancies/categories",
+        parentKey: "page-vacancies",
+      },
+      {
+        key: "vacancies-skills",
+        label: "Skills",
+        url: "/vacancies/skills",
+        parentKey: "page-vacancies",
+      },
+    ],
+  },
+  {
+    key: "page-user",
+    label: "User Management",
+    isTitle: false,
+    icon: "solar:user-id-broken",
+    children: [
+      {
+        key: "user-list",
+        label: "User List",
+        url: "/users/list",
+        parentKey: "page-user",
+      },
+      {
+        key: "user-create",
+        label: "Create User",
+        url: "/users/create",
+        parentKey: "page-user",
+      },
+      {
+        key: "user-roles",
+        label: "Roles & Permissions",
+        url: "/users/roles",
+        parentKey: "page-user",
+      },
+      {
+        key: "user-profile",
+        label: "Profile",
+        url: "/users/profile",
+        parentKey: "page-user",
+      },
+    ],
+  },
   {
     key: "custom",
     label: "Custom",
@@ -160,12 +179,12 @@ export const MENU_ITEMS: MenuItemType[] = [
         url: "/auth/sign-in",
         parentKey: "page-authentication",
       },
-      {
-        key: "signup",
-        label: "Sign Up",
-        url: "/auth/sign-up",
-        parentKey: "page-authentication",
-      },
+      // {
+      //   key: "signup",
+      //   label: "Sign Up",
+      //   url: "/auth/sign-up",
+      //   parentKey: "page-authentication",
+      // },
       {
         key: "reset-pass",
         label: "Reset Password",

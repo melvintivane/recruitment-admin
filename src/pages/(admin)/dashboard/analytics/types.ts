@@ -1,37 +1,38 @@
-import type { BootstrapVariantType } from '@/types/component-props'
-
-export type StatType = {
-  title: string
-  icon: string
-  stat: string
-  change: string
-  variant: string
+export interface JobSourceType {
+  icon: string;
+  name: string;
+  percentage: number;
+  applicants: number;
+  variant: 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'info' | 'light' | 'dark';
 }
 
-export type OnlineUserType = {
-  name: string
-  percentage: string
-  amount: number
+export interface ApplicantType {
+  name: string;
+  percentage: string | number;
+  count: number;
+  // Optional stage property for recruitment pipeline
+  stage?: 'Applied' | 'Screened' | 'Interviewed' | 'Offered' | 'Hired';
 }
 
-export type CountryType = {
-  icon: string
-  name: string
-  value: number
-  amount: number
-  variant: BootstrapVariantType
+export interface JobType {
+  title: string;
+  views: number;
+  applications: number;
+  hireRate: number;
+  variant: 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'info' | 'light' | 'dark';
+  // Optional fields for more detailed job tracking
+  department?: string;
+  location?: string;
+  jobType?: 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERNSHIP';
+  status?: 'OPEN' | 'CLOSED' | 'DRAFT';
 }
 
-export type BrowserType = {
-  name: string
-  percentage: number
-  amount: number
-}
-
-export type PageType = {
-  path: string
-  views: number
-  avgTime: string
-  exitRate: number
-  variant: BootstrapVariantType
+export interface StatType {
+  title: string;
+  icon: string;
+  stat: string | number;
+  change: string;
+  variant: 'success' | 'danger' | 'warning' | 'info';
+  // Optional link for navigation
+  link?: string;
 }

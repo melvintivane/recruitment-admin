@@ -13,12 +13,12 @@ export const appsData: AppType[] = [
   {
     image: githubImg,
     name: 'Github',
-    handle: '@Rasket',
+    handle: '@EP',
   },
   {
     image: bitbucketImg,
     name: 'Bitbucket',
-    handle: '@Rasket',
+    handle: '@EP',
   },
   {
     image: dribbleImg,
@@ -33,7 +33,7 @@ export const appsData: AppType[] = [
   {
     image: slackImg,
     name: 'Slack',
-    handle: '@Rasket',
+    handle: '@EP',
   },
 ]
 

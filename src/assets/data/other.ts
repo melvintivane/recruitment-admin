@@ -1,4 +1,4 @@
-import type { Employee, PricingType, ProjectType, TimelineType, TransactionType } from '@/types/data'
+import type { Employee, PricingType, ProjectType, TimelineType, TransactionType, VacancyType } from '@/types/data'
 
 import type { Author, BlogCategory, BlogPost, BlogComment, BlogTag, FeaturedPost } from '@/types/data'
 
@@ -13,6 +13,129 @@ import avatar5 from '@/assets/images/users/avatar-5.jpg'
 import avatar6 from '@/assets/images/users/avatar-6.jpg'
 import avatar7 from '@/assets/images/users/avatar-7.jpg'
 
+export const vacanciesData: VacancyType[] = [
+  {
+    id: "VAC-1001",
+    title: "Frontend Developer",
+    department: "Engineering",
+    location: "Remote",
+    type: "Full-time",
+    postedDate: "2023-06-15",
+    status: "Open",
+    applicationCount: 24,
+    salaryRange: "$85,000 - $110,000",
+    description: "We're looking for an experienced React developer to join our team."
+  },
+  {
+    id: "VAC-1002",
+    title: "UX Designer",
+    department: "Design",
+    location: "New York, NY",
+    type: "Full-time",
+    postedDate: "2023-06-20",
+    status: "Open",
+    applicationCount: 18,
+    salaryRange: "$75,000 - $95,000",
+    description: "Join our design team to create beautiful user experiences."
+  },
+  {
+    id: "VAC-1003",
+    title: "DevOps Engineer",
+    department: "Engineering",
+    location: "San Francisco, CA",
+    type: "Full-time",
+    postedDate: "2023-06-10",
+    status: "Open",
+    applicationCount: 12,
+    salaryRange: "$120,000 - $150,000",
+    description: "Help us build and maintain our cloud infrastructure."
+  },
+  {
+    id: "VAC-1004",
+    title: "Marketing Intern",
+    department: "Marketing",
+    location: "Chicago, IL",
+    type: "Part-time",
+    postedDate: "2023-06-25",
+    status: "Open",
+    applicationCount: 32,
+    salaryRange: "$20 - $25/hr",
+    description: "Great opportunity for marketing students to gain real-world experience."
+  },
+  {
+    id: "VAC-1005",
+    title: "Senior Backend Developer",
+    department: "Engineering",
+    location: "Remote",
+    type: "Full-time",
+    postedDate: "2023-05-30",
+    status: "Closed",
+    applicationCount: 45,
+    salaryRange: "$130,000 - $160,000",
+    description: "Lead our backend development with Node.js and microservices."
+  },
+  {
+    id: "VAC-1006",
+    title: "Customer Support Specialist",
+    department: "Support",
+    location: "Austin, TX",
+    type: "Full-time",
+    postedDate: "2023-06-18",
+    status: "Open",
+    applicationCount: 15,
+    salaryRange: "$45,000 - $55,000",
+    description: "Provide exceptional support to our growing customer base."
+  },
+  {
+    id: "VAC-1007",
+    title: "Product Manager",
+    department: "Product",
+    location: "Boston, MA",
+    type: "Full-time",
+    postedDate: "2023-06-05",
+    status: "Draft",
+    applicationCount: 0,
+    salaryRange: "$90,000 - $120,000",
+    description: "Lead product development from conception to launch."
+  },
+  {
+    id: "VAC-1008",
+    title: "Data Scientist",
+    department: "Data",
+    location: "Remote",
+    type: "Contract",
+    postedDate: "2023-06-22",
+    status: "Open",
+    applicationCount: 8,
+    salaryRange: "$60 - $80/hr",
+    description: "Help us extract insights from our growing datasets."
+  },
+  {
+    id: "VAC-1009",
+    title: "HR Coordinator",
+    department: "Human Resources",
+    location: "Seattle, WA",
+    type: "Full-time",
+    postedDate: "2023-06-12",
+    status: "Open",
+    applicationCount: 21,
+    salaryRange: "$50,000 - $65,000",
+    description: "Support our HR operations and employee experience programs."
+  },
+  {
+    id: "VAC-1010",
+    title: "Quality Assurance Engineer",
+    department: "Engineering",
+    location: "Remote",
+    type: "Full-time",
+    postedDate: "2023-06-28",
+    status: "Open",
+    applicationCount: 5,
+    salaryRange: "$70,000 - $90,000",
+    description: "Ensure the quality of our software through rigorous testing."
+  }
+];
+
 export const timelineData: TimelineType = {
   Today: [
     {
@@ -25,7 +148,7 @@ export const timelineData: TimelineType = {
       description: 'Consectetur adipisicing elit. Iusto, optio, dolorum John deon provident.',
     },
     {
-      title: 'We released new version of our theme Rasket.',
+      title: 'We released new version of our theme EP.',
       description: '3 new photo Uploaded on facebook fan page',
     },
   ],

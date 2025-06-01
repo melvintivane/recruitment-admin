@@ -1,246 +1,255 @@
-import { currency } from '@/context/constants'
-import type { BrowserType, CountryType, OnlineUserType, PageType, StatType } from './types'
+import { currency } from "@/context/constants";
+import type { JobSourceType, ApplicantType, JobType, StatType } from "./types";
 
-export const countries: CountryType[] = [
+
+export const topJobs = [
+  {
+    id: 'VAC-1001',
+    title: 'Senior Frontend Developer',
+    views: 4265,
+    applications: 86,
+    hireRate: 8.4,
+    status: 'OPEN',
+    location: 'Remote'
+  },
+  {
+    id: 'VAC-1002',
+    title: 'Backend Engineer (Node.js)',
+    views: 2584,
+    applications: 42,
+    hireRate: 6.25,
+    status: 'OPEN',
+    location: 'New York, NY'
+  },
+  {
+    id: 'VAC-1003',
+    title: 'UX/UI Designer',
+    views: 3369,
+    applications: 58,
+    hireRate: 5.2,
+    status: 'OPEN',
+    location: 'San Francisco, CA'
+  },
+  {
+    id: 'VAC-1004',
+    title: 'Data Scientist',
+    views: 985,
+    applications: 19,
+    hireRate: 4.2,
+    status: 'CLOSED',
+    location: 'Boston, MA'
+  },
+  {
+    id: 'VAC-1005',
+    title: 'Product Manager',
+    views: 653,
+    applications: 12,
+    hireRate: 2.4,
+    status: 'OPEN',
+    location: 'Chicago, IL'
+  }
+]
+
+export const applicantLocations = [
   {
     icon: 'circle-flags:us',
     name: 'United States',
-    value: 82.5,
-    amount: 659,
-    variant: 'secondary',
+    percentage: 42.5,
+    applicants: 125,
+    variant: 'primary',
   },
   {
-    icon: 'circle-flags:ru',
-    name: 'Russia',
-    value: 70.5,
-    amount: 485,
+    icon: 'circle-flags:gb',
+    name: 'United Kingdom',
+    percentage: 18.3,
+    applicants: 54,
     variant: 'info',
   },
   {
-    icon: 'circle-flags:cn',
-    name: 'China',
-    value: 65.8,
-    amount: 355,
+    icon: 'circle-flags:in',
+    name: 'India',
+    percentage: 15.2,
+    applicants: 45,
     variant: 'warning',
   },
   {
-    icon: 'circle-flags:ca',
-    name: 'Canada',
-    value: 55.8,
-    amount: 204,
+    icon: 'circle-flags:de',
+    name: 'Germany',
+    percentage: 12.7,
+    applicants: 38,
+    variant: 'danger',
+  },
+  {
+    icon: 'circle-flags:au',
+    name: 'Australia',
+    percentage: 11.3,
+    applicants: 33,
     variant: 'success',
   },
 ]
 
-export const browsers: BrowserType[] = [
+export const jobSources: JobSourceType[] = [
   {
-    name: 'Chrome',
-    percentage: 62.5,
-    amount: 5.06,
+    icon: "simple-icons:linkedin",
+    name: "LinkedIn",
+    percentage: 42.5,
+    applicants: 125,
+    variant: "primary",
   },
   {
-    name: 'Firefox',
-    percentage: 12.3,
-    amount: 1.5,
+    icon: "simple-icons:indeed",
+    name: "Indeed",
+    percentage: 28.3,
+    applicants: 83,
+    variant: "info",
   },
   {
-    name: 'Safari',
-    percentage: 9.86,
-    amount: 1.03,
+    icon: "simple-icons:glassdoor",
+    name: "Glassdoor",
+    percentage: 15.8,
+    applicants: 46,
+    variant: "warning",
   },
   {
-    name: 'Brave',
-    percentage: 3.15,
-    amount: 0.3,
+    icon: "mdi:company",
+    name: "Company Website",
+    percentage: 13.4,
+    applicants: 39,
+    variant: "success",
   },
-  {
-    name: 'Opera',
-    percentage: 3.01,
-    amount: 1.58,
-  },
-  {
-    name: 'Falkon',
-    percentage: 2.8,
-    amount: 0.01,
-  },
-  {
-    name: 'Other',
-    percentage: 6.38,
-    amount: 3.6,
-  },
-]
+];
 
-export const pagesList: PageType[] = [
+export const applicants: ApplicantType[] = [
   {
-    path: '/dashboard/analytics',
+    name: "Software Engineer",
+    percentage: 32.5,
+    count: 86,
+  },
+  {
+    name: "Product Manager",
+    percentage: 22.1,
+    count: 58,
+  },
+  {
+    name: "UX Designer",
+    percentage: 18.6,
+    count: 49,
+  },
+  {
+    name: "Data Analyst",
+    percentage: 12.4,
+    count: 33,
+  },
+  {
+    name: "Marketing Specialist",
+    percentage: 8.3,
+    count: 22,
+  },
+  {
+    name: "HR Coordinator",
+    percentage: 3.8,
+    count: 10,
+  },
+  {
+    name: "Other",
+    percentage: 2.3,
+    count: 6,
+  },
+];
+
+export const jobsList: JobType[] = [
+  {
+    title: "Senior Frontend Developer",
     views: 4265,
-    avgTime: '09m:45s',
-    exitRate: 20.4,
-    variant: 'danger',
+    applications: 86,
+    hireRate: 8.4,
+    variant: "success",
   },
   {
-    path: '/apps/chat',
+    title: "Backend Engineer",
     views: 2584,
-    avgTime: '05m:02s',
-    exitRate: 12.25,
-    variant: 'warning',
+    applications: 42,
+    hireRate: 6.25,
+    variant: "warning",
   },
   {
-    path: '/auth/sign-in',
+    title: "UX/UI Designer",
     views: 3369,
-    avgTime: '04m:25s',
-    exitRate: 5.2,
-    variant: 'success',
+    applications: 58,
+    hireRate: 5.2,
+    variant: "success",
   },
   {
-    path: '/apps/email',
+    title: "Data Scientist",
     views: 985,
-    avgTime: '02m:03s',
-    exitRate: 64.2,
-    variant: 'danger',
+    applications: 19,
+    hireRate: 4.2,
+    variant: "danger",
   },
   {
-    path: '/apps/social',
+    title: "Product Owner",
     views: 653,
-    avgTime: '15m:56s',
-    exitRate: 2.4,
-    variant: 'success',
+    applications: 12,
+    hireRate: 2.4,
+    variant: "success",
   },
-]
+];
 
 export const statData: StatType[] = [
   {
-    title: 'Page View',
-    icon: 'solar:leaf-bold-duotone',
-    stat: '13, 647',
-    change: '2.3%',
-    variant: 'success',
+    title: "Active Jobs",
+    icon: "solar:case-minimalistic-bold-duotone",
+    stat: "24",
+    change: "5.3%",
+    variant: "success",
   },
   {
-    title: 'Clicks',
-    icon: 'solar:cpu-bolt-line-duotone',
-    stat: '9, 526',
-    change: '8.1%',
-    variant: 'success',
+    title: "New Applicants",
+    icon: "solar:user-plus-bold-duotone",
+    stat: "186",
+    change: "12.1%",
+    variant: "success",
   },
   {
-    title: 'Conversions',
-    icon: 'solar:layers-bold-duotone',
-    stat: '976',
-    change: '0.3%',
-    variant: 'danger',
+    title: "Interviews Scheduled",
+    icon: "solar:calendar-mark-bold-duotone",
+    stat: "42",
+    change: "3.3%",
+    variant: "danger",
   },
   {
-    title: 'New Users',
-    icon: 'solar:users-group-two-rounded-bold-duotone',
-    stat: `${currency}123.6k`,
-    change: '10.6%',
-    variant: 'danger',
+    title: "Hiring Budget",
+    icon: "solar:wallet-money-bold-duotone",
+    stat: `${currency}256.8k`,
+    change: "18.6%",
+    variant: "success",
   },
-]
+];
 
-export const onlineUsers: OnlineUserType[] = [
+export const recruitmentStages: ApplicantType[] = [
   {
-    name: 'Chrome',
-    percentage: '62.5%',
-    amount: 5000,
+    name: "Application Review",
+    percentage: "42.5%",
+    count: 125,
   },
   {
-    name: 'Firefox',
-    percentage: '9.86',
-    amount: 1030,
+    name: "Phone Screening",
+    percentage: "28.3%",
+    count: 83,
   },
   {
-    name: 'Safari',
-    percentage: '12.3%',
-    amount: 1500,
+    name: "Technical Interview",
+    percentage: "15.8%",
+    count: 46,
   },
   {
-    name: 'Opera',
-    percentage: '2.8%',
-    amount: 9900,
+    name: "Final Interview",
+    percentage: "9.4%",
+    count: 28,
   },
   {
-    name: 'Web',
-    percentage: '1.05%',
-    amount: 2500,
+    name: "Offer Extended",
+    percentage: "4.0%",
+    count: 12,
   },
-  {
-    name: 'Other',
-    percentage: '6.38%',
-    amount: 3600,
-  },
-  {
-    name: 'Safari',
-    percentage: '9.86',
-    amount: 1.03,
-  },
-  {
-    name: 'Web',
-    percentage: '1.05%',
-    amount: 2500,
-  },
-  {
-    name: 'Other',
-    percentage: '6.38%',
-    amount: 3600,
-  },
-  {
-    name: 'Safari',
-    percentage: '9.86',
-    amount: 1.03,
-  },
-  {
-    name: 'Web',
-    percentage: '1.05%',
-    amount: 2500,
-  },
-  {
-    name: 'Other',
-    percentage: '6.38%',
-    amount: 3600,
-  },
-  {
-    name: 'Safari',
-    percentage: '9.86',
-    amount: 1.03,
-  },
-]
-
-export const topPages: PageType[] = [
-  {
-    path: 'rasket/dashboard',
-    views: 4265,
-    avgTime: '09m:45s',
-    exitRate: 20.4,
-    variant: 'danger',
-  },
-  {
-    path: 'rasket/chat',
-    views: 2584,
-    avgTime: '05m:02s',
-    exitRate: 12.25,
-    variant: 'warning',
-  },
-  {
-    path: 'rasket/auth-login',
-    views: 3369,
-    avgTime: '04m:25s',
-    exitRate: 5.2,
-    variant: 'success',
-  },
-  {
-    path: 'rasket/email',
-    views: 985,
-    avgTime: '02m:03s',
-    exitRate: 64.2,
-    variant: 'danger',
-  },
-  {
-    path: 'rasket/social',
-    views: 653,
-    avgTime: '15m:56s',
-    exitRate: 2.4,
-    variant: 'success',
-  },
-]
+];

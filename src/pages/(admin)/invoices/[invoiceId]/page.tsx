@@ -8,8 +8,8 @@ import SubmissionButton from './components/SubmissionButton'
 import PageMetaData from '@/components/PageTitle'
 import type { InvoiceType } from '@/types/data'
 
-import logoDark from '@/assets/images/logo-dark-full.png'
-import logoLight from '@/assets/images/logo-light-full.png'
+import logoDark from '@/assets/images/logo-dark.png'
+import logoLight from '@/assets/images/logo-light.png'
 
 const InvoiceDetail = () => {
   const [invoice, setInvoice] = useState<InvoiceType>()

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { BootstrapVariantType } from "./component-props";
 import type { NumberRange } from "./utils";
 
@@ -313,54 +314,54 @@ export type PostType = {
 };
 
 export type BlogPost = {
-  id: string
-  title: string
-  excerpt: string
-  author: string
-  avatar: string
-  createdAt: Date
-  updatedAt?: Date
-  publishDate: Date
-  category: string
-  status: 'Publicado' | 'Rascunho' | 'Draft'
-  tags: string[]
-  featuredImage: string
-  views: number
-  commentsCount: number
-  content: string
-  isFeatured?: boolean
-}
+  id: string;
+  title: string;
+  excerpt: string;
+  author: string;
+  avatar: string;
+  createdAt: Date;
+  updatedAt?: Date;
+  publishDate: Date;
+  category: string;
+  status: "Publicado" | "Rascunho" | "Draft";
+  tags: string[];
+  featuredImage: string;
+  views: number;
+  commentsCount: number;
+  content: string;
+  isFeatured?: boolean;
+};
 
 export type BlogCategory = {
-  id: string
-  name: string
-  postCount: number
-  lastUpdate: Date
-}
+  id: string;
+  name: string;
+  postCount: number;
+  lastUpdate: Date;
+};
 
 export type Author = {
-  id: string
-  name: string
-  avatar: string
-  bio: string
-  postCount: number
-  social: Record<string, string>
-}
+  id: string;
+  name: string;
+  avatar: string;
+  bio: string;
+  postCount: number;
+  social: Record<string, string>;
+};
 
 export type BlogComment = {
-  id: string
-  postId: string
-  author: string
-  content: string
-  date: Date
-  approved: boolean
-}
+  id: string;
+  postId: string;
+  author: string;
+  content: string;
+  date: Date;
+  approved: boolean;
+};
 
 export type BlogTag = {
-  id: string
-  name: string
-  postCount: number
-}
+  id: string;
+  name: string;
+  postCount: number;
+};
 
 export type FeaturedPost = {
   id: string;
@@ -375,14 +376,77 @@ export type FeaturedPost = {
 export interface VacancyType {
   id: string;
   title: string;
-  department: string;
-  location: string;
-  type: string; // "Full-time", "Part-time", etc.
-  postedDate: string | Date;
-  status: "Open" | "Closed" | "Draft";
-  applicationCount: number;
-  salaryRange?: string; // e.g., "$50,000 - $70,000"
-  description?: string; // Detailed job description
-  // Add other fields as needed
+  location: string; // Mapped from city.name + state.name
+  type: string; // Mapped from jobType (converted to more readable format)
+  postedDate: string | Date; // Mapped from createdAt
+  status: "Open" | "Closed" | "Draft"; // Default to "Open" since not in JSON
+  applicationCount: number; // Not in JSON, default to 0
+  salaryRange?: string; // Combined from minSalary and maxSalary
+  description?: string; // Could use company description or leave empty
+  yearsOfExperience: number;
+  degreeRequired: string;
+  careerLevel: string;
+  remoteAllowed: boolean;
+  applicationDeadline: string | Date;
+  company: {
+    name: string;
+    picture?: string;
+    industry: string;
+    website?: string;
+  };
+  requiredSkills: {
+    name: string;
+    category: string;
+  }[];
+}
+
+// Example of how to transform the API data to VacancyType
+export function transformApiDataToVacancy(apiData: any): VacancyType {
+  return {
+    id: apiData.id,
+    title: apiData.jobTitle,
+    location: `${apiData.city.name}, ${apiData.city.state.name}`,
+    type: apiData.jobType === "FULL_TIME" ? "Full-time" : "Other",
+    postedDate: apiData.createdAt,
+    status: "Open",
+    applicationCount: 0,
+    salaryRange: `${apiData.minSalary} - ${apiData.maxSalary}`,
+    yearsOfExperience: apiData.yearsOfExperience,
+    degreeRequired: apiData.degreeRequired,
+    careerLevel: apiData.careerLevel,
+    remoteAllowed: apiData.remoteAllowed,
+    applicationDeadline: apiData.applicationDeadline,
+    company: {
+      name: apiData.company.name,
+      picture: apiData.company.picture,
+      industry: apiData.company.industry,
+      website: apiData.company.website,
+    },
+    requiredSkills: apiData.requiredSkills.map((skill: any) => ({
+      name: skill.name,
+      category: skill.jobCategory.name,
+    })),
+  };
+}
+
+export interface PageableType {
+  pageNumber: number;
+  pageSize: number;
+  offset: number;
+  paged: boolean;
+  unpaged: boolean;
+  last: boolean;
+  totalElements: number;
+  totalPages: number;
+  first: boolean;
+  size: number;
+  number: number;
+  sort: {
+    sorted: boolean;
+    empty: boolean;
+    unsorted: boolean;
+  };
+  numberOfElements: number;
+  empty: boolean;
 }
 

@@ -1,33 +1,33 @@
-import { useEffect, useState } from 'react'
-import { Card, CardBody, CardTitle, Col, Row, Badge } from 'react-bootstrap'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useEffect, useState } from "react";
+import { Card, CardBody, CardTitle, Col, Row, Badge } from "react-bootstrap";
+import { useNavigate, useParams } from "react-router-dom";
 
-import { getVacancyById } from '@/helpers/data'
-import PageMetaData from '@/components/PageTitle'
-import type { VacancyType } from '@/types/data'
-import SubmissionButton from './components/SubmissionButton'
+import { getVacancyById } from "@/services/vacancyService";
+import PageMetaData from "@/components/PageTitle";
+import type { VacancyType } from "@/types/vacancy";
+import SubmissionButton from "./components/SubmissionButton";
 
-import logoDark from '@/assets/images/logo-dark-full.png'
-import logoLight from '@/assets/images/logo-light-full.png'
+import logoDark from "@/assets/images/logo-dark-full.png";
+import logoLight from "@/assets/images/logo-light-full.png";
 
 const VacancyDetails = () => {
-  const [vacancy, setVacancy] = useState<VacancyType>()
-  const { vacancyId } = useParams()
-  const navigate = useNavigate()
+  const [vacancy, setVacancy] = useState<VacancyType>();
+  const { vacancyId } = useParams();
+  const navigate = useNavigate();
 
   useEffect(() => {
     (async () => {
       if (vacancyId) {
-        const data = await getVacancyById(vacancyId)
-        if (data) setVacancy(data)
-        else navigate('/pages/error-404-alt')
+        const data = await getVacancyById(vacancyId);
+        if (data) setVacancy(data);
+        else navigate("/pages/error-404-alt");
       }
-    })()
-  }, [vacancyId, navigate])
+    })();
+  }, [vacancyId, navigate]);
 
   return (
     <>
-      <PageMetaData title={vacancy?.title ?? 'Vacancy Details'} />
+      <PageMetaData title={vacancy?.title ?? "Vacancy Details"} />
 
       <Row>
         <Col xs={12}>
@@ -37,22 +37,41 @@ const VacancyDetails = () => {
                 <div className="clearfix">
                   <div className="float-sm-end">
                     <div className="auth-logo">
-                      <img className="logo-dark me-1" height={24} src={logoDark} alt="logo-dark" />
-                      <img className="logo-light me-1" height={24} src={logoLight} alt="logo-light" />
+                      <img
+                        className="logo-dark me-1"
+                        height={24}
+                        src={logoDark}
+                        alt="logo-dark"
+                      />
+                      <img
+                        className="logo-light me-1"
+                        height={24}
+                        src={logoLight}
+                        alt="logo-light"
+                      />
                     </div>
                     <address className="mt-3">
-                      1729 Bangor St,
+                      Rua da Amizade, 41
                       <br />
-                      Houlton, ME, 04730 <br />
-                      <abbr title="Phone">P:</abbr> (207) 532-9109
+                      Maputo 1101, MZ <br />
+                      <abbr title="Telefone">T:</abbr> (+258) 82 530 9675
                     </address>
                   </div>
                   <div className="float-sm-start">
-                    <CardTitle as={'h5'} className="mb-2">
+                    <CardTitle as={"h5"} className="mb-2">
                       {vacancy.title}
                     </CardTitle>
                     <div className="d-flex gap-2 align-items-center">
-                      <Badge pill bg={vacancy.status === 'Open' ? 'success' : vacancy.status === 'Closed' ? 'danger' : 'warning'}>
+                      <Badge
+                        pill
+                        bg={
+                          vacancy.status === "ACTIVE"
+                            ? "success"
+                            : vacancy.status === "CLOSED"
+                              ? "danger"
+                              : "warning"
+                        }
+                      >
                         {vacancy.status}
                       </Badge>
                       <span className="text-muted">#{vacancy.id}</span>
@@ -64,19 +83,22 @@ const VacancyDetails = () => {
                   <Col md={6}>
                     <h6 className="fw-normal text-muted">Position Details</h6>
                     <div className="mb-2">
-                      <strong>Department:</strong> {vacancy.department}
+                      <strong>Department:</strong> {vacancy.company.name}
                     </div>
                     <div className="mb-2">
-                      <strong>Location:</strong> {vacancy.location}
+                      <strong>Location:</strong> {vacancy.city.name},{" "}
+                      {vacancy.city.state.name}
                     </div>
                     <div className="mb-2">
                       <strong>Type:</strong> {vacancy.type}
                     </div>
                     <div className="mb-2">
-                      <strong>Salary:</strong> {vacancy.salaryRange}
+                      <strong>Salary:</strong> ${vacancy.minSalary} - $
+                      {vacancy.maxSalary}
                     </div>
                     <div className="mb-2">
-                      <strong>Posted Date:</strong> {new Date(vacancy.postedDate).toLocaleDateString()}
+                      <strong>Posted Date:</strong>{" "}
+                      {new Date(vacancy.createdAt).toLocaleDateString()}
                     </div>
                     <div className="mb-2">
                       <strong>Applications:</strong> {vacancy.applicationCount}
@@ -107,7 +129,10 @@ const VacancyDetails = () => {
                         <tbody>
                           <tr>
                             <td>Education</td>
-                            <td>Bachelor's degree in Computer Science or related field</td>
+                            <td>
+                              Bachelor's degree in Computer Science or related
+                              field
+                            </td>
                           </tr>
                           <tr>
                             <td>Experience</td>
@@ -119,7 +144,10 @@ const VacancyDetails = () => {
                           </tr>
                           <tr>
                             <td>Nice to Have</td>
-                            <td>Experience with Redux, GraphQL, and testing frameworks</td>
+                            <td>
+                              Experience with Redux, GraphQL, and testing
+                              frameworks
+                            </td>
                           </tr>
                         </tbody>
                       </table>
@@ -132,8 +160,10 @@ const VacancyDetails = () => {
                     <div className="clearfix pt-xl-3 pt-0">
                       <h6 className="text-muted">Notes:</h6>
                       <small className="text-muted">
-                        This position may require occasional travel. We offer competitive benefits including health insurance, 
-                        401(k) matching, and flexible work arrangements. Applications will be reviewed on a rolling basis.
+                        This position may require occasional travel. We offer
+                        competitive benefits including health insurance, 401(k)
+                        matching, and flexible work arrangements. Applications
+                        will be reviewed on a rolling basis.
                       </small>
                     </div>
                   </Col>
@@ -142,13 +172,22 @@ const VacancyDetails = () => {
                       <p>
                         <span className="fw-medium">Application Deadline:</span>
                         <span className="float-end">
-                          {new Date(new Date(vacancy.postedDate).setDate(new Date(vacancy.postedDate).getDate() + 30)).toLocaleDateString()}
+                          {new Date(
+                            new Date(vacancy.applicationDeadline).setDate(
+                              new Date(vacancy.applicationDeadline).getDate() +
+                                30
+                            )
+                          ).toLocaleDateString()}
                         </span>
                       </p>
                       <p>
                         <span className="fw-medium">Expected Start Date:</span>
                         <span className="float-end">
-                          {new Date(new Date(vacancy.postedDate).setDate(new Date(vacancy.postedDate).getDate() + 45)).toLocaleDateString()}
+                          {new Date(
+                            new Date(vacancy.createdAt).setDate(
+                              new Date(vacancy.createdAt).getDate() + 45
+                            )
+                          ).toLocaleDateString()}
                         </span>
                       </p>
                     </div>
@@ -165,7 +204,7 @@ const VacancyDetails = () => {
         </Col>
       </Row>
     </>
-  )
-}
+  );
+};
 
-export default VacancyDetails
+export default VacancyDetails;

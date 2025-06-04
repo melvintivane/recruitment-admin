@@ -2,9 +2,9 @@ import { Link } from 'react-router-dom'
 
 import type { LogoBoxProps } from '@/types/component-props'
 
-import logoDark from '@/assets/images/logo-dark-full.png'
-import logoLight from '@/assets/images/logo-light-full.png'
-// import logoSm from '@/assets/images/logo-light-full.png'
+import logoDark from '@/assets/images/logo-dark.png'
+import logoLight from '@/assets/images/logo-light.png'
+// import logoSm from '@/assets/images/logo-light.png'
 
 const LogoBox = ({ containerClassName, squareLogo, textLogo }: LogoBoxProps) => {
   return (

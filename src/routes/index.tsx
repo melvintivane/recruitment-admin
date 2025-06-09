@@ -1,11 +1,15 @@
 import BlogPosts from "@/pages/(admin)/blog/page";
+import VacancyEdit from "@/pages/(admin)/vacancies/edit/page";
 import { lazy } from "react";
 import { Navigate, type RouteProps } from "react-router-dom";
 
-
 const VacanciesList = lazy(() => import("@/pages/(admin)/vacancies/list/page"));
-const VacanciesCreate = lazy(() => import("@/pages/(admin)/vacancies/create/page"));
-const VacancyDetails = lazy(() => import("@/pages/(admin)/vacancies/details/page"));
+const VacanciesCreate = lazy(
+  () => import("@/pages/(admin)/vacancies/create/page")
+);
+const VacancyDetails = lazy(
+  () => import("@/pages/(admin)/vacancies/details/page")
+);
 
 // const VacanciesCreate = lazy(() => import("@/pages/(admin)/vacancies/create/page"));
 // const VacanciesCategories = lazy(() => import("@/pages/(admin)/vacancies/categories/page"));
@@ -35,12 +39,16 @@ const Analytics = lazy(
 const Chat = lazy(() => import("@/pages/(admin)/apps/chat/page"));
 const Email = lazy(() => import("@/pages/(admin)/apps/email/page"));
 const Schedule = lazy(() => import("@/pages/(admin)/calendar/schedule/page"));
-const Integration = lazy(() => import("@/pages/(admin)/calendar/integration/page"));
+const Integration = lazy(
+  () => import("@/pages/(admin)/calendar/integration/page")
+);
 const Todo = lazy(() => import("@/pages/(admin)/apps/todo/page"));
 // const Social = lazy(() => import('@/app/(admin)/apps/social/page'))
 // const Contacts = lazy(() => import('@/app/(admin)/apps/contacts/page'))
 const Invoices = lazy(() => import("@/pages/(admin)/invoices/page"));
-const InvoiceDetails = lazy(() => import("@/pages/(admin)/invoices/[invoiceId]/page"));
+const InvoiceDetails = lazy(
+  () => import("@/pages/(admin)/invoices/[invoiceId]/page")
+);
 
 // Pages Routes
 const Welcome = lazy(() => import("@/pages/(admin)/pages/welcome/page"));
@@ -135,8 +143,11 @@ const NotFound = lazy(
 // Auth Routes
 const AuthSignIn2 = lazy(() => import("@/pages/(other)/auth/sign-in-2/page"));
 // const AuthSignUp2 = lazy(() => import("@/pages/(other)/auth/sign-up-2/page"));
-const ResetPassword2 = lazy(() => import("@/pages/(other)/auth/reset-pass-2/page"));
-const LockScreen2 = lazy(() => import("@/pages/(other)/auth/lock-screen-2/page")
+const ResetPassword2 = lazy(
+  () => import("@/pages/(other)/auth/reset-pass-2/page")
+);
+const LockScreen2 = lazy(
+  () => import("@/pages/(other)/auth/lock-screen-2/page")
 );
 
 export type RoutesProps = {
@@ -212,6 +223,11 @@ const appsRoutes: RoutesProps[] = [
     name: "Vacancy Details",
     path: "/vacancies/:vacancyId",
     element: <VacancyDetails />,
+  },
+  {
+    name: "Vacancy Edit",
+    path: "/vacancies/edit/:vacancyId",
+    element: <VacancyEdit />,
   },
   {
     name: "Invoices Details",
@@ -572,12 +588,6 @@ export const authRoutes: RoutesProps[] = [
     path: "/auth/sign-in",
     element: <AuthSignIn2 />,
   },
-  // {
-  //   name: "Sign Up",
-  //   path: "/auth/sign-up",
-  //   element: <AuthSignUp2 />,
-  // },
-
   {
     name: "Reset Password",
     path: "/auth/reset-pass",

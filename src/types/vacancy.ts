@@ -59,12 +59,12 @@ export type VacancyType = {
   title: string;
   slug: string;
   description: string;
-  type: 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERNSHIP'; // Add other types as needed
-  status: 'PENDING' | 'CLOSED' | 'ACTIVE'; // Adjust as needed
+  type: 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERNSHIP';
+  status: 'PENDING' | 'CLOSED' | 'ACTIVE';
   yearsOfExperience: number;
   applicationCount: number;
   degreeRequired: string;
-  careerLevel: 'ENTRY' | 'MID' | 'SENIOR' | 'LEAD' | 'MANAGER'; // Adjust as needed
+  careerLevel: 'JUNIOR' | 'MID' | 'SENIOR' | 'LEAD' | 'MANAGER';
   genderPreference: 'UNSPECIFIED' | 'MALE' | 'FEMALE';
   applicationDeadline: string;
   remoteAllowed: boolean;

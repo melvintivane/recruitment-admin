@@ -1,83 +1,20 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react";
 import { Button, Card, CardBody, Col, Row } from "react-bootstrap";
 import { Link } from "react-router-dom";
-import { useMutation, useQueryClient } from "react-query";
-import { withSwal } from "react-sweetalert2";
+
 import PageMetaData from "@/components/PageTitle";
 import IconifyIcon from "@/components/wrappers/IconifyIcon";
-import { getAllVacancies, deleteVacancy } from "@/services/vacancyService"; // You'll need to create this helper
-import { VacancyApiResponse } from "@/types/vacancy"; // Define this type
+import { getAllCategories } from "@/services/categoryService";
+import { CategoryApiResponse } from "@/types/category";
 
-const VacanciesList = withSwal((props: any) => {
-  const { swal } = props;
-  const [pagination, setPagination] = useState({ page: 0, size: 10, sort: "createdAt,desc", });
-  const [vacancies, setVacancies] = useState<VacancyApiResponse>();
-  const queryClient = useQueryClient();
-
-  useEffect(() => {
-    const fetchData = async () => {
-      const data = await getAllVacancies(pagination.page, pagination.size);
-      setVacancies(data);
-    };
-    fetchData();
-  }, [pagination]);
-
-  const deleteMutation = useMutation(deleteVacancy, {
-    onSuccess: () => {
-      // Refresh the categories list after successful deletion
-      queryClient.invalidateQueries("categories");
-      // You might want to add a success notification here
-    },
-    onError: (error) => {
-      console.error("Error deleting category:", error);
-      // Add error notification here
-    },
+const CategoriesList = () => {
+  const [pagination, setPagination] = useState({
+    page: 0,
+    size: 10,
+    sort: "createdAt,desc",
   });
 
-  const handleDelete = (categoryId: string) => {
-    swal
-      .fire({
-        title: "Tem certeza?",
-        text: "Você não poderá reverter isso!",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonText: "Sim, deletar!",
-        cancelButtonText: "Cancelar",
-        customClass: {
-          confirmButton: "btn btn-danger me-2",
-          cancelButton: "btn btn-secondary",
-        },
-        buttonsStyling: false,
-        reverseButtons: true,
-      })
-      .then((result: any) => {
-        if (result.isConfirmed) {
-          deleteMutation.mutate(categoryId, {
-            onSuccess: () => {
-              swal.fire({
-                title: "Deletado!",
-                text: "A vaga foi deletada.",
-                icon: "success",
-                customClass: {
-                  confirmButton: "btn btn-success",
-                },
-              });
-            },
-            onError: () => {
-              swal.fire({
-                title: "Erro!",
-                text: "Ocorreu um erro ao deletar a vaga.",
-                icon: "error",
-                customClass: {
-                  confirmButton: "btn btn-danger",
-                },
-              });
-            },
-          });
-        }
-      });
-  };
+  const [categories, setCategories] = useState<CategoryApiResponse>();
 
   const handlePageChange = (newPage: number) => {
     setPagination((prev) => ({ ...prev, page: newPage }));
@@ -86,6 +23,15 @@ const VacanciesList = withSwal((props: any) => {
   const handlePageSizeChange = (newSize: number) => {
     setPagination((prev) => ({ ...prev, size: newSize, page: 0 }));
   };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const data = await getAllCategories(pagination.page, pagination.size);
+      setCategories(data);
+    };
+    
+    fetchData();
+  }, [pagination]);
 
   return (
     <>
@@ -104,14 +50,14 @@ const VacanciesList = withSwal((props: any) => {
                     type="search"
                     className="form-control"
                     id="search"
-                    placeholder="Search vacancies..."
+                    placeholder="Search categories..."
                     // onChange={handleSearch}
                   />
                 </div>
                 <div>
-                  <Link to="/vacancies/create" className="btn btn-success ms-2">
+                  <Link to="/categories/create" className="btn btn-success ms-2">
                     <IconifyIcon icon="bx:plus" className="me-1" />
-                    Post New Job
+                    Post New Category
                   </Link>
                 </div>
               </div>
@@ -121,47 +67,33 @@ const VacanciesList = withSwal((props: any) => {
                 <table className="table text-nowrap mb-0">
                   <thead className="bg-light bg-opacity-50">
                     <tr>
-                      <th className="border-0 py-2">Job Title</th>
-                      <th className="border-0 py-2">Company</th>
-                      <th className="border-0 py-2">Location</th>
-                      <th className="border-0 py-2">Type</th>
+                      <th className="border-0 py-2">Id</th>
+                      <th className="border-0 py-2">Code</th>
+                      <th className="border-0 py-2">Name</th>
                       <th className="border-0 py-2">Posted Date</th>
-                      <th className="border-0 py-2">Status</th>
-                      <th className="border-0 py-2">Applications</th>
+                      <th className="border-0 py-2">Updated Date</th>
                       <th className="border-0 py-2">Action</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {vacancies?.content?.map((vacancy, idx) => (
+                    {categories?.content?.map((category, idx) => (
                       <tr key={idx}>
                         <td>
                           <Link
-                            to={`/vacancies/${vacancy.id}`}
+                            to={`/vacancies/${category.id}`}
                             className="fw-medium"
                           >
-                            {vacancy.title}
+                            {category.id}
                           </Link>
                         </td>
-                        <td>{vacancy.company.name}</td>
-                        <td>{`${vacancy.city.name}, ${vacancy.city.state.name}`}</td>
-                        <td>{vacancy.type}</td>
+                        <td>{category.code}</td>
+                        <td>{category.name}</td>
                         <td>
-                          {new Date(vacancy.createdAt).toLocaleDateString()}
+                          {new Date(category.createdAt).toLocaleDateString()}
                         </td>
                         <td>
-                          <span
-                            className={`badge badge-soft-${
-                              vacancy.status === "CLOSED"
-                                ? "danger"
-                                : vacancy.status === "PENDING"
-                                  ? "warning"
-                                  : "success"
-                            }`}
-                          >
-                            {vacancy.status}
-                          </span>
+                          {new Date(category.updatedAt).toLocaleDateString()}
                         </td>
-                        <td>{vacancy.applicationCount}</td>
                         <td>
                           <Button
                             variant="soft-secondary"
@@ -169,17 +101,11 @@ const VacanciesList = withSwal((props: any) => {
                             type="button"
                             className="me-2"
                             // as={Link}
-                            // to={`/vacancies/edit/${vacancy.id}`}
+                            // to={`/vacancies/edit/${category.id}`}
                           >
                             <IconifyIcon icon="bx:edit" className="fs-16" />
                           </Button>
-                          <Button
-                            variant="soft-danger"
-                            size="sm"
-                            type="button"
-                            onClick={() => handleDelete(vacancy.id)}
-                            disabled={deleteMutation.isLoading}
-                          >
+                          <Button variant="soft-danger" size="sm" type="button">
                             <IconifyIcon
                               icon="bx:trash"
                               className="bx bx-trash fs-16"
@@ -196,13 +122,13 @@ const VacanciesList = withSwal((props: any) => {
                   <div className="text-muted">
                     Showing{" "}
                     <span className="fw-semibold">
-                      {vacancies?.numberOfElements}
+                      {categories?.numberOfElements}
                     </span>{" "}
                     of{" "}
                     <span className="fw-semibold">
-                      {vacancies?.totalElements}
+                      {categories?.totalElements}
                     </span>{" "}
-                    jobs
+                    categories
                     <select
                       className="form-select form-select-sm ms-2 d-inline-block w-auto"
                       value={pagination.size}
@@ -221,23 +147,23 @@ const VacanciesList = withSwal((props: any) => {
                 <Col sm="auto" className="mt-3 mt-sm-0">
                   <ul className="pagination pagination-rounded m-0">
                     <li
-                      className={`page-item ${vacancies?.first ? "disabled" : ""}`}
+                      className={`page-item ${categories?.first ? "disabled" : ""}`}
                     >
                       <button
                         className="page-link"
                         onClick={() => handlePageChange(0)}
-                        disabled={vacancies?.first}
+                        disabled={categories?.first}
                       >
                         <IconifyIcon icon="bx:left-arrow-alt" />
                       </button>
                     </li>
                     <li
-                      className={`page-item ${vacancies?.first ? "disabled" : ""}`}
+                      className={`page-item ${categories?.first ? "disabled" : ""}`}
                     >
                       <button
                         className="page-link"
                         onClick={() => handlePageChange(pagination.page - 1)}
-                        disabled={vacancies?.first}
+                        disabled={categories?.first}
                       >
                         Prev
                       </button>
@@ -246,10 +172,10 @@ const VacanciesList = withSwal((props: any) => {
                     {/* Mostrar números de página */}
                     {/* Mostrar números de página */}
                     {Array.from(
-                      { length: Math.min(5, vacancies?.totalPages ?? 0) },
+                      { length: Math.min(5, categories?.totalPages ?? 0) },
                       (_, i) => {
                         // Garante que temos um valor numérico para totalPages
-                        const totalPages = vacancies?.totalPages ?? 0;
+                        const totalPages = categories?.totalPages ?? 0;
 
                         // Calcula o número da página a ser exibido
                         let pageNum: number;
@@ -288,25 +214,25 @@ const VacanciesList = withSwal((props: any) => {
                     )}
 
                     <li
-                      className={`page-item ${vacancies?.last ? "disabled" : ""}`}
+                      className={`page-item ${categories?.last ? "disabled" : ""}`}
                     >
                       <button
                         className="page-link"
                         onClick={() => handlePageChange(pagination.page + 1)}
-                        disabled={vacancies?.last}
+                        disabled={categories?.last}
                       >
                         Next
                       </button>
                     </li>
                     <li
-                      className={`page-item ${vacancies?.last ? "disabled" : ""}`}
+                      className={`page-item ${categories?.last ? "disabled" : ""}`}
                     >
                       <button
                         className="page-link"
                         onClick={() =>
-                          handlePageChange((vacancies?.totalPages || 1) - 1)
+                          handlePageChange((categories?.totalPages || 1) - 1)
                         }
-                        disabled={vacancies?.last}
+                        disabled={categories?.last}
                       >
                         <IconifyIcon icon="bx:right-arrow-alt" />
                       </button>
@@ -320,6 +246,6 @@ const VacanciesList = withSwal((props: any) => {
       </Row>
     </>
   );
-});
+};
 
-export default VacanciesList;
+export default CategoriesList;

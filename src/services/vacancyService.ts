@@ -59,9 +59,9 @@ export const getVacancyById = async (vacancyId: string): Promise<VacancyType> =>
 };
 
 
-export const updateVacancy = async ({ id, data }: { id: string; data: VacancyType;}): Promise<VacancyType> => {
+export const updateVacancy = async ({ vacancyId, data }: { vacancyId: string; data: VacancyType;}): Promise<VacancyType> => {
 
-  const response = await fetch(`${API_ENDPOINTS.VACANCIES}/${id}`, {
+  const response = await fetch(`${API_ENDPOINTS.VACANCIES}/${vacancyId}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -72,4 +72,15 @@ export const updateVacancy = async ({ id, data }: { id: string; data: VacancyTyp
   }
 
   return response.json();
+};
+
+
+export const deleteVacancy = async (vacancyId: string): Promise<void> => {
+  const response = await fetch(`${API_ENDPOINTS.VACANCIES}/${vacancyId}`, {
+    method: "DELETE",
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to delete category with ID: ${vacancyId}`);
+  }
 };

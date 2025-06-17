@@ -1,8 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { WorldVectorMap } from '@/components/VectorMap'
 import IconifyIcon from '@/components/wrappers/IconifyIcon'
 import { Fragment } from 'react'
 import { Card, CardBody, CardHeader, CardTitle, Col, Dropdown, DropdownItem, DropdownMenu, DropdownToggle, ProgressBar, Row } from 'react-bootstrap'
-import { countries } from '../data'
 
 const SessionsByCountry = () => {
   const options = {
@@ -60,14 +60,14 @@ const SessionsByCountry = () => {
           </Col>
           <Col lg={5} dir="ltr">
             <div className="p-3">
-              {countries.map((country, idx) => (
+              {options.markers.map((country: any, idx: any) => (
                 <Fragment key={idx}>
                   <div className="d-flex justify-content-between align-items-center">
                     <p className="mb-1">
                       <IconifyIcon icon={country.icon} className="fs-16 align-middle me-1" /> <span className="align-middle">{country.name}</span>
                     </p>
                   </div>
-                  <Row className={`align-items-center ${countries.length - 1 === idx ? '' : 'mb-3'}`}>
+                  <Row className={`align-items-center ${options.markers.length - 1 === idx ? '' : 'mb-3'}`}>
                     <Col>
                       <ProgressBar variant={country.variant} now={country.value} className="progress progress-soft progress-sm" />
                     </Col>

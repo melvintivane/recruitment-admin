@@ -5,20 +5,36 @@ import PageMetaData from "@/components/PageTitle";
 import ComponentContainerCard from "@/components/ComponentContainerCard";
 import { useMutation } from "react-query";
 import { createVacancy } from "@/services/vacancyService";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
+import { toast } from "react-toastify";
+import { getAllCompanies } from "@/services/companyService";
+import { CompanyType } from "@/types/company";
 
 const VacanciesCreate = () => {
   const navigate = useNavigate();
-  // const [companies, setCompanies] = useState([]);
+  const [companies, setCompanies] = useState<CompanyType[]>([]);
 
-  // useEffect(() => {
-  //   const fetchCompanies = async () => {
-  //     const response = await fetch(`${API_ENDPOINTS.COMPANIES}`);
-  //     const data = await response.json();
-  //     setCompanies(data);
-  //   };
-  //   fetchCompanies();
-  // }, []);
+  const modules = {
+    toolbar: [
+      [{ header: [1, 2, 3, 4, 5, 6, false] }],
+      ["bold", "italic", "underline", "strike"],
+      [{ color: [] }, { background: [] }],
+      [{ list: "ordered" }, { list: "bullet" }],
+      ["link", "image"],
+      ["clean"],
+    ],
+  };
+
+  useEffect(() => {
+    const fetchCompanies = async () => {
+      const data = await getAllCompanies();
+      setCompanies(data);
+    };
+    fetchCompanies();
+  }, []);
+
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -41,13 +57,28 @@ const VacanciesCreate = () => {
 
   const mutation = useMutation(createVacancy, {
     onSuccess: () => {
+      toast.success("Vacancy created successfully!");
       navigate("/vacancies");
     },
     onError: (error: any) => {
       console.error("Error creating vacancy:", error);
-      // Adicione tratamento de erro aqui (ex: toast notification)
+      toast.error("Error creating vacancy");
     },
   });
+
+  const handleSkillChange = (value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      requiredSkills: value,
+    }));
+  };
+
+  const handleDescriptionChange = (value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      description: value,
+    }));
+  };
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -77,9 +108,11 @@ const VacanciesCreate = () => {
       educationRequired: "",
       requiredSkills: "",
       location: "",
-      requiredSkillIds: formData.requiredSkills 
-      ? formData.requiredSkills.split(",").map(skill => parseInt(skill.trim()))
-      : [602], // Fallback para valor padrão
+      requiredSkillIds: formData.requiredSkills
+        ? formData.requiredSkills
+            .split(",")
+            .map((skill) => parseInt(skill.trim()))
+        : [602], // Fallback para valor padrão
     };
 
     mutation.mutate(vacancyData);
@@ -125,20 +158,18 @@ const VacanciesCreate = () => {
                         required
                       >
                         <option value="">Select company</option>
-                        {/* Você precisará buscar as empresas da API */}
-                        <option value="0cdf58d1-a700-46bc-9d87-b6a2dbc40678">
-                          EP Management & Consultancy Services
-                        </option>
-                        <option value="ac19d71e-921f-46b1-88dc-7ca2a842e40b">
-                          Krei Tech Industries
-                        </option>
+                        {companies.map((company) => (
+                          <option key={company.id} value={company.id}>
+                            {company.name}
+                          </option>
+                        ))}
                       </Form.Select>
                     </Form.Group>
                   </Col>
                 </Row>
 
                 <Row className="mb-3">
-                  <Col md={6}>
+                  <Col md={3}>
                     <Form.Group controlId="jobType">
                       <Form.Label>Job Type *</Form.Label>
                       <Form.Select
@@ -156,7 +187,7 @@ const VacanciesCreate = () => {
                       </Form.Select>
                     </Form.Group>
                   </Col>
-                  <Col md={6}>
+                  <Col md={3}>
                     <Form.Group controlId="status">
                       <Form.Label>Status *</Form.Label>
                       <Form.Select
@@ -174,18 +205,46 @@ const VacanciesCreate = () => {
                 </Row>
 
                 <Row className="mb-3">
-                  <Form.Group controlId="location">
-                    <Form.Label>Location *</Form.Label>
-                    <Form.Control
-                      type="text"
-                      placeholder="e.g. Maputo, Alto Maé"
-                      name="cityId"
-                      value={formData.cityId}
-                      onChange={handleChange}
-                      required
-                    />
-                  </Form.Group>
-                  {/* <Col md={6}>
+                  <Col md={3}>
+                    <Form.Group controlId="location">
+                      <Form.Label>Location *</Form.Label>
+                      <Form.Control
+                        type="text"
+                        placeholder="e.g. Maputo, Alto Maé"
+                        name="cityId"
+                        value={formData.cityId}
+                        onChange={handleChange}
+                        required
+                      />
+                    </Form.Group>
+                  </Col>
+                  <Col md={3}>
+                    <Form.Group controlId="location">
+                      <Form.Label>Location *</Form.Label>
+                      <Form.Control
+                        type="text"
+                        placeholder="e.g. Maputo, Alto Maé"
+                        name="cityId"
+                        value={formData.cityId}
+                        onChange={handleChange}
+                        required
+                      />
+                    </Form.Group>
+                  </Col>
+                  <Col md={3}>
+                    <Form.Group controlId="location">
+                      <Form.Label>Location *</Form.Label>
+                      <Form.Control
+                        type="text"
+                        placeholder="e.g. Maputo, Alto Maé"
+                        name="cityId"
+                        value={formData.cityId}
+                        onChange={handleChange}
+                        required
+                      />
+                    </Form.Group>
+                  </Col>
+                  <Col md={6}>
                     <Form.Group controlId="remoteAllowed">
                       <Form.Label>Remote Work</Form.Label>
                       <Form.Check
@@ -194,7 +253,7 @@ const VacanciesCreate = () => {
                         label="Allow remote work"
                       />
                     </Form.Group>
-                  </Col> */}
+                  </Col>
                 </Row>
               </div>
 
@@ -203,7 +262,7 @@ const VacanciesCreate = () => {
                 <h5 className="mb-3">Requirements</h5>
 
                 <Row className="mb-3">
-                  <Col md={6}>
+                  <Col md={3}>
                     <Form.Group controlId="yearsOfExperience">
                       <Form.Label>Years of Experience *</Form.Label>
                       <Form.Control
@@ -217,7 +276,7 @@ const VacanciesCreate = () => {
                       />
                     </Form.Group>
                   </Col>
-                  <Col md={6}>
+                  <Col md={3}>
                     <Form.Group controlId="careerLevel">
                       <Form.Label>Career Level *</Form.Label>
                       <Form.Select
@@ -231,6 +290,20 @@ const VacanciesCreate = () => {
                         <option value="MID">Mid Level</option>
                         <option value="SENIOR">Senior Level</option>
                         <option value="HEAD">Head Level</option>
+                      </Form.Select>
+                    </Form.Group>
+                  </Col>
+                  <Col md={3}>
+                    <Form.Group controlId="genderPreference">
+                      <Form.Label>Gender Preference</Form.Label>
+                      <Form.Select
+                        name="genderPreference"
+                        value={formData.genderPreference}
+                        onChange={handleChange}
+                      >
+                        <option value="UNSPECIFIED">No Preference</option>
+                        <option value="MALE">Male</option>
+                        <option value="FEMALE">Female</option>
                       </Form.Select>
                     </Form.Group>
                   </Col>
@@ -250,18 +323,19 @@ const VacanciesCreate = () => {
                       />
                     </Form.Group>
                   </Col>
-                  <Col md={6}>
-                    <Form.Group controlId="genderPreference">
-                      <Form.Label>Gender Preference</Form.Label>
-                      <Form.Select
-                        name="genderPreference"
-                        value={formData.genderPreference}
-                        onChange={handleChange}
-                      >
-                        <option value="UNSPECIFIED">No Preference</option>
-                        <option value="MALE">Male</option>
-                        <option value="FEMALE">Female</option>
-                      </Form.Select>
+                </Row>
+
+                <Row className="mb-3">
+                  <Col>
+                    <Form.Group controlId="requiredSkills">
+                      <Form.Label>Skills *</Form.Label>
+                      <ReactQuill
+                        theme="snow"
+                        value={formData.requiredSkills}
+                        onChange={handleSkillChange}
+                        modules={modules}
+                        // style={{ height: "100px", marginBottom: "50px" }}
+                      />
                     </Form.Group>
                   </Col>
                 </Row>
@@ -272,7 +346,7 @@ const VacanciesCreate = () => {
                 <h5 className="mb-3">Compensation</h5>
 
                 <Row className="mb-3">
-                  <Col md={6}>
+                  <Col md={3}>
                     <Form.Group controlId="minSalary">
                       <Form.Label>Minimum Salary *</Form.Label>
                       <Form.Control
@@ -286,7 +360,7 @@ const VacanciesCreate = () => {
                       />
                     </Form.Group>
                   </Col>
-                  <Col md={6}>
+                  <Col md={3}>
                     <Form.Group controlId="maxSalary">
                       <Form.Label>Maximum Salary *</Form.Label>
                       <Form.Control
@@ -301,6 +375,17 @@ const VacanciesCreate = () => {
                     </Form.Group>
                   </Col>
                 </Row>
+              </div>
+
+              {/* Description */}
+              <div className="mb-4">
+                <h5 className="mb-3">Job Description *</h5>
+                <ReactQuill
+                  theme="snow"
+                  value={formData.description}
+                  onChange={handleDescriptionChange}
+                  modules={modules}
+                />
               </div>
 
               {/* Dates */}
@@ -322,41 +407,6 @@ const VacanciesCreate = () => {
                   </Col>
                 </Row>
               </div>
-
-              {/* Description */}
-              <div className="mb-4">
-                <h5 className="mb-3">Job Description</h5>
-
-                <Form.Group controlId="description">
-                  <Form.Label>Description *</Form.Label>
-                  <Form.Control
-                    as="textarea"
-                    rows={5}
-                    placeholder="Enter detailed job description..."
-                    name="description"
-                    value={formData.description}
-                    onChange={handleChange}
-                    required
-                  />
-                </Form.Group>
-              </div>
-
-              {/* Skills */}
-              {/* <div className="mb-4">
-                <h5 className="mb-3">Required Skills</h5>
-
-                <Form.Group controlId="requiredSkills">
-                  <Form.Label>Skills (comma separated) *</Form.Label>
-                  <Form.Control
-                    type="text"
-                    placeholder="e.g. React, JavaScript, TypeScript"
-                    name="requiredSkills"
-                    value={formData.requiredSkills}
-                    onChange={handleChange}
-                    required
-                  />
-                </Form.Group>
-              </div> */}
 
               <div className="mt-4">
                 <Button

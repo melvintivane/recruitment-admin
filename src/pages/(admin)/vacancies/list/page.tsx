@@ -6,44 +6,55 @@ import { useMutation, useQueryClient } from "react-query";
 import { withSwal } from "react-sweetalert2";
 import PageMetaData from "@/components/PageTitle";
 import IconifyIcon from "@/components/wrappers/IconifyIcon";
-import { getAllVacancies, deleteVacancy } from "@/services/vacancyService"; // You'll need to create this helper
-import { VacancyApiResponse } from "@/types/vacancy"; // Define this type
+import Spinner from "@/components/Spinner";
+import { getAllVacancies, deleteVacancy } from "@/services/vacancyService";
+import { VacancyApiResponse } from "@/types/vacancy";
 
 const VacanciesList = withSwal((props: any) => {
   const { swal } = props;
-  const [pagination, setPagination] = useState({ page: 0, size: 10, sort: "createdAt,desc", });
+  const [pagination, setPagination] = useState({
+    page: 0,
+    size: 10,
+    sort: "createdAt,desc",
+  });
   const [vacancies, setVacancies] = useState<VacancyApiResponse>();
+  const [isLoading, setIsLoading] = useState(false);
   const queryClient = useQueryClient();
 
   useEffect(() => {
     const fetchData = async () => {
-      const data = await getAllVacancies(pagination.page, pagination.size);
-      setVacancies(data);
+      setIsLoading(true);
+      try {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        const data = await getAllVacancies(pagination.page, pagination.size);
+        setVacancies(data);
+      } catch (error) {
+        console.error("Error fetching vacancies:", error);
+      } finally {
+        setIsLoading(false);
+      }
     };
     fetchData();
   }, [pagination]);
 
   const deleteMutation = useMutation(deleteVacancy, {
     onSuccess: () => {
-      // Refresh the categories list after successful deletion
-      queryClient.invalidateQueries("categories");
-      // You might want to add a success notification here
+      queryClient.invalidateQueries("vacancies");
     },
     onError: (error) => {
-      console.error("Error deleting category:", error);
-      // Add error notification here
+      console.error("Error deleting vacancy:", error);
     },
   });
 
-  const handleDelete = (categoryId: string) => {
+  const handleDelete = (vacancyId: string) => {
     swal
       .fire({
-        title: "Tem certeza?",
-        text: "Você não poderá reverter isso!",
+        title: "Are you sure?",
+        text: "You won't be able to revert this!",
         icon: "warning",
         showCancelButton: true,
-        confirmButtonText: "Sim, deletar!",
-        cancelButtonText: "Cancelar",
+        confirmButtonText: "Yes, delete it!",
+        cancelButtonText: "Cancel",
         customClass: {
           confirmButton: "btn btn-danger me-2",
           cancelButton: "btn btn-secondary",
@@ -53,11 +64,11 @@ const VacanciesList = withSwal((props: any) => {
       })
       .then((result: any) => {
         if (result.isConfirmed) {
-          deleteMutation.mutate(categoryId, {
+          deleteMutation.mutate(vacancyId, {
             onSuccess: () => {
               swal.fire({
-                title: "Deletado!",
-                text: "A vaga foi deletada.",
+                title: "Deleted!",
+                text: "The vacancy has been deleted.",
                 icon: "success",
                 customClass: {
                   confirmButton: "btn btn-success",
@@ -66,8 +77,8 @@ const VacanciesList = withSwal((props: any) => {
             },
             onError: () => {
               swal.fire({
-                title: "Erro!",
-                text: "Ocorreu um erro ao deletar a vaga.",
+                title: "Error!",
+                text: "An error occurred while deleting the vacancy.",
                 icon: "error",
                 customClass: {
                   confirmButton: "btn btn-danger",
@@ -105,7 +116,6 @@ const VacanciesList = withSwal((props: any) => {
                     className="form-control"
                     id="search"
                     placeholder="Search vacancies..."
-                    // onChange={handleSearch}
                   />
                 </div>
                 <div>
@@ -132,188 +142,206 @@ const VacanciesList = withSwal((props: any) => {
                     </tr>
                   </thead>
                   <tbody>
-                    {vacancies?.content?.map((vacancy, idx) => (
-                      <tr key={idx}>
-                        <td>
-                          <Link
-                            to={`/vacancies/${vacancy.id}`}
-                            className="fw-medium"
-                          >
-                            {vacancy.title}
-                          </Link>
-                        </td>
-                        <td>{vacancy.company.name}</td>
-                        <td>{`${vacancy.city.name}, ${vacancy.city.state.name}`}</td>
-                        <td>{vacancy.type}</td>
-                        <td>
-                          {new Date(vacancy.createdAt).toLocaleDateString()}
-                        </td>
-                        <td>
-                          <span
-                            className={`badge badge-soft-${
-                              vacancy.status === "CLOSED"
-                                ? "danger"
-                                : vacancy.status === "PENDING"
-                                  ? "warning"
-                                  : "success"
-                            }`}
-                          >
-                            {vacancy.status}
-                          </span>
-                        </td>
-                        <td>{vacancy.applicationCount}</td>
-                        <td>
-                          <Button
-                            variant="soft-secondary"
-                            size="sm"
-                            type="button"
-                            className="me-2"
-                            // as={Link}
-                            // to={`/vacancies/edit/${vacancy.id}`}
-                          >
-                            <IconifyIcon icon="bx:edit" className="fs-16" />
-                          </Button>
-                          <Button
-                            variant="soft-danger"
-                            size="sm"
-                            type="button"
-                            onClick={() => handleDelete(vacancy.id)}
-                            disabled={deleteMutation.isLoading}
-                          >
-                            <IconifyIcon
-                              icon="bx:trash"
-                              className="bx bx-trash fs-16"
-                            />
-                          </Button>
+                    {isLoading ? (
+                      <tr>
+                        <td colSpan={8} className="text-center py-4">
+                          <div className="flex flex-col items-center gap-4">
+                            <div className="flex gap-2">
+                              <Spinner type="bordered" className="m-2" color="primary"/>
+                              <Spinner type="bordered" className="m-2" color="secondary"/>
+                              <Spinner type="bordered" className="m-2" color="success"/>
+                              <Spinner type="bordered" className="m-2" color="danger"/>
+                            </div>
+                            <span className="text-center">
+                              Loading vacancies...
+                            </span>
+                          </div>
                         </td>
                       </tr>
-                    ))}
+                    ) : vacancies?.content?.length ? (
+                      vacancies.content.map((vacancy, idx) => (
+                        <tr key={idx}>
+                          <td>
+                            <Link
+                              to={`/vacancies/${vacancy.id}`}
+                              className="fw-medium"
+                            >
+                              {vacancy.title}
+                            </Link>
+                          </td>
+                          <td>{vacancy.company.name}</td>
+                          <td>{`${vacancy.city.name}, ${vacancy.city.state.name}`}</td>
+                          <td>{vacancy.type}</td>
+                          <td>
+                            {new Date(vacancy.createdAt).toLocaleDateString()}
+                          </td>
+                          <td>
+                            <span
+                              className={`badge badge-soft-${
+                                vacancy.status === "CLOSED"
+                                  ? "danger"
+                                  : vacancy.status === "PENDING"
+                                    ? "warning"
+                                    : "success"
+                              }`}
+                            >
+                              {vacancy.status}
+                            </span>
+                          </td>
+                          <td>{vacancy.applicationCount}</td>
+                          <td>
+                            <Button
+                              variant="soft-secondary"
+                              size="sm"
+                              type="button"
+                              className="me-2"
+                            >
+                              <IconifyIcon icon="bx:edit" className="fs-16" />
+                            </Button>
+                            <Button
+                              variant="soft-danger"
+                              size="sm"
+                              type="button"
+                              onClick={() => handleDelete(vacancy.id)}
+                              disabled={deleteMutation.isLoading}
+                            >
+                              <IconifyIcon
+                                icon="bx:trash"
+                                className="bx bx-trash fs-16"
+                              />
+                            </Button>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={8} className="text-center py-4">
+                          No vacancies found
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
-              <div className="align-items-center justify-content-between row g-0 text-center text-sm-start p-3 border-top">
-                <div className="col-sm">
-                  <div className="text-muted">
-                    Showing{" "}
-                    <span className="fw-semibold">
-                      {vacancies?.numberOfElements}
-                    </span>{" "}
-                    of{" "}
-                    <span className="fw-semibold">
-                      {vacancies?.totalElements}
-                    </span>{" "}
-                    jobs
-                    <select
-                      className="form-select form-select-sm ms-2 d-inline-block w-auto"
-                      value={pagination.size}
-                      onChange={(e) =>
-                        handlePageSizeChange(Number(e.target.value))
-                      }
-                    >
-                      {[5, 10, 20, 50].map((size) => (
-                        <option key={size} value={size}>
-                          {size} per page
-                        </option>
-                      ))}
-                    </select>
+              {!isLoading && (
+                <div className="align-items-center justify-content-between row g-0 text-center text-sm-start p-3 border-top">
+                  <div className="col-sm">
+                    <div className="text-muted">
+                      Showing{" "}
+                      <span className="fw-semibold">
+                        {vacancies?.numberOfElements}
+                      </span>{" "}
+                      of{" "}
+                      <span className="fw-semibold">
+                        {vacancies?.totalElements}
+                      </span>{" "}
+                      jobs
+                      <select
+                        className="form-select form-select-sm ms-2 d-inline-block w-auto"
+                        value={pagination.size}
+                        onChange={(e) =>
+                          handlePageSizeChange(Number(e.target.value))
+                        }
+                      >
+                        {[5, 10, 20, 50].map((size) => (
+                          <option key={size} value={size}>
+                            {size} per page
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
-                </div>
-                <Col sm="auto" className="mt-3 mt-sm-0">
-                  <ul className="pagination pagination-rounded m-0">
-                    <li
-                      className={`page-item ${vacancies?.first ? "disabled" : ""}`}
-                    >
-                      <button
-                        className="page-link"
-                        onClick={() => handlePageChange(0)}
-                        disabled={vacancies?.first}
+                  <Col sm="auto" className="mt-3 mt-sm-0">
+                    <ul className="pagination pagination-rounded m-0">
+                      <li
+                        className={`page-item ${vacancies?.first ? "disabled" : ""}`}
                       >
-                        <IconifyIcon icon="bx:left-arrow-alt" />
-                      </button>
-                    </li>
-                    <li
-                      className={`page-item ${vacancies?.first ? "disabled" : ""}`}
-                    >
-                      <button
-                        className="page-link"
-                        onClick={() => handlePageChange(pagination.page - 1)}
-                        disabled={vacancies?.first}
+                        <button
+                          className="page-link"
+                          onClick={() => handlePageChange(0)}
+                          disabled={vacancies?.first}
+                        >
+                          <IconifyIcon icon="bx:left-arrow-alt" />
+                        </button>
+                      </li>
+                      <li
+                        className={`page-item ${vacancies?.first ? "disabled" : ""}`}
                       >
-                        Prev
-                      </button>
-                    </li>
+                        <button
+                          className="page-link"
+                          onClick={() => handlePageChange(pagination.page - 1)}
+                          disabled={vacancies?.first}
+                        >
+                          Prev
+                        </button>
+                      </li>
 
-                    {/* Mostrar números de página */}
-                    {/* Mostrar números de página */}
-                    {Array.from(
-                      { length: Math.min(5, vacancies?.totalPages ?? 0) },
-                      (_, i) => {
-                        // Garante que temos um valor numérico para totalPages
-                        const totalPages = vacancies?.totalPages ?? 0;
+                      {Array.from(
+                        { length: Math.min(5, vacancies?.totalPages ?? 0) },
+                        (_, i) => {
+                          const totalPages = vacancies?.totalPages ?? 0;
+                          let pageNum: number;
 
-                        // Calcula o número da página a ser exibido
-                        let pageNum: number;
+                          if (totalPages <= 5) {
+                            pageNum = i;
+                          } else if (pagination.page <= 2) {
+                            pageNum = i;
+                          } else if (pagination.page >= totalPages - 3) {
+                            pageNum = totalPages - 5 + i;
+                          } else {
+                            pageNum = pagination.page - 2 + i;
+                          }
 
-                        if (totalPages <= 5) {
-                          pageNum = i;
-                        } else if (pagination.page <= 2) {
-                          pageNum = i;
-                        } else if (pagination.page >= totalPages - 3) {
-                          pageNum = totalPages - 5 + i;
-                        } else {
-                          pageNum = pagination.page - 2 + i;
-                        }
+                          pageNum = Math.max(
+                            0,
+                            Math.min(pageNum, totalPages - 1)
+                          );
 
-                        // Garante que o pageNum está dentro dos limites válidos
-                        pageNum = Math.max(
-                          0,
-                          Math.min(pageNum, totalPages - 1)
-                        );
-
-                        return (
-                          <li
-                            key={pageNum}
-                            className={`page-item ${pagination.page === pageNum ? "active" : ""}`}
-                          >
-                            <button
-                              className="page-link"
-                              onClick={() => handlePageChange(pageNum)}
-                              disabled={pageNum === pagination.page}
+                          return (
+                            <li
+                              key={pageNum}
+                              className={`page-item ${pagination.page === pageNum ? "active" : ""}`}
                             >
-                              {pageNum + 1}
-                            </button>
-                          </li>
-                        );
-                      }
-                    )}
-
-                    <li
-                      className={`page-item ${vacancies?.last ? "disabled" : ""}`}
-                    >
-                      <button
-                        className="page-link"
-                        onClick={() => handlePageChange(pagination.page + 1)}
-                        disabled={vacancies?.last}
-                      >
-                        Next
-                      </button>
-                    </li>
-                    <li
-                      className={`page-item ${vacancies?.last ? "disabled" : ""}`}
-                    >
-                      <button
-                        className="page-link"
-                        onClick={() =>
-                          handlePageChange((vacancies?.totalPages || 1) - 1)
+                              <button
+                                className="page-link"
+                                onClick={() => handlePageChange(pageNum)}
+                                disabled={pageNum === pagination.page}
+                              >
+                                {pageNum + 1}
+                              </button>
+                            </li>
+                          );
                         }
-                        disabled={vacancies?.last}
+                      )}
+
+                      <li
+                        className={`page-item ${vacancies?.last ? "disabled" : ""}`}
                       >
-                        <IconifyIcon icon="bx:right-arrow-alt" />
-                      </button>
-                    </li>
-                  </ul>
-                </Col>
-              </div>
+                        <button
+                          className="page-link"
+                          onClick={() => handlePageChange(pagination.page + 1)}
+                          disabled={vacancies?.last}
+                        >
+                          Next
+                        </button>
+                      </li>
+                      <li
+                        className={`page-item ${vacancies?.last ? "disabled" : ""}`}
+                      >
+                        <button
+                          className="page-link"
+                          onClick={() =>
+                            handlePageChange((vacancies?.totalPages || 1) - 1)
+                          }
+                          disabled={vacancies?.last}
+                        >
+                          <IconifyIcon icon="bx:right-arrow-alt" />
+                        </button>
+                      </li>
+                    </ul>
+                  </Col>
+                </div>
+              )}
             </div>
           </Card>
         </Col>

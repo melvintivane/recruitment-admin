@@ -10,11 +10,36 @@ import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import { toast } from "react-toastify";
 import { getAllCompanies } from "@/services/companyService";
+import { getAllCategories } from "@/services/categoryService";
 import { CompanyType } from "@/types/company";
+import { CategoryApiResponse } from "@/types/category";
 
 const VacanciesCreate = () => {
   const navigate = useNavigate();
   const [companies, setCompanies] = useState<CompanyType[]>([]);
+  const [categories, setCategories] = useState<CategoryApiResponse>({
+    content: [],
+    pageable: {
+      pageNumber: 0,
+      pageSize: 0,
+      offset: 0,
+      paged: true,
+      unpaged: true,
+      last: true,
+      totalElements: 0,
+      totalPages: 0,
+      first: true,
+      size: 0,
+      number: 0,
+      sort: {
+        sorted: true,
+        empty: true,
+        unsorted: true,
+      },
+      numberOfElements: 0,
+      empty: true,
+    },
+  });
 
   const modules = {
     toolbar: [
@@ -29,8 +54,11 @@ const VacanciesCreate = () => {
 
   useEffect(() => {
     const fetchCompanies = async () => {
-      const data = await getAllCompanies();
-      setCompanies(data);
+      const companies = await getAllCompanies();
+      const categories = await getAllCategories();
+
+      setCategories(categories);
+      setCompanies(companies);
     };
     fetchCompanies();
   }, []);
@@ -39,6 +67,8 @@ const VacanciesCreate = () => {
     title: "",
     description: "",
     companyId: "",
+    jobCategoryId: "",
+    remoteAllowed: false,
     type: "FULL_TIME",
     status: "ACTIVE",
     location: "",
@@ -61,8 +91,8 @@ const VacanciesCreate = () => {
       navigate("/vacancies");
     },
     onError: (error: any) => {
-      console.error("Error creating vacancy:", error);
-      toast.error("Error creating vacancy");
+      console.error("Error creating vacancy:", error.message);
+      toast.error(error.message || "Failed to create vacancy");
     },
   });
 
@@ -95,24 +125,35 @@ const VacanciesCreate = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Transforma os dados para corresponder à API
+    // Extrai skills do ReactQuill (formato HTML) e converte para array de strings
+    const skillsArray = formData.requiredSkills
+      ? formData.requiredSkills
+          .replace(/<[^>]*>/g, "") // Remove HTML tags
+          .split(/[\n,]+/) // Divide por vírgulas ou quebras de linha
+          .map((skill) => skill.trim())
+          .filter((skill) => skill.length > 0)
+      : [];
+
+    const descriptionText = formData.description
+      ? formData.description.replace(/<[^>]*>/g, "").trim()
+      : "";
+
     const vacancyData = {
-      ...formData,
-      // Mapeia os campos que têm nomes diferentes
-      degreeRequired: formData.educationRequired,
-      // Converte valores numéricos
+      title: formData.title,
+      description: descriptionText,
+      companyId: formData.companyId,
+      jobCategoryId: formData.jobCategoryId,
+      type: formData.type,
+      status: formData.status,
+      cityId: formData.cityId,
       yearsOfExperience: Number(formData.yearsOfExperience),
-      minSalary: Number(formData.minSalary),
-      maxSalary: Number(formData.maxSalary),
-      // Remove campos não usados na API
-      educationRequired: "",
-      requiredSkills: "",
-      location: "",
-      requiredSkillIds: formData.requiredSkills
-        ? formData.requiredSkills
-            .split(",")
-            .map((skill) => parseInt(skill.trim()))
-        : [602], // Fallback para valor padrão
+      careerLevel: formData.careerLevel,
+      degreeRequired: formData.educationRequired,
+      minSalary: formData.minSalary,
+      maxSalary: formData.maxSalary,
+      applicationDeadline: formData.applicationDeadline,
+      genderPreference: formData.genderPreference,
+      skills: skillsArray,
     };
 
     mutation.mutate(vacancyData);
@@ -202,6 +243,24 @@ const VacanciesCreate = () => {
                       </Form.Select>
                     </Form.Group>
                   </Col>
+                  <Col md={6}>
+                    <Form.Group controlId="companyId">
+                      <Form.Label>Category *</Form.Label>
+                      <Form.Select
+                        name="jobCategoryId"
+                        value={formData.jobCategoryId}
+                        onChange={handleChange}
+                        required
+                      >
+                        <option value="">Select category</option>
+                        {categories.content.map((category) => (
+                          <option key={category.id} value={category.id}>
+                            {category.name}
+                          </option>
+                        ))}
+                      </Form.Select>
+                    </Form.Group>
+                  </Col>
                 </Row>
 
                 <Row className="mb-3">
@@ -244,7 +303,7 @@ const VacanciesCreate = () => {
                       />
                     </Form.Group>
                   </Col>
-                  <Col md={6}>
+                  <Col md={3}>
                     <Form.Group controlId="remoteAllowed">
                       <Form.Label>Remote Work</Form.Label>
                       <Form.Check

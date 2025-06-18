@@ -18,18 +18,9 @@ interface City {
   state: State;
 }
 
-interface JobCategory {
-  id: number;
-  name: string;
-  code: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
 interface RequiredSkill {
   id: number;
   name: string;
-  jobCategory: JobCategory;
   createdAt: string;
   updatedAt: string;
 }

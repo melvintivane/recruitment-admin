@@ -7,17 +7,18 @@ export interface VacancyCreateDto {
   title: string;
   description: string;
   companyId: string;
+  jobCategoryId: string;
   type: string;
   status: string;
   cityId: number;
   yearsOfExperience: number;
   careerLevel: string;
-  educationRequired: string;
+  degreeRequired: string;
   minSalary: number;
   maxSalary: number;
   applicationDeadline: string;
-  degreeRequired: string;
-  requiredSkillIds: number[];
+  genderPreference: string;
+  skills: string[];
 }
 
 

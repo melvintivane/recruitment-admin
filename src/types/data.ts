@@ -450,3 +450,11 @@ export interface PageableType {
   empty: boolean;
 }
 
+
+export interface ErrorResponse {
+  status: number;
+  message: string;
+  error?: string;
+  path?: string;
+  timestamp?: string;
+}    

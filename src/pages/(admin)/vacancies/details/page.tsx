@@ -83,7 +83,7 @@ const VacancyDetails = () => {
                   <Col md={6}>
                     <h6 className="fw-normal text-muted">Position Details</h6>
                     <div className="mb-2">
-                      <strong>Department:</strong> {vacancy.company.name}
+                      <strong>Company:</strong> {vacancy.company.name}
                     </div>
                     <div className="mb-2">
                       <strong>Location:</strong> {vacancy.city.name},{" "}
@@ -130,23 +130,24 @@ const VacancyDetails = () => {
                           <tr>
                             <td>Education</td>
                             <td>
-                              Bachelor's degree in Computer Science or related
-                              field
+                              {vacancy.degreeRequired
+                                ? vacancy.degreeRequired
+                                : "Not specified"}
                             </td>
                           </tr>
                           <tr>
                             <td>Experience</td>
-                            <td>3+ years in frontend development with React</td>
+                            <td>
+                              {vacancy.yearsOfExperience
+                                ? `${vacancy.yearsOfExperience}+ years of experience`
+                                : "Not specified"}
+                            </td>
                           </tr>
                           <tr>
                             <td>Skills</td>
-                            <td>JavaScript, TypeScript, HTML5, CSS3, Git</td>
-                          </tr>
-                          <tr>
-                            <td>Nice to Have</td>
                             <td>
-                              Experience with Redux, GraphQL, and testing
-                              frameworks
+                              {vacancy.requiredSkills.map((skill) => skill.name).join(", ") ||
+                                "Not specified"}
                             </td>
                           </tr>
                         </tbody>
@@ -176,16 +177,6 @@ const VacancyDetails = () => {
                             new Date(vacancy.applicationDeadline).setDate(
                               new Date(vacancy.applicationDeadline).getDate() +
                                 30
-                            )
-                          ).toLocaleDateString()}
-                        </span>
-                      </p>
-                      <p>
-                        <span className="fw-medium">Expected Start Date:</span>
-                        <span className="float-end">
-                          {new Date(
-                            new Date(vacancy.createdAt).setDate(
-                              new Date(vacancy.createdAt).getDate() + 45
                             )
                           ).toLocaleDateString()}
                         </span>

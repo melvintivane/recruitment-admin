@@ -25,7 +25,7 @@ interface VacancyFormData {
   remoteAllowed: boolean;
   type: string;
   status: string;
-  country: string;  // Changed from cityId
+  country: string; // Changed from cityId
   state: string;
   city: string;
   yearsOfExperience: number;
@@ -67,26 +67,26 @@ const VacancyEdit = () => {
   });
 
   const [formData, setFormData] = useState<VacancyFormData>({
-  id: "",
-  title: "",
-  description: "",
-  companyId: "",
-  jobCategoryId: "",
-  remoteAllowed: false,
-  type: "FULL_TIME",
-  status: "ACTIVE",
-  country: "",  // Changed from cityId: 0
-  state: "",
-  city: "",
-  yearsOfExperience: 0,
-  careerLevel: "JUNIOR",
-  degreeRequired: "",
-  genderPreference: "UNSPECIFIED",
-  minSalary: 0,
-  maxSalary: 0,
-  applicationDeadline: "",
-  requiredSkills: "",
-});
+    id: "",
+    title: "",
+    description: "",
+    companyId: "",
+    jobCategoryId: "",
+    remoteAllowed: false,
+    type: "FULL_TIME",
+    status: "ACTIVE",
+    country: "", // Changed from cityId: 0
+    state: "",
+    city: "",
+    yearsOfExperience: 0,
+    careerLevel: "JUNIOR",
+    degreeRequired: "",
+    genderPreference: "UNSPECIFIED",
+    minSalary: 0,
+    maxSalary: 0,
+    applicationDeadline: "",
+    requiredSkills: "",
+  });
 
   const modules = {
     toolbar: [
@@ -106,30 +106,30 @@ const VacancyEdit = () => {
     {
       enabled: !!id,
       onSuccess: (data: any) => {
-  setFormData({
-    id: data.id,
-    title: data.title,
-    description: data.description,
-    companyId: data.company.id,
-    jobCategoryId: data.jobCategory.id,
-    remoteAllowed: data.remoteAllowed || false,
-    type: data.type,
-    status: data.status,
-    country: data.country || "",  // Changed from city.id
-    state: data.state || "",
-    city: data.city || "",
-    yearsOfExperience: data.yearsOfExperience,
-    careerLevel: data.careerLevel,
-    degreeRequired: data.degreeRequired,
-    genderPreference: data.genderPreference,
-    minSalary: data.minSalary,
-    maxSalary: data.maxSalary,
-    applicationDeadline: data.applicationDeadline,
-    requiredSkills: data.requiredSkills
-      .map((s: { name: any }) => s.name)
-      .join(", "),
-  });
-},
+        setFormData({
+          id: data.id,
+          title: data.title,
+          description: data.description,
+          companyId: data.company.id,
+          jobCategoryId: data.jobCategory.id,
+          remoteAllowed: data.remoteAllowed || false,
+          type: data.type,
+          status: data.status,
+          country: data.country || "", // Changed from city.id
+          state: data.state || "",
+          city: data.city || "",
+          yearsOfExperience: data.yearsOfExperience,
+          careerLevel: data.careerLevel,
+          degreeRequired: data.degreeRequired,
+          genderPreference: data.genderPreference,
+          minSalary: data.minSalary,
+          maxSalary: data.maxSalary,
+          applicationDeadline: data.applicationDeadline,
+          requiredSkills: data.requiredSkills
+            .map((s: { name: any }) => s.name)
+            .join(", "),
+        });
+      },
       onError: () => {
         toast.error("Failed to load vacancy data");
         navigate("/vacancies");
@@ -191,15 +191,15 @@ const VacancyEdit = () => {
   };
 
   const handleLocationChange = (newLocation: {
-  country: string;
-  state: string;
-  city: string;
-}) => {
-  setFormData(prev => ({
-    ...prev,
-    ...newLocation
-  }));
-};
+    country: string;
+    state: string;
+    city: string;
+  }) => {
+    setFormData((prev) => ({
+      ...prev,
+      ...newLocation,
+    }));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -217,24 +217,24 @@ const VacancyEdit = () => {
       : "";
 
     const vacancyData = {
-  title: formData.title,
-  description: descriptionText,
-  companyId: formData.companyId,
-  jobCategoryId: formData.jobCategoryId,
-  type: formData.type,
-  status: formData.status,
-  country: formData.country,
-  state: formData.state,
-  city: formData.city,
-  yearsOfExperience: formData.yearsOfExperience,
-  careerLevel: formData.careerLevel,
-  degreeRequired: formData.degreeRequired,
-  minSalary: formData.minSalary,
-  maxSalary: formData.maxSalary,
-  applicationDeadline: formData.applicationDeadline,
-  genderPreference: formData.genderPreference,
-  requiredSkills: skillsArray,
-};
+      title: formData.title,
+      description: descriptionText,
+      companyId: formData.companyId,
+      jobCategoryId: formData.jobCategoryId,
+      type: formData.type,
+      status: formData.status,
+      country: formData.country,
+      state: formData.state,
+      city: formData.city,
+      yearsOfExperience: formData.yearsOfExperience,
+      careerLevel: formData.careerLevel,
+      degreeRequired: formData.degreeRequired,
+      minSalary: formData.minSalary,
+      maxSalary: formData.maxSalary,
+      applicationDeadline: formData.applicationDeadline,
+      genderPreference: formData.genderPreference,
+      requiredSkills: skillsArray,
+    };
 
     mutation.mutate({ id: id!, data: vacancyData });
   };
@@ -347,13 +347,14 @@ const VacancyEdit = () => {
                 </Row>
 
                 <Row className="mb-3">
-                  <LocationSelector 
+                  <LocationSelector
                     onLocationChange={handleLocationChange}
                     initialValues={{
                       country: formData.country,
                       state: formData.state,
-                      city: formData.city
+                      city: formData.city,
                     }}
+                    key={`${formData.country}-${formData.state}-${formData.city}`}
                   />
                   <Col md={6}>
                     <Form.Group controlId="remoteAllowed">

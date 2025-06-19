@@ -20,6 +20,11 @@ const LocationSelector = ({ onLocationChange, initialValues }: LocationSelectorP
   const [states, setStates] = useState<IState[]>([]);
   const [cities, setCities] = useState<ICity[]>([]);
   
+  // Estado para armazenar os códigos ISO
+  const [selectedCountryCode, setSelectedCountryCode] = useState<string>("");
+  const [selectedStateCode, setSelectedStateCode] = useState<string>("");
+  
+  // Estado para os nomes exibidos nos selects
   const [selectedCountry, setSelectedCountry] = useState<string>(initialValues?.country || "");
   const [selectedState, setSelectedState] = useState<string>(initialValues?.state || "");
   const [selectedCity, setSelectedCity] = useState<string>(initialValues?.city || "");
@@ -28,47 +33,83 @@ const LocationSelector = ({ onLocationChange, initialValues }: LocationSelectorP
     setCountries(Country.getAllCountries());
   }, []);
 
+  // Efeito para inicializar os valores
   useEffect(() => {
-    if (selectedCountry) {
-      const countryObj = countries.find(c => c.isoCode === selectedCountry);
-      const countryName = countryObj?.name || "";
-      const countryStates = State.getStatesOfCountry(selectedCountry);
-      setStates(countryStates);
+    if (initialValues?.country) {
+      const country = countries.find(c => c.name === initialValues.country);
+      if (country) {
+        setSelectedCountryCode(country.isoCode);
+        setSelectedCountry(country.name);
+        
+        if (initialValues.state) {
+          const countryStates = State.getStatesOfCountry(country.isoCode);
+          setStates(countryStates);
+          
+          const state = countryStates.find(s => s.name === initialValues.state);
+          if (state) {
+            setSelectedStateCode(state.isoCode);
+            setSelectedState(state.name);
+            
+            if (initialValues.city) {
+              const stateCities = City.getCitiesOfState(country.isoCode, state.isoCode);
+              setCities(stateCities);
+              setSelectedCity(initialValues.city);
+            }
+          }
+        }
+      }
+    }
+  }, [countries, initialValues]);
+
+  const handleCountryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const isoCode = e.target.value;
+    const country = countries.find(c => c.isoCode === isoCode);
+    
+    if (country) {
+      setSelectedCountryCode(isoCode);
+      setSelectedCountry(country.name);
+      setStates(State.getStatesOfCountry(isoCode));
+      setSelectedStateCode("");
       setSelectedState("");
       setCities([]);
       setSelectedCity("");
+      
       onLocationChange({
-        country: countryName,
+        country: country.name,
         state: "",
         city: ""
       });
     }
-  }, [selectedCountry]);
+  };
 
-  useEffect(() => {
-    if (selectedCountry && selectedState) {
-      const stateObj = states.find(s => s.isoCode === selectedState);
-      const stateName = stateObj?.name || "";
-      const stateCities = City.getCitiesOfState(selectedCountry, selectedState);
-      setCities(stateCities);
+  const handleStateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const isoCode = e.target.value;
+    const state = states.find(s => s.isoCode === isoCode);
+    
+    if (state) {
+      setSelectedStateCode(isoCode);
+      setSelectedState(state.name);
+      setCities(City.getCitiesOfState(selectedCountryCode, isoCode));
       setSelectedCity("");
+      
       onLocationChange({
-        country: countries.find(c => c.isoCode === selectedCountry)?.name || "",
-        state: stateName,
+        country: selectedCountry,
+        state: state.name,
         city: ""
       });
     }
-  }, [selectedState]);
+  };
 
-  useEffect(() => {
-    if (selectedCity) {
-      onLocationChange({
-        country: countries.find(c => c.isoCode === selectedCountry)?.name || "",
-        state: states.find(s => s.isoCode === selectedState)?.name || "",
-        city: selectedCity
-      });
-    }
-  }, [selectedCity]);
+  const handleCityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const cityName = e.target.value;
+    setSelectedCity(cityName);
+    
+    onLocationChange({
+      country: selectedCountry,
+      state: selectedState,
+      city: cityName
+    });
+  };
 
   return (
     <div className="mb-4">
@@ -79,8 +120,8 @@ const LocationSelector = ({ onLocationChange, initialValues }: LocationSelectorP
           <Form.Group controlId="country">
             <Form.Label>Country *</Form.Label>
             <Form.Select
-              value={selectedCountry}
-              onChange={(e) => setSelectedCountry(e.target.value)}
+              value={selectedCountryCode}
+              onChange={handleCountryChange}
               required
             >
               <option value="">Select Country</option>
@@ -97,10 +138,10 @@ const LocationSelector = ({ onLocationChange, initialValues }: LocationSelectorP
           <Form.Group controlId="state">
             <Form.Label>State *</Form.Label>
             <Form.Select
-              value={selectedState}
-              onChange={(e) => setSelectedState(e.target.value)}
+              value={selectedStateCode}
+              onChange={handleStateChange}
               required
-              disabled={!selectedCountry}
+              disabled={!selectedCountryCode}
             >
               <option value="">Select State</option>
               {states.map((state) => (
@@ -117,9 +158,9 @@ const LocationSelector = ({ onLocationChange, initialValues }: LocationSelectorP
             <Form.Label>City *</Form.Label>
             <Form.Select
               value={selectedCity}
-              onChange={(e) => setSelectedCity(e.target.value)}
+              onChange={handleCityChange}
               required
-              disabled={!selectedState}
+              disabled={!selectedStateCode}
             >
               <option value="">Select City</option>
               {cities.map((city, index) => (

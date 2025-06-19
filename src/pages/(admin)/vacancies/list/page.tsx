@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button, Card, CardBody, Col, Row } from "react-bootstrap";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "react-query";
 import { withSwal } from "react-sweetalert2";
 import PageMetaData from "@/components/PageTitle";
@@ -23,6 +23,7 @@ interface PaginationState {
 }
 
 const VacanciesList = withSwal(({ swal }: VacanciesListProps) => {
+  const navigate = useNavigate();
   const [pagination, setPagination] = useState<PaginationState>({
     page: 0,
     size: 10,
@@ -130,7 +131,10 @@ const VacanciesList = withSwal(({ swal }: VacanciesListProps) => {
       i++
     ) {
       buttons.push(
-        <li key={i} className={`page-item ${currentPage === i ? "active" : ""}`}>
+        <li
+          key={i}
+          className={`page-item ${currentPage === i ? "active" : ""}`}
+        >
           <button className="page-link" onClick={() => handlePageChange(i)}>
             {i + 1}
           </button>
@@ -224,12 +228,30 @@ const VacanciesList = withSwal(({ swal }: VacanciesListProps) => {
                         <td colSpan={8} className="text-center py-4">
                           <div className="flex flex-col items-center gap-4">
                             <div className="flex gap-2">
-                              <Spinner type="bordered" className="m-2" color="primary" />
-                              <Spinner type="bordered" className="m-2" color="secondary" />
-                              <Spinner type="bordered" className="m-2" color="success" />
-                              <Spinner type="bordered" className="m-2" color="danger" />
+                              <Spinner
+                                type="bordered"
+                                className="m-2"
+                                color="primary"
+                              />
+                              <Spinner
+                                type="bordered"
+                                className="m-2"
+                                color="secondary"
+                              />
+                              <Spinner
+                                type="bordered"
+                                className="m-2"
+                                color="success"
+                              />
+                              <Spinner
+                                type="bordered"
+                                className="m-2"
+                                color="danger"
+                              />
                             </div>
-                            <span className="text-center">Loading vacancies...</span>
+                            <span className="text-center">
+                              Loading vacancies...
+                            </span>
                           </div>
                         </td>
                       </tr>
@@ -237,22 +259,27 @@ const VacanciesList = withSwal(({ swal }: VacanciesListProps) => {
                       vacancies.content.map((vacancy) => (
                         <tr key={vacancy.id}>
                           <td>
-                            <Link to={`/vacancies/${vacancy.id}`} className="fw-medium">
+                            <Link
+                              to={`/vacancies/${vacancy.id}`}
+                              className="fw-medium"
+                            >
                               {vacancy.title}
                             </Link>
                           </td>
                           <td>{vacancy.company.name}</td>
-                          <td>{`${vacancy.city.name}, ${vacancy.city.state.name}`}</td>
+                          <td>{`${vacancy.country}, ${vacancy.city}`}</td>
                           <td>{vacancy.type}</td>
-                          <td>{new Date(vacancy.createdAt).toLocaleDateString()}</td>
+                          <td>
+                            {new Date(vacancy.createdAt).toLocaleDateString()}
+                          </td>
                           <td>
                             <span
                               className={`badge badge-soft-${
                                 vacancy.status === "CLOSED"
                                   ? "danger"
                                   : vacancy.status === "PENDING"
-                                  ? "warning"
-                                  : "success"
+                                    ? "warning"
+                                    : "success"
                               }`}
                             >
                               {vacancy.status}
@@ -261,11 +288,12 @@ const VacanciesList = withSwal(({ swal }: VacanciesListProps) => {
                           <td>{vacancy.applicationCount}</td>
                           <td>
                             <Button
-                              // as={Link}
-                              // to={`/vacancies/edit/${vacancy.id}`}
                               variant="soft-secondary"
                               size="sm"
                               className="me-2"
+                              onClick={() =>
+                                navigate(`/vacancies/edit/${vacancy.id}`)
+                              }
                             >
                               <IconifyIcon icon="bx:edit" className="fs-16" />
                             </Button>
@@ -320,7 +348,9 @@ const VacanciesList = withSwal(({ swal }: VacanciesListProps) => {
                   </div>
                   <Col sm="auto" className="mt-3 mt-sm-0">
                     <ul className="pagination pagination-rounded m-0">
-                      <li className={`page-item ${vacancies.first ? "disabled" : ""}`}>
+                      <li
+                        className={`page-item ${vacancies.first ? "disabled" : ""}`}
+                      >
                         <button
                           className="page-link"
                           onClick={() => handlePageChange(0)}
@@ -329,7 +359,9 @@ const VacanciesList = withSwal(({ swal }: VacanciesListProps) => {
                           <IconifyIcon icon="bx:left-arrow-alt" />
                         </button>
                       </li>
-                      <li className={`page-item ${vacancies.first ? "disabled" : ""}`}>
+                      <li
+                        className={`page-item ${vacancies.first ? "disabled" : ""}`}
+                      >
                         <button
                           className="page-link"
                           onClick={() => handlePageChange(pagination.page - 1)}
@@ -341,7 +373,9 @@ const VacanciesList = withSwal(({ swal }: VacanciesListProps) => {
 
                       {renderPaginationButtons()}
 
-                      <li className={`page-item ${vacancies.last ? "disabled" : ""}`}>
+                      <li
+                        className={`page-item ${vacancies.last ? "disabled" : ""}`}
+                      >
                         <button
                           className="page-link"
                           onClick={() => handlePageChange(pagination.page + 1)}
@@ -350,7 +384,9 @@ const VacanciesList = withSwal(({ swal }: VacanciesListProps) => {
                           Next
                         </button>
                       </li>
-                      <li className={`page-item ${vacancies.last ? "disabled" : ""}`}>
+                      <li
+                        className={`page-item ${vacancies.last ? "disabled" : ""}`}
+                      >
                         <button
                           className="page-link"
                           // onClick={() => handlePageChange(vacancies.totalPages - 1)}

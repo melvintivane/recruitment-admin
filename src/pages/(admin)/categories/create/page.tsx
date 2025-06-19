@@ -6,8 +6,10 @@ import ComponentContainerCard from "@/components/ComponentContainerCard";
 import { useMutation } from "react-query";
 import { createCategory } from "@/services/categoryService";
 import { useState } from "react";
+import { toast } from "react-toastify";
 
 const CategoriesCreate = () => {
+  
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     code: "",
@@ -23,6 +25,7 @@ const CategoriesCreate = () => {
     onError: (error: any) => {
       console.error("Error creating category:", error);
       // Add error handling here (e.g., toast notification)
+      toast.error("Failed to create category");
     },
   });
 

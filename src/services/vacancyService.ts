@@ -21,6 +21,25 @@ export interface VacancyCreateDto {
   skills: string[];
 }
 
+export interface VacancyUpdateDto {
+  title?: string;
+  description?: string;
+  companyId?: string;
+  jobCategoryId?: string;
+  remoteAllowed?: boolean;
+  type?: string;
+  status?: string;
+  cityId?: number;
+  yearsOfExperience?: number;
+  careerLevel?: string;
+  degreeRequired?: string;
+  genderPreference?: string;
+  minSalary?: number;
+  maxSalary?: number;
+  applicationDeadline?: string;
+  requiredSkills?: string[];
+}
+
 
 export const createVacancy = async ( vacancyData: VacancyCreateDto ): Promise<VacancyType> => {
 
@@ -48,21 +67,21 @@ export const getAllVacancies = async (page: number = 0, size: number = 10): Prom
 };
 
 
-export const getVacancyById = async (vacancyId: string): Promise<VacancyType> => {
+export const getVacancyById = async (id: string): Promise<VacancyType> => {
 
-  const response = await fetch(`${API_ENDPOINTS.VACANCIES}/${vacancyId}`);
+  const response = await fetch(`${API_ENDPOINTS.VACANCIES}/${id}`);
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch vacancy with ID: ${vacancyId}`);
+    throw new Error(`Failed to fetch vacancy with ID: ${id}`);
   }
 
   return response.json();
 };
 
 
-export const updateVacancy = async ({ vacancyId, data }: { vacancyId: string; data: VacancyType;}): Promise<VacancyType> => {
+export const updateVacancy = async ({ id, data }: { id: string; data: VacancyUpdateDto;}): Promise<VacancyUpdateDto> => {
 
-  const response = await fetch(`${API_ENDPOINTS.VACANCIES}/${vacancyId}`, {
+  const response = await fetch(`${API_ENDPOINTS.VACANCIES}/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -76,12 +95,12 @@ export const updateVacancy = async ({ vacancyId, data }: { vacancyId: string; da
 };
 
 
-export const deleteVacancy = async (vacancyId: string): Promise<void> => {
-  const response = await fetch(`${API_ENDPOINTS.VACANCIES}/${vacancyId}`, {
+export const deleteVacancy = async (id: string): Promise<void> => {
+  const response = await fetch(`${API_ENDPOINTS.VACANCIES}/${id}`, {
     method: "DELETE",
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to delete category with ID: ${vacancyId}`);
+    throw new Error(`Failed to delete category with ID: ${id}`);
   }
 };

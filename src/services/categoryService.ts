@@ -54,3 +54,17 @@ export const updateCategory = async ({ id, data }: { id: string; data: CategoryT
 
   return response.json();
 };
+
+export const deleteCategory = async (categoryId: string): Promise<void> => {
+
+  const response = await fetch(`${API_ENDPOINTS.CATEGORIES}/${categoryId}`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to delete category with ID: ${categoryId}`);
+  }
+  // No content to return on successful deletion
+  return;
+};

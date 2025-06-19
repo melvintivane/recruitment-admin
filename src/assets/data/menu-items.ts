@@ -40,6 +40,12 @@ export const MENU_ITEMS: MenuItemType[] = [
     url: "/vacancies",
   },
   {
+    key: "page-employers",
+    label: "Employeres",
+    icon: "solar:users-group-two-rounded-broken",
+    url: "/companies",
+  },
+  {
     key: "page-categories",
     label: "Categories",
     icon: "solar:layers-broken",

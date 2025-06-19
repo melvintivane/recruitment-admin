@@ -2,8 +2,7 @@ import { CategoryType, CategoryCreateDto, CategoryApiResponse } from "../types/c
 import { API_ENDPOINTS } from "../config/api";
 
 
-export const createCategory = async ( categoryData: CategoryCreateDto ): Promise<CategoryType> => {
-
+export const createCategory = async (categoryData: CategoryCreateDto): Promise<CategoryType> => {
   const response = await fetch(`${API_ENDPOINTS.CATEGORIES}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -11,11 +10,13 @@ export const createCategory = async ( categoryData: CategoryCreateDto ): Promise
   });
 
   if (!response.ok) {
-    throw new Error("Failed to create vacancy");
+    const errorBody = await response.json();
+    throw new Error(errorBody.message || "Erro ao criar categoria");
   }
 
   return response.json();
 };
+
 
 
 export const getAllCategories = async (page: number = 0, size: number = 10): Promise<CategoryApiResponse> => {
@@ -33,7 +34,8 @@ export const getCategoryById = async (categoryId: string): Promise<CategoryType>
   const response = await fetch(`${API_ENDPOINTS.CATEGORIES}/${categoryId}`);
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch category with ID: ${categoryId}`);
+    const errorBody = await response.json();
+    throw new Error(errorBody.message || "Erro ao buscar categoria");
   }
 
   return response.json();
@@ -49,7 +51,8 @@ export const updateCategory = async ({ id, data }: { id: string; data: CategoryT
   });
 
   if (!response.ok) {
-    throw new Error("Failed to update category");
+    const errorBody = await response.json();
+    throw new Error(errorBody.message || "Erro ao atualizar categoria");
   }
 
   return response.json();
@@ -63,7 +66,8 @@ export const deleteCategory = async (categoryId: string): Promise<void> => {
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to delete category with ID: ${categoryId}`);
+    const errorBody = await response.json();
+    throw new Error(errorBody.message || "Erro ao deletar categoria");
   }
   // No content to return on successful deletion
   return;

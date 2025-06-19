@@ -87,8 +87,7 @@ const VacanciesCreate = () => {
       navigate("/vacancies");
     },
     onError: (error: any) => {
-      console.error("Error creating vacancy:", error.message);
-      toast.error(error.message || "Failed to create vacancy");
+      toast.error(error.message);
     },
   });
 

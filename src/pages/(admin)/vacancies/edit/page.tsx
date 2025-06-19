@@ -135,8 +135,8 @@ const VacancyEdit = () => {
             .join(", "),
         });
       },
-      onError: () => {
-        toast.error("Failed to load vacancy data");
+      onError: (error: any) => {
+        toast.error(error.message);
         navigate("/vacancies");
       },
     }
@@ -165,7 +165,7 @@ const VacancyEdit = () => {
       navigate("/vacancies");
     },
     onError: (error: any) => {
-      toast.error(error.message || "Failed to update vacancy");
+      toast.error(error.message);
     },
   });
 

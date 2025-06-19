@@ -23,23 +23,28 @@ const VacanciesCreate = () => {
     pageable: {
       pageNumber: 0,
       pageSize: 0,
-      offset: 0,
-      paged: true,
-      unpaged: true,
-      last: true,
-      totalElements: 0,
-      totalPages: 0,
-      first: true,
-      size: 0,
-      number: 0,
       sort: {
         sorted: true,
         empty: true,
         unsorted: true,
       },
-      numberOfElements: 0,
-      empty: true,
+      offset: 0,
+      paged: true,
+      unpaged: true,
     },
+    sort: {
+      sorted: true,
+      empty: true,
+      unsorted: true,
+    },
+    last: true,
+    totalElements: 0,
+    totalPages: 0,
+    first: true,
+    size: 0,
+    number: 0,
+    numberOfElements: 0,
+    empty: true,
   });
 
   const modules = {
@@ -52,19 +57,7 @@ const VacanciesCreate = () => {
       ["clean"],
     ],
   };
-
-  useEffect(() => {
-    const fetchCompanies = async () => {
-      const companies = await getAllCompanies();
-      const categories = await getAllCategories();
-
-      setCategories(categories);
-      setCompanies(companies);
-    };
-    fetchCompanies();
-  }, []);
-
-
+  
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -98,6 +91,17 @@ const VacanciesCreate = () => {
       toast.error(error.message || "Failed to create vacancy");
     },
   });
+
+  useEffect(() => {
+    const fetchCompanies = async () => {
+      const companies = await getAllCompanies();
+      const categories = await getAllCategories();
+
+      setCategories(categories);
+      setCompanies(companies);
+    };
+    fetchCompanies();
+  }, []);
 
   const handleSkillChange = (value: string) => {
     setFormData((prev) => ({

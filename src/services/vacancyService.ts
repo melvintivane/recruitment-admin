@@ -10,7 +10,9 @@ export interface VacancyCreateDto {
   jobCategoryId: string;
   type: string;
   status: string;
-  cityId: number;
+  country: string;
+  state: string;
+  city: string;
   yearsOfExperience: number;
   careerLevel: string;
   degreeRequired: string;
@@ -29,7 +31,9 @@ export interface VacancyUpdateDto {
   remoteAllowed?: boolean;
   type?: string;
   status?: string;
-  cityId?: number;
+  country: string;
+  state: string;
+  city: string;
   yearsOfExperience?: number;
   careerLevel?: string;
   degreeRequired?: string;

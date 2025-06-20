@@ -10,7 +10,9 @@ export interface VacancyCreateDto {
   jobCategoryId: string;
   type: string;
   status: string;
-  cityId: number;
+  country: string;
+  state: string;
+  city: string;
   yearsOfExperience: number;
   careerLevel: string;
   degreeRequired: string;
@@ -19,6 +21,27 @@ export interface VacancyCreateDto {
   applicationDeadline: string;
   genderPreference: string;
   skills: string[];
+}
+
+export interface VacancyUpdateDto {
+  title?: string;
+  description?: string;
+  companyId?: string;
+  jobCategoryId?: string;
+  remoteAllowed?: boolean;
+  type?: string;
+  status?: string;
+  country: string;
+  state: string;
+  city: string;
+  yearsOfExperience?: number;
+  careerLevel?: string;
+  degreeRequired?: string;
+  genderPreference?: string;
+  minSalary?: number;
+  maxSalary?: number;
+  applicationDeadline?: string;
+  requiredSkills?: string[];
 }
 
 
@@ -30,8 +53,9 @@ export const createVacancy = async ( vacancyData: VacancyCreateDto ): Promise<Va
     body: JSON.stringify(vacancyData),
   });
 
-  if (!response.ok) {
-    throw new Error("Failed to create vacancy");
+ if (!response.ok) {
+    const errorBody = await response.json();
+    throw new Error(errorBody.message || "Erro ao criar vaga");
   }
 
   return response.json();
@@ -48,40 +72,45 @@ export const getAllVacancies = async (page: number = 0, size: number = 10): Prom
 };
 
 
-export const getVacancyById = async (vacancyId: string): Promise<VacancyType> => {
+export const getVacancyById = async (id: string): Promise<VacancyType> => {
 
-  const response = await fetch(`${API_ENDPOINTS.VACANCIES}/${vacancyId}`);
+  const response = await fetch(`${API_ENDPOINTS.VACANCIES}/${id}`);
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch vacancy with ID: ${vacancyId}`);
+    const errorBody = await response.json();
+    throw new Error(errorBody.message || "Erro ao buscar vaga com ID: " + id);
   }
 
   return response.json();
 };
 
 
-export const updateVacancy = async ({ vacancyId, data }: { vacancyId: string; data: VacancyType;}): Promise<VacancyType> => {
+export const updateVacancy = async ({ id, data }: { id: string; data: VacancyUpdateDto;}): Promise<VacancyUpdateDto> => {
 
-  const response = await fetch(`${API_ENDPOINTS.VACANCIES}/${vacancyId}`, {
+  const response = await fetch(`${API_ENDPOINTS.VACANCIES}/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
 
   if (!response.ok) {
-    throw new Error("Failed to update vacancy");
+    const errorBody = await response.json();
+    throw new Error(errorBody.message || "Erro ao atualizar vaga com ID: " + id);
   }
 
   return response.json();
 };
 
 
-export const deleteVacancy = async (vacancyId: string): Promise<void> => {
-  const response = await fetch(`${API_ENDPOINTS.VACANCIES}/${vacancyId}`, {
+export const deleteVacancy = async (id: string): Promise<void> => {
+  const response = await fetch(`${API_ENDPOINTS.VACANCIES}/${id}`, {
     method: "DELETE",
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to delete category with ID: ${vacancyId}`);
+    const errorBody = await response.json();
+    throw new Error(errorBody.message || "Erro ao deletar vaga com ID: " + id);
   }
+
+  return;
 };

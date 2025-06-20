@@ -12,18 +12,18 @@ import logoLight from "@/assets/images/logo-light-full.png";
 
 const VacancyDetails = () => {
   const [vacancy, setVacancy] = useState<VacancyType>();
-  const { vacancyId } = useParams();
+  const { id } = useParams();
   const navigate = useNavigate();
 
   useEffect(() => {
     (async () => {
-      if (vacancyId) {
-        const data = await getVacancyById(vacancyId);
+      if (id) {
+        const data = await getVacancyById(id);
         if (data) setVacancy(data);
         else navigate("/pages/error-404-alt");
       }
     })();
-  }, [vacancyId, navigate]);
+  }, [id, navigate]);
 
   return (
     <>
@@ -86,8 +86,9 @@ const VacancyDetails = () => {
                       <strong>Company:</strong> {vacancy.company.name}
                     </div>
                     <div className="mb-2">
-                      <strong>Location:</strong> {vacancy.city.name},{" "}
-                      {vacancy.city.state.name}
+                      <strong>Location:</strong> {vacancy.country},{" "}
+                      {vacancy.state},{" "}
+                      {vacancy.city ? vacancy.city : "Not specified"}
                     </div>
                     <div className="mb-2">
                       <strong>Type:</strong> {vacancy.type}

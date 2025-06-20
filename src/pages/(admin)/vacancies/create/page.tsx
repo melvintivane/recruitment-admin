@@ -1,18 +1,19 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import "react-quill/dist/quill.snow.css";
+import { useEffect, useState } from "react";
 import { Button, Col, Form, Row } from "react-bootstrap";
-import { useNavigate } from "react-router-dom";
-import PageMetaData from "@/components/PageTitle";
-import ComponentContainerCard from "@/components/ComponentContainerCard";
 import { useMutation } from "react-query";
 import { createVacancy } from "@/services/vacancyService";
-import { useEffect, useState } from "react";
-import ReactQuill from "react-quill";
-import "react-quill/dist/quill.snow.css";
-import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 import { getAllCompanies } from "@/services/companyService";
+import PageMetaData from "@/components/PageTitle";
+import ComponentContainerCard from "@/components/ComponentContainerCard";
+import ReactQuill from "react-quill";
+import { toast } from "react-toastify";
 import { getAllCategories } from "@/services/categoryService";
 import { CompanyType } from "@/types/company";
 import { CategoryApiResponse } from "@/types/category";
+import LocationSelector from "@/components/LocationSelector";
 
 const VacanciesCreate = () => {
   const navigate = useNavigate();
@@ -22,23 +23,28 @@ const VacanciesCreate = () => {
     pageable: {
       pageNumber: 0,
       pageSize: 0,
-      offset: 0,
-      paged: true,
-      unpaged: true,
-      last: true,
-      totalElements: 0,
-      totalPages: 0,
-      first: true,
-      size: 0,
-      number: 0,
       sort: {
         sorted: true,
         empty: true,
         unsorted: true,
       },
-      numberOfElements: 0,
-      empty: true,
+      offset: 0,
+      paged: true,
+      unpaged: true,
     },
+    sort: {
+      sorted: true,
+      empty: true,
+      unsorted: true,
+    },
+    last: true,
+    totalElements: 0,
+    totalPages: 0,
+    first: true,
+    size: 0,
+    number: 0,
+    numberOfElements: 0,
+    empty: true,
   });
 
   const modules = {
@@ -51,18 +57,7 @@ const VacanciesCreate = () => {
       ["clean"],
     ],
   };
-
-  useEffect(() => {
-    const fetchCompanies = async () => {
-      const companies = await getAllCompanies();
-      const categories = await getAllCategories();
-
-      setCategories(categories);
-      setCompanies(companies);
-    };
-    fetchCompanies();
-  }, []);
-
+  
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -71,8 +66,9 @@ const VacanciesCreate = () => {
     remoteAllowed: false,
     type: "FULL_TIME",
     status: "ACTIVE",
-    location: "",
-    cityId: 1004,
+    country: "",
+    state: "",
+    city: "",
     yearsOfExperience: 0,
     careerLevel: "JUNIOR",
     educationRequired: "",
@@ -91,10 +87,20 @@ const VacanciesCreate = () => {
       navigate("/vacancies");
     },
     onError: (error: any) => {
-      console.error("Error creating vacancy:", error.message);
-      toast.error(error.message || "Failed to create vacancy");
+      toast.error(error.message);
     },
   });
+
+  useEffect(() => {
+    const fetchCompanies = async () => {
+      const companies = await getAllCompanies();
+      const categories = await getAllCategories();
+
+      setCategories(categories);
+      setCompanies(companies);
+    };
+    fetchCompanies();
+  }, []);
 
   const handleSkillChange = (value: string) => {
     setFormData((prev) => ({
@@ -122,6 +128,17 @@ const VacanciesCreate = () => {
     }));
   };
 
+  const handleLocationChange = (newLocation: {
+    country: string;
+    state: string;
+    city: string;
+  }) => {
+    setFormData(prev => ({
+      ...prev,
+      ...newLocation // Atualiza country, state e city diretamente no formData
+    }));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -145,7 +162,9 @@ const VacanciesCreate = () => {
       jobCategoryId: formData.jobCategoryId,
       type: formData.type,
       status: formData.status,
-      cityId: formData.cityId,
+      country: formData.country,
+      state: formData.state,
+      city: formData.city,
       yearsOfExperience: Number(formData.yearsOfExperience),
       careerLevel: formData.careerLevel,
       degreeRequired: formData.educationRequired,
@@ -210,7 +229,7 @@ const VacanciesCreate = () => {
                 </Row>
 
                 <Row className="mb-3">
-                  <Col md={3}>
+                  <Col md={4}>
                     <Form.Group controlId="jobType">
                       <Form.Label>Job Type *</Form.Label>
                       <Form.Select
@@ -228,7 +247,7 @@ const VacanciesCreate = () => {
                       </Form.Select>
                     </Form.Group>
                   </Col>
-                  <Col md={3}>
+                  <Col md={4}>
                     <Form.Group controlId="status">
                       <Form.Label>Status *</Form.Label>
                       <Form.Select
@@ -243,7 +262,7 @@ const VacanciesCreate = () => {
                       </Form.Select>
                     </Form.Group>
                   </Col>
-                  <Col md={6}>
+                  <Col md={4}>
                     <Form.Group controlId="companyId">
                       <Form.Label>Category *</Form.Label>
                       <Form.Select
@@ -263,57 +282,14 @@ const VacanciesCreate = () => {
                   </Col>
                 </Row>
 
-                <Row className="mb-3">
-                  <Col md={3}>
-                    <Form.Group controlId="location">
-                      <Form.Label>Location *</Form.Label>
-                      <Form.Control
-                        type="text"
-                        placeholder="e.g. Maputo, Alto Maé"
-                        name="cityId"
-                        value={formData.cityId}
-                        onChange={handleChange}
-                        required
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col md={3}>
-                    <Form.Group controlId="location">
-                      <Form.Label>Location *</Form.Label>
-                      <Form.Control
-                        type="text"
-                        placeholder="e.g. Maputo, Alto Maé"
-                        name="cityId"
-                        value={formData.cityId}
-                        onChange={handleChange}
-                        required
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col md={3}>
-                    <Form.Group controlId="location">
-                      <Form.Label>Location *</Form.Label>
-                      <Form.Control
-                        type="text"
-                        placeholder="e.g. Maputo, Alto Maé"
-                        name="cityId"
-                        value={formData.cityId}
-                        onChange={handleChange}
-                        required
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col md={3}>
-                    <Form.Group controlId="remoteAllowed">
-                      <Form.Label>Remote Work</Form.Label>
-                      <Form.Check
-                        type="switch"
-                        id="remoteSwitch"
-                        label="Allow remote work"
-                      />
-                    </Form.Group>
-                  </Col>
-                </Row>
+                <LocationSelector 
+                  onLocationChange={handleLocationChange}
+                  initialValues={{
+                    country: formData.country,
+                    state: formData.state,
+                    city: formData.city
+                  }}
+                />
               </div>
 
               {/* Requirements */}
@@ -321,7 +297,7 @@ const VacanciesCreate = () => {
                 <h5 className="mb-3">Requirements</h5>
 
                 <Row className="mb-3">
-                  <Col md={3}>
+                  <Col md={4}>
                     <Form.Group controlId="yearsOfExperience">
                       <Form.Label>Years of Experience *</Form.Label>
                       <Form.Control
@@ -335,7 +311,7 @@ const VacanciesCreate = () => {
                       />
                     </Form.Group>
                   </Col>
-                  <Col md={3}>
+                  <Col md={4}>
                     <Form.Group controlId="careerLevel">
                       <Form.Label>Career Level *</Form.Label>
                       <Form.Select
@@ -352,7 +328,7 @@ const VacanciesCreate = () => {
                       </Form.Select>
                     </Form.Group>
                   </Col>
-                  <Col md={3}>
+                  <Col md={4}>
                     <Form.Group controlId="genderPreference">
                       <Form.Label>Gender Preference</Form.Label>
                       <Form.Select
@@ -405,7 +381,7 @@ const VacanciesCreate = () => {
                 <h5 className="mb-3">Compensation</h5>
 
                 <Row className="mb-3">
-                  <Col md={3}>
+                  <Col md={4}>
                     <Form.Group controlId="minSalary">
                       <Form.Label>Minimum Salary *</Form.Label>
                       <Form.Control
@@ -419,7 +395,7 @@ const VacanciesCreate = () => {
                       />
                     </Form.Group>
                   </Col>
-                  <Col md={3}>
+                  <Col md={4}>
                     <Form.Group controlId="maxSalary">
                       <Form.Label>Maximum Salary *</Form.Label>
                       <Form.Control
@@ -452,7 +428,7 @@ const VacanciesCreate = () => {
                 <h5 className="mb-3">Dates</h5>
 
                 <Row className="mb-3">
-                  <Col md={6}>
+                  <Col md={4}>
                     <Form.Group controlId="applicationDeadline">
                       <Form.Label>Application Deadline *</Form.Label>
                       <Form.Control

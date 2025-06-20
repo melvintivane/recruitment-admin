@@ -1,22 +1,4 @@
 // Base types for nested objects
-interface Country {
-  id: number;
-  shortName: string;
-  name: string;
-  phoneCode: string;
-}
-
-interface State {
-  id: number;
-  name: string;
-  country: Country;
-}
-
-interface City {
-  id: number;
-  name: string;
-  state: State;
-}
 
 interface RequiredSkill {
   id: number;
@@ -34,7 +16,9 @@ interface Company {
   email: string;
   website?: string;
   linkedin?: string;
-  city: City;
+  country: string;
+  state: string;
+  city: string;
   industry: string;
   foundedYear: number;
   numberOfEmployees: number;
@@ -63,7 +47,9 @@ export type VacancyType = {
   maxSalary: number;
   requiredSkills: RequiredSkill[];
   company: Company;
-  city: City;
+  country: string;
+  state: string;
+  city: string;
   createdAt: string;
   updatedAt: string;
 }

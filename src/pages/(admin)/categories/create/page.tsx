@@ -6,8 +6,10 @@ import ComponentContainerCard from "@/components/ComponentContainerCard";
 import { useMutation } from "react-query";
 import { createCategory } from "@/services/categoryService";
 import { useState } from "react";
+import { toast } from "react-toastify";
 
 const CategoriesCreate = () => {
+  
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     code: "",
@@ -18,11 +20,11 @@ const CategoriesCreate = () => {
 
   const mutation = useMutation(createCategory, {
     onSuccess: () => {
+      toast.success("Category created successfully!");
       navigate("/categories");
     },
     onError: (error: any) => {
-      console.error("Error creating category:", error);
-      // Add error handling here (e.g., toast notification)
+      toast.error(error.message);
     },
   });
 
@@ -62,14 +64,14 @@ const CategoriesCreate = () => {
                 <Row className="mb-3">
                   <Col md={6}>
                     <Form.Group controlId="code">
-                      <Form.Label>Code *</Form.Label>
+                      <Form.Label>Code</Form.Label>
                       <Form.Control
                         type="text"
                         name="code"
-                        placeholder="e.g. CAT-001"
+                        placeholder="e.g. CAT-001, generated automatically"
                         value={formData.code}
                         onChange={handleChange}
-                        required
+                        disabled
                       />
                     </Form.Group>
                   </Col>
@@ -84,23 +86,6 @@ const CategoriesCreate = () => {
                         onChange={handleChange}
                         required
                       />
-                    </Form.Group>
-                  </Col>
-                </Row>
-
-                <Row className="mb-3">
-                  <Col md={6}>
-                    <Form.Group controlId="status">
-                      <Form.Label>Status *</Form.Label>
-                      <Form.Select
-                        name="status"
-                        value={formData.status}
-                        onChange={handleChange}
-                        required
-                      >
-                        <option value="ACTIVE">Active</option>
-                        <option value="INACTIVE">Inactive</option>
-                      </Form.Select>
                     </Form.Group>
                   </Col>
                 </Row>

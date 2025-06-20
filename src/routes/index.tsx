@@ -1,7 +1,7 @@
 import BlogPosts from "@/pages/(admin)/blog/page";
 import CategoriesCreate from "@/pages/(admin)/categories/create/page";
 import CategoriesList from "@/pages/(admin)/categories/list/page";
-// import VacancyEdit from "@/pages/(admin)/vacancies/edit/page";
+import VacancyEdit from "@/pages/(admin)/vacancies/edit/page";
 import { lazy } from "react";
 import { Navigate, type RouteProps } from "react-router-dom";
 
@@ -79,14 +79,14 @@ const appsRoutes: RoutesProps[] = [
   },
   {
     name: "Vacancy Details",
-    path: "/vacancies/:vacancyId",
+    path: "/vacancies/:id",
     element: <VacancyDetails />,
   },
-  // {
-  //   name: "Vacancy Edit",
-  //   path: "/vacancies/edit/:vacancyId",
-  //   element: <VacancyEdit />,
-  // },
+  {
+    name: "Vacancy Edit",
+    path: "/vacancies/edit/:id",
+    element: <VacancyEdit />,
+  },
   {
     name:"Employer List",
     path:"/companies",

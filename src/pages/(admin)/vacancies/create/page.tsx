@@ -11,13 +11,40 @@ import ComponentContainerCard from "@/components/ComponentContainerCard";
 import ReactQuill from "react-quill";
 import { toast } from "react-toastify";
 import { getAllCategories } from "@/services/categoryService";
-import { CompanyType } from "@/types/company";
+import { CompanyApiResponse } from "@/types/company";
 import { CategoryApiResponse } from "@/types/category";
 import LocationSelector from "@/components/LocationSelector";
 
 const VacanciesCreate = () => {
   const navigate = useNavigate();
-  const [companies, setCompanies] = useState<CompanyType[]>([]);
+  const [companies, setCompanies] = useState<CompanyApiResponse>({
+    content: [],
+    pageable: {
+      pageNumber: 0,
+      pageSize: 0,
+      sort: {
+        sorted: true,
+        empty: true,
+        unsorted: true,
+      },
+      offset: 0,
+      paged: true,
+      unpaged: true,
+    },
+    sort: {
+      sorted: true,
+      empty: true,
+      unsorted: true,
+    },
+    last: true,
+    totalElements: 0,
+    totalPages: 0,
+    first: true,
+    size: 0,
+    number: 0,
+    numberOfElements: 0,
+    empty: true,
+  });
   const [categories, setCategories] = useState<CategoryApiResponse>({
     content: [],
     pageable: {
@@ -218,7 +245,7 @@ const VacanciesCreate = () => {
                         required
                       >
                         <option value="">Select company</option>
-                        {companies.map((company) => (
+                        {companies.content.map((company) => (
                           <option key={company.id} value={company.id}>
                             {company.name}
                           </option>

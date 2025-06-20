@@ -6,7 +6,7 @@ import { CompanyApiResponse } from "@/types/company";
 import { useState } from "react";
 import { Button, Card, CardBody, Col, Row } from "react-bootstrap";
 import { useMutation, useQuery, useQueryClient } from "react-query";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { withSwal } from "react-sweetalert2";
 import { SweetAlertResult } from "sweetalert2";
 
@@ -23,6 +23,8 @@ interface PaginationState {
 }
 
 const CompaniesList = withSwal(({ swal }: CompaniesListProps) => {
+
+  const navigate = useNavigate();
   const [pagination, setPagination] = useState<PaginationState>({
     page: 0,
     size: 10,
@@ -243,7 +245,7 @@ const CompaniesList = withSwal(({ swal }: CompaniesListProps) => {
                           <td>{company.industry}</td>
                           <td>{company.numberOfEmployees}</td>
                           <td>{company.foundedYear}</td>
-                          <td>{company.city?.name || 'N/A'}</td>
+                          <td>{company.country || 'N/A'}</td>
                           <td>
                             {company.website ? (
                               <a href={company.website} target="_blank" rel="noopener noreferrer">
@@ -255,8 +257,7 @@ const CompaniesList = withSwal(({ swal }: CompaniesListProps) => {
                           </td>
                           <td>
                             <Button
-                              as={Link}
-                              to={`/companies/edit/${company.id}`}
+                              onClick={() => navigate(`/companies/edit/${company.id}`)}
                               variant="soft-secondary"
                               size="sm"
                               className="me-2"
@@ -266,7 +267,7 @@ const CompaniesList = withSwal(({ swal }: CompaniesListProps) => {
                             <Button
                               variant="soft-danger"
                               size="sm"
-                              onClick={() => handleDelete(company.id)}
+                              onClick={() => handleDelete(company.id?.toString())}
                               disabled={deleteMutation.isLoading}
                             >
                               <IconifyIcon icon="bx:trash" className="fs-16" />

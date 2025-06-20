@@ -1,14 +1,39 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import ComponentContainerCard from "@/components/ComponentContainerCard";
+import LocationSelector from "@/components/LocationSelector";
 import PageMetaData from "@/components/PageTitle";
 import { getCompanyById, updateCompany } from "@/services/companyService";
 import { CompanyType, CompanyUpdateDto } from "@/types/company";
 import { useState } from "react";
-import { Spinner as BootstrapSpinner, Button, Col, Form, Row } from "react-bootstrap";
+import {
+  Spinner as BootstrapSpinner,
+  Button,
+  Col,
+  Form,
+  Row,
+} from "react-bootstrap";
 import { useMutation, useQuery } from "react-query";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
+
+interface CompanyFormData {
+  name: string;
+  slug: string;
+  mobileNumber: string;
+  email: string;
+  website: string;
+  linkedin: string;
+  country: string;
+  state: string;
+  city: string;
+  industry: string;
+  foundedYear: number;
+  numberOfEmployees: number;
+  businessType: string;
+  description: string;
+}
 
 const CompanyEdit = () => {
   const { companyId } = useParams<{ companyId: string }>();
@@ -27,15 +52,16 @@ const CompanyEdit = () => {
   };
 
   // Form state with TypeScript interface
-  const [formData, setFormData] = useState<CompanyUpdateDto>({
+  const [formData, setFormData] = useState<CompanyFormData>({
     name: "",
     slug: "",
-    picture: "",
     mobileNumber: "",
     email: "",
     website: "",
     linkedin: "",
-    city: { id: "" },
+    country: "",
+    state: "",
+    city: "",
     industry: "",
     foundedYear: new Date().getFullYear(),
     numberOfEmployees: 0,
@@ -44,7 +70,11 @@ const CompanyEdit = () => {
   });
 
   // Fetch company data
-  const { data: companyData, isLoading: isFetching, error: fetchError } = useQuery<CompanyType, Error>(
+  const {
+    data: companyData,
+    isLoading: isFetching,
+    error: fetchError,
+  } = useQuery<CompanyType, Error>(
     ["company", companyId],
     () => {
       if (!companyId) throw new Error("Company ID is required");
@@ -56,12 +86,13 @@ const CompanyEdit = () => {
         setFormData({
           name: data.name,
           slug: data.slug,
-          picture: data.picture || "",
           mobileNumber: data.mobileNumber,
           email: data.email,
-          website: data.website || "",
-          linkedin: data.linkedin || "",
-          city: { id: data.city?.id || "" },
+          website: data.website,
+          linkedin: data.linkedin,
+          country: data.country,
+          state: data.state,
+          city: data.city,
           industry: data.industry,
           foundedYear: data.foundedYear,
           numberOfEmployees: data.numberOfEmployees,
@@ -72,26 +103,20 @@ const CompanyEdit = () => {
       onError: (error) => {
         toast.error(error.message || "Failed to load company data");
         navigate("/companies");
-      }
+      },
     }
   );
 
   // Update company mutation
-  const mutation = useMutation<CompanyType, Error, CompanyUpdateDto>(
-    (updatedData) => {
-      if (!companyId) throw new Error("Company ID is required");
-      return updateCompany({ companyId, data: updatedData });
+  const mutation = useMutation(updateCompany, {
+    onSuccess: () => {
+      toast.success("Company updated successfully!");
+      navigate("/companies");
     },
-    {
-      onSuccess: () => {
-        toast.success("Company updated successfully!");
-        navigate("/companies");
-      },
-      onError: (error) => {
-        toast.error(error.message || "Failed to update company");
-      },
-    }
-  );
+    onError: (error: any) => {
+      toast.error(error.message);
+    },
+  });
 
   // Handle description change for Quill editor
   const handleDescriptionChange = (value: string) => {
@@ -103,36 +128,51 @@ const CompanyEdit = () => {
 
   // Handle form field changes
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
     const { name, value } = e.target;
-    
-    if (name === "cityId") {
-      setFormData(prev => ({
-        ...prev,
-        city: {
-          id: value
-        }
-      }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        [name]: value,
-      }));
-    }
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleLocationChange = (newLocation: {
+    country: string;
+    state: string;
+    city: string;
+  }) => {
+    setFormData((prev) => ({
+      ...prev,
+      ...newLocation, // Atualiza country, state e city diretamente no formData
+    }));
   };
 
   // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    const updatedData: CompanyUpdateDto = {
-      ...formData,
-      foundedYear: Number(formData.foundedYear),
-      numberOfEmployees: Number(formData.numberOfEmployees),
-    };
 
-    mutation.mutate(updatedData);
+    const updatedData = {
+      name: formData.name,
+      slug: formData.slug,
+      mobileNumber: formData.mobileNumber,
+      email: formData.email,
+      website: formData.website,
+      linkedin: formData.linkedin,
+      country: formData.country,
+      state: formData.state,
+      city: formData.city,
+      industry: formData.industry,
+      foundedYear: formData.foundedYear,
+      numberOfEmployees: formData.numberOfEmployees,
+      businessType: formData.businessType,
+      description: formData.description,
+    } as CompanyUpdateDto;
+
+    mutation.mutate({ companyId: companyId!, data: updatedData });
   };
 
   // Loading state
@@ -155,13 +195,13 @@ const CompanyEdit = () => {
 
   return (
     <>
-      <PageMetaData title={`Edit ${formData.name || 'Company'}`} />
+      <PageMetaData title={`Edit ${formData.name || "Company"}`} />
 
       <Row>
         <Col>
           <ComponentContainerCard
             id="company-edit-form"
-            title={`Edit ${formData.name || 'Company'}`}
+            title={`Edit ${formData.name || "Company"}`}
             description="Update the company information below"
           >
             <Form onSubmit={handleSubmit}>
@@ -198,18 +238,6 @@ const CompanyEdit = () => {
 
                 <Row className="mb-3">
                   <Col md={6}>
-                    <Form.Group controlId="picture" className="mb-3">
-                      <Form.Label>Logo URL</Form.Label>
-                      <Form.Control
-                        type="url"
-                        name="picture"
-                        value={formData.picture}
-                        onChange={handleChange}
-                        placeholder="https://example.com/logo.jpg"
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col md={6}>
                     <Form.Group controlId="mobileNumber" className="mb-3">
                       <Form.Label>Phone Number *</Form.Label>
                       <Form.Control
@@ -238,20 +266,17 @@ const CompanyEdit = () => {
                       />
                     </Form.Group>
                   </Col>
-                  <Col md={6}>
-                    <Form.Group controlId="cityId" className="mb-3">
-                      <Form.Label>City ID *</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="cityId"
-                        value={formData.city.id}
-                        onChange={handleChange}
-                        required
-                        placeholder="Enter city UUID"
-                      />
-                    </Form.Group>
-                  </Col>
                 </Row>
+
+                <LocationSelector
+                  onLocationChange={handleLocationChange}
+                  initialValues={{
+                    country: formData.country,
+                    state: formData.state,
+                    city: formData.city,
+                  }}
+                  key={`${formData.country}-${formData.state}-${formData.city}`}
+                />
               </div>
 
               {/* Company Details Section */}

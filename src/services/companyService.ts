@@ -10,14 +10,32 @@ export interface CompanyCreateDto {
   email: string;
   website: string;
   linkedin: string;
-  city: {
-    id: string;
-  };
+  country: string
+  state: string;
+  city: string;
   industry: string;
   foundedYear: number;
   numberOfEmployees: number;
   businessType: string;
   description: string;
+}
+
+export interface CompanyUpdateDto {
+  name?: string;
+  slug?: string;
+  picture?: string;
+  mobileNumber?: string;
+  email?: string;
+  website?: string;
+  linkedin?: string;
+  country?: string
+  state?: string;
+  city?: string;
+  industry?: string;
+  foundedYear?: number;
+  numberOfEmployees?: number;
+  businessType?: string;
+  description?: string;
 }
 
 export const getAllCompanies = async (page: number = 0, size: number = 10): Promise<CompanyApiResponse> => {
@@ -26,7 +44,8 @@ export const getAllCompanies = async (page: number = 0, size: number = 10): Prom
   );
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch companies: ${response.status}`);
+    const errorBody = await response.json();
+    throw new Error(errorBody.message || "Failed to fetch companies");
   }
 
   return response.json();
@@ -36,7 +55,8 @@ export const getCompanyById = async (companyId: string): Promise<CompanyType> =>
   const response = await fetch(`${API_ENDPOINTS.COMPANIES}/${companyId}`);
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch company with ID: ${companyId}`);
+    const errorBody = await response.json();
+    throw new Error(errorBody.message || `Failed to fetch company with ID: ${companyId}`);
   }
 
   return response.json();
@@ -50,19 +70,14 @@ export const createCompany = async (companyData: CompanyCreateDto): Promise<Comp
   });
 
   if (!response.ok) {
-    throw new Error("Failed to create company");
+    const errorBody = await response.json();
+    throw new Error(errorBody.message || "Failed to create company");
   }
 
   return response.json();
 };
 
-export const updateCompany = async ({ 
-  companyId, 
-  data 
-}: { 
-  companyId: string; 
-  data: CompanyType;
-}): Promise<CompanyType> => {
+export const updateCompany = async ({ companyId, data }: { companyId: string; data: CompanyUpdateDto; }): Promise<CompanyUpdateDto> => {
   const response = await fetch(`${API_ENDPOINTS.COMPANIES}/${companyId}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
@@ -70,7 +85,8 @@ export const updateCompany = async ({
   });
 
   if (!response.ok) {
-    throw new Error("Failed to update company");
+    const errorBody = await response.json();
+    throw new Error(errorBody.message || `Failed to update company with ID: ${companyId}`);
   }
 
   return response.json();
@@ -82,6 +98,9 @@ export const deleteCompany = async (companyId: string): Promise<void> => {
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to delete company with ID: ${companyId}`);
+    const errorBody = await response.json();
+    throw new Error(errorBody.message || `Failed to delete company with ID: ${companyId}`);
   }
+  
+  return;
 };

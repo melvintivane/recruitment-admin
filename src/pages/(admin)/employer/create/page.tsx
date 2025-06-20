@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import ComponentContainerCard from "@/components/ComponentContainerCard";
+import LocationSelector from "@/components/LocationSelector";
 import PageMetaData from "@/components/PageTitle";
 import { createCompany } from "@/services/companyService";
 import { useState } from "react";
@@ -32,9 +33,9 @@ const CompaniesCreate = () => {
     email: "",
     website: "",
     linkedin: "",
-    city: {
-      id: ""
-    },
+    country: "",
+    state: "",
+    city: "",
     industry: "",
     foundedYear: new Date().getFullYear(),
     numberOfEmployees: 0,
@@ -64,22 +65,22 @@ const CompaniesCreate = () => {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
-    
-    // Handle nested city.id separately
-    if (name === "cityId") {
-      setFormData(prev => ({
-        ...prev,
-        city: {
-       
-          id: value
-        }
-      }));
-    } else {
-      setFormData((prev: any) => ({
-        ...prev,
-        [name]: value,
-      }));
-    }
+
+    setFormData((prev: any) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleLocationChange = (newLocation: {
+    country: string;
+    state: string;
+    city: string;
+  }) => {
+    setFormData(prev => ({
+      ...prev,
+      ...newLocation
+    }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -126,13 +127,13 @@ const CompaniesCreate = () => {
                     </Form.Group>
                   </Col>
                   <Col md={6}>
-                    <Form.Group controlId="slug">
-                      <Form.Label>Slug *</Form.Label>
+                    <Form.Group controlId="email">
+                      <Form.Label>Email *</Form.Label>
                       <Form.Control
-                        type="text"
-                        name="slug"
-                        placeholder="e.g. tech-solutions-inc"
-                        value={formData.slug}
+                        type="email"
+                        name="email"
+                        placeholder="contact@example.com"
+                        value={formData.email}
                         onChange={handleChange}
                         required
                       />
@@ -141,18 +142,6 @@ const CompaniesCreate = () => {
                 </Row>
 
                 <Row className="mb-3">
-                  <Col md={6}>
-                    <Form.Group controlId="picture">
-                      <Form.Label>Logo URL</Form.Label>
-                      <Form.Control
-                        type="url"
-                        name="picture"
-                        placeholder="https://example.com/logo.jpg"
-                        value={formData.picture}
-                        onChange={handleChange}
-                      />
-                    </Form.Group>
-                  </Col>
                   <Col md={6}>
                     <Form.Group controlId="mobileNumber">
                       <Form.Label>Phone Number *</Form.Label>
@@ -161,22 +150,6 @@ const CompaniesCreate = () => {
                         name="mobileNumber"
                         placeholder="+5511999999999"
                         value={formData.mobileNumber}
-                        onChange={handleChange}
-                        required
-                      />
-                    </Form.Group>
-                  </Col>
-                </Row>
-
-                <Row className="mb-3">
-                  <Col md={6}>
-                    <Form.Group controlId="email">
-                      <Form.Label>Email *</Form.Label>
-                      <Form.Control
-                        type="email"
-                        name="email"
-                        placeholder="contact@example.com"
-                        value={formData.email}
                         onChange={handleChange}
                         required
                       />
@@ -209,20 +182,15 @@ const CompaniesCreate = () => {
                       />
                     </Form.Group>
                   </Col>
-                  <Col md={6}>
-                    <Form.Group controlId="cityId">
-                      <Form.Label>City ID *</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="cityId"
-                        placeholder="Enter city UUID"
-                        value={formData.city.id}
-                        onChange={handleChange}
-                        required
-                      />
-                    </Form.Group>
-                  </Col>
                 </Row>
+                <LocationSelector 
+                  onLocationChange={handleLocationChange}
+                  initialValues={{
+                    country: formData.country,
+                    state: formData.state,
+                    city: formData.city
+                  }}
+                />
               </div>
 
               {/* Company Details */}

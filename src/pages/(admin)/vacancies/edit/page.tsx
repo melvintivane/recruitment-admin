@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { getAllCompanies } from "@/services/companyService";
 import { getAllCategories } from "@/services/categoryService";
-import { CompanyType } from "@/types/company";
+import { CompanyApiResponse } from "@/types/company";
 import { CategoryApiResponse } from "@/types/category";
 import ComponentContainerCard from "@/components/ComponentContainerCard";
 import PageMetaData from "@/components/PageTitle";
@@ -41,7 +41,34 @@ interface VacancyFormData {
 const VacancyEdit = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [companies, setCompanies] = useState<CompanyType[]>([]);
+  const [companies, setCompanies] = useState<CompanyApiResponse>({
+    content: [],
+    pageable: {
+      pageNumber: 0,
+      pageSize: 0,
+      sort: {
+        sorted: true,
+        empty: true,
+        unsorted: true,
+      },
+      offset: 0,
+      paged: true,
+      unpaged: true,
+    },
+    sort: {
+      sorted: true,
+      empty: true,
+      unsorted: true,
+    },
+    last: true,
+    totalElements: 0,
+    totalPages: 0,
+    first: true,
+    size: 0,
+    number: 0,
+    numberOfElements: 0,
+    empty: true,
+  });
   const [categories, setCategories] = useState<CategoryApiResponse>({
     content: [],
     pageable: {
@@ -80,7 +107,7 @@ const VacancyEdit = () => {
     remoteAllowed: false,
     type: "FULL_TIME",
     status: "ACTIVE",
-    country: "", // Changed from cityId: 0
+    country: "",
     state: "",
     city: "",
     yearsOfExperience: 0,
@@ -288,7 +315,7 @@ const VacancyEdit = () => {
                         required
                       >
                         <option value="">Select company</option>
-                        {companies.map((company) => (
+                        {companies.content.map((company) => (
                           <option key={company.id} value={company.id}>
                             {company.name}
                           </option>

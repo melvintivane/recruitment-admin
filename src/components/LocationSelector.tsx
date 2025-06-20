@@ -136,11 +136,10 @@ const LocationSelector = ({ onLocationChange, initialValues }: LocationSelectorP
 
         <Col md={4}>
           <Form.Group controlId="state">
-            <Form.Label>State *</Form.Label>
+            <Form.Label>State</Form.Label>
             <Form.Select
               value={selectedStateCode}
               onChange={handleStateChange}
-              required
               disabled={!selectedCountryCode}
             >
               <option value="">Select State</option>
@@ -155,11 +154,10 @@ const LocationSelector = ({ onLocationChange, initialValues }: LocationSelectorP
 
         <Col md={4}>
           <Form.Group controlId="city">
-            <Form.Label>City *</Form.Label>
+            <Form.Label>City</Form.Label>
             <Form.Select
               value={selectedCity}
               onChange={handleCityChange}
-              required
               disabled={!selectedStateCode}
             >
               <option value="">Select City</option>

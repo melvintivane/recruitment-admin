@@ -11,6 +11,10 @@ import { Navigate, type RouteProps } from "react-router-dom";
 const VacanciesList = lazy(() => import("@/pages/(admin)/vacancies/list/page"));
 const VacanciesCreate = lazy(() => import("@/pages/(admin)/vacancies/create/page"));
 const VacancyDetails = lazy(() => import("@/pages/(admin)/vacancies/details/page"));
+const EmployerList = lazy(() => import("@/pages/(admin)/employer/list/page"));
+const EmployerCreate = lazy(() => import("@/pages/(admin)/employer/create/page"));
+const EmployerDetails = lazy(() => import("@/pages/(admin)/employer/details/page"));
+const EmployerEdit = lazy(() => import("@/pages/(admin)/employer/edit/page"));
 
 // Dashboard Routes
 const Analytics = lazy(() => import("@/pages/(admin)/dashboard/analytics/page"));
@@ -82,6 +86,26 @@ const appsRoutes: RoutesProps[] = [
     name: "Vacancy Edit",
     path: "/vacancies/edit/:id",
     element: <VacancyEdit />,
+  },
+  {
+    name:"Employer List",
+    path:"/companies",
+    element:<EmployerList/>
+  },
+  {
+    name:"Employer Create",
+    path:"/companies/create",
+    element:<EmployerCreate/>
+  },
+  {
+    name:"Employer Details",
+    path:"/companies/:companyId",
+    element:<EmployerDetails/>
+  },
+  {
+    name:"Employer Edit",
+    path:"/companies/edit/:companyId",
+    element:<EmployerEdit/>
   },
   {
     name: "Job Categories",

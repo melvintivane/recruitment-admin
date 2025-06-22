@@ -19,7 +19,7 @@ export interface Application {
     }
   };
   applicationSource?: string;
-  status: "APPLIED" | "REVIEWED" | "INTERVIEW" | "APPROVED" | "REJECTED" | "HIRED";
+  status: "APPLIED" | "SHORTLISTED" | "INTERVIEW" | "REJECTED" | "HIRED";
   feedback?: string;
   createdAt: string;
   updatedAt: string;

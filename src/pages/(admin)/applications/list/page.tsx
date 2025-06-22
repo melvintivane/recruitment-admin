@@ -272,7 +272,7 @@ const ApplicationsList = withSwal(({ swal, jobId }: ApplicationsListProps) => {
                           {!jobId && (
                             <td>
                               <Link
-                                to={`/jobs/${application.job.id}`}
+                                to={`/vacancies/${application.job.id}/applications`}
                                 className="fw-medium"
                               >
                                 {application.job.title}
@@ -300,10 +300,14 @@ const ApplicationsList = withSwal(({ swal, jobId }: ApplicationsListProps) => {
                                 application.status === "REJECTED"
                                   ? "danger"
                                   : application.status === "APPLIED"
-                                    ? "warning"
+                                    ? "primary"
                                     : application.status === "INTERVIEW"
-                                      ? "info"
-                                      : "success"
+                                      ? "warning"
+                                      : application.status === "HIRED"
+                                        ? "sucess"
+                                        : application.status === "SHORTLISTED"
+                                          ? "info"
+                                          : "secondary"
                               }`}
                             >
                               {application.status}

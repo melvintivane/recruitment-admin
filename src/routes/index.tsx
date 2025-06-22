@@ -1,7 +1,7 @@
+import JobApplicationPipeline from "@/pages/(admin)/applications/pipeline/page";
 import BlogPosts from "@/pages/(admin)/blog/page";
 import CategoriesCreate from "@/pages/(admin)/categories/create/page";
 import CategoriesList from "@/pages/(admin)/categories/list/page";
-import VacancyEdit from "@/pages/(admin)/vacancies/edit/page";
 import { lazy } from "react";
 import { Navigate, type RouteProps } from "react-router-dom";
 
@@ -11,6 +11,10 @@ import { Navigate, type RouteProps } from "react-router-dom";
 const VacanciesList = lazy(() => import("@/pages/(admin)/vacancies/list/page"));
 const VacanciesCreate = lazy(() => import("@/pages/(admin)/vacancies/create/page"));
 const VacancyDetails = lazy(() => import("@/pages/(admin)/vacancies/details/page"));
+const VacancyEdit = lazy(() => import("@/pages/(admin)/vacancies/edit/page"));
+
+const ApplicationsList = lazy(() => import("@/pages/(admin)/applications/list/page"));
+
 const EmployerList = lazy(() => import("@/pages/(admin)/employer/list/page"));
 const EmployerCreate = lazy(() => import("@/pages/(admin)/employer/create/page"));
 const EmployerDetails = lazy(() => import("@/pages/(admin)/employer/details/page"));
@@ -86,6 +90,16 @@ const appsRoutes: RoutesProps[] = [
     name: "Vacancy Edit",
     path: "/vacancies/edit/:id",
     element: <VacancyEdit />,
+  },
+  {
+    name: "Vacancy Applications",
+    path: "/vacancies/:id/applications",
+    element: <JobApplicationPipeline />,
+  },
+  {
+    name: "Applications List",
+    path: "/applications",
+    element: <ApplicationsList />,
   },
   {
     name:"Employer List",

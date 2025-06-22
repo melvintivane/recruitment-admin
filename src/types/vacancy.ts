@@ -71,7 +71,7 @@ export interface VacancyApiResponse {
   };
   last: boolean;
   totalElements: number;
-  totalPages?: number;
+  totalPages: number;
   first: boolean;
   size: number;
   number: number;

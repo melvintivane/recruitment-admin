@@ -1,18 +1,23 @@
 import { useState } from "react";
-import { Spinner as BootstrapSpinner, Badge, Button, Card, CardBody, Col, Row } from "react-bootstrap";
+import { Button, Card, CardBody, Col, Row } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "react-query";
 import { withSwal } from "react-sweetalert2";
 import PageMetaData from "@/components/PageTitle";
 import IconifyIcon from "@/components/wrappers/IconifyIcon";
-import { getAllVacancies, deleteVacancy } from "@/services/vacancyService";
-import { VacancyApiResponse } from "@/types/vacancy";
+import Spinner from "@/components/Spinner";
 import { SweetAlertResult } from "sweetalert2";
+import { ApplicationApiResponse } from "@/types/application";
+import {
+  deleteApplication,
+  getApplications,
+} from "@/services/applicationService";
 
-interface VacanciesListProps {
+interface ApplicationsListProps {
   swal: {
     fire: (options: object) => Promise<SweetAlertResult>;
   };
+  jobId?: string; // Opcional para filtrar por vaga específica
 }
 
 interface PaginationState {
@@ -21,7 +26,7 @@ interface PaginationState {
   sort: string;
 }
 
-const VacanciesList = withSwal(({ swal }: VacanciesListProps) => {
+const ApplicationsList = withSwal(({ swal, jobId }: ApplicationsListProps) => {
   const navigate = useNavigate();
   const [pagination, setPagination] = useState<PaginationState>({
     page: 0,
@@ -31,26 +36,27 @@ const VacanciesList = withSwal(({ swal }: VacanciesListProps) => {
 
   const queryClient = useQueryClient();
 
-  // Using react-query for better data fetching management
+  // Query para buscar candidaturas
   const {
-    data: vacancies,
+    data: applications,
     isLoading,
     error,
-  } = useQuery<VacancyApiResponse, Error>(
-    ["vacancies", pagination],
-    () => getAllVacancies(pagination.page, pagination.size),
+  } = useQuery<ApplicationApiResponse, Error>(
+    ["applications", pagination, jobId],
+    () => getApplications(pagination.page, pagination.size),
     {
       keepPreviousData: true,
       staleTime: 5000,
     }
   );
 
-  const deleteMutation = useMutation(deleteVacancy, {
+  // Mutação para deletar candidatura
+  const deleteMutation = useMutation(deleteApplication, {
     onSuccess: () => {
-      queryClient.invalidateQueries(["vacancies"]);
+      queryClient.invalidateQueries(["applications"]);
       swal.fire({
         title: "Deleted!",
-        text: "The vacancy has been deleted.",
+        text: "The application has been deleted.",
         icon: "success",
         customClass: {
           confirmButton: "btn btn-success",
@@ -60,7 +66,7 @@ const VacanciesList = withSwal(({ swal }: VacanciesListProps) => {
     onError: () => {
       swal.fire({
         title: "Error!",
-        text: "An error occurred while deleting the vacancy.",
+        text: "An error occurred while deleting the application.",
         icon: "error",
         customClass: {
           confirmButton: "btn btn-danger",
@@ -69,7 +75,7 @@ const VacanciesList = withSwal(({ swal }: VacanciesListProps) => {
     },
   });
 
-  const handleDelete = async (vacancyId: string) => {
+  const handleDelete = async (applicationId: string) => {
     const result = await swal.fire({
       title: "Are you sure?",
       text: "You won't be able to revert this!",
@@ -86,7 +92,7 @@ const VacanciesList = withSwal(({ swal }: VacanciesListProps) => {
     });
 
     if (result.isConfirmed) {
-      deleteMutation.mutate(vacancyId);
+      deleteMutation.mutate(applicationId);
     }
   };
 
@@ -99,13 +105,13 @@ const VacanciesList = withSwal(({ swal }: VacanciesListProps) => {
   };
 
   const renderPaginationButtons = () => {
-    if (!vacancies?.totalPages) return null;
+    if (!applications?.totalPages) return null;
 
-    const totalPages = vacancies.totalPages;
+    const totalPages = applications.totalPages;
     const currentPage = pagination.page;
     const buttons = [];
 
-    // Always show first page
+    // Sempre mostra primeira página
     buttons.push(
       <li key={0} className={`page-item ${currentPage === 0 ? "active" : ""}`}>
         <button className="page-link" onClick={() => handlePageChange(0)}>
@@ -114,7 +120,7 @@ const VacanciesList = withSwal(({ swal }: VacanciesListProps) => {
       </li>
     );
 
-    // Show ellipsis if needed
+    // Mostra ellipsis se necessário
     if (currentPage > 3) {
       buttons.push(
         <li key="left-ellipsis" className="page-item disabled">
@@ -123,7 +129,7 @@ const VacanciesList = withSwal(({ swal }: VacanciesListProps) => {
       );
     }
 
-    // Show current page and neighbors
+    // Mostra página atual e vizinhas
     for (
       let i = Math.max(1, currentPage - 1);
       i <= Math.min(totalPages - 2, currentPage + 1);
@@ -141,7 +147,7 @@ const VacanciesList = withSwal(({ swal }: VacanciesListProps) => {
       );
     }
 
-    // Show ellipsis if needed
+    // Mostra ellipsis se necessário
     if (currentPage < totalPages - 4) {
       buttons.push(
         <li key="right-ellipsis" className="page-item disabled">
@@ -150,7 +156,7 @@ const VacanciesList = withSwal(({ swal }: VacanciesListProps) => {
       );
     }
 
-    // Always show last page if there's more than one page
+    // Sempre mostra última página se houver mais de uma página
     if (totalPages > 1) {
       buttons.push(
         <li
@@ -170,27 +176,17 @@ const VacanciesList = withSwal(({ swal }: VacanciesListProps) => {
     return buttons;
   };
 
-  // Loading state
-  if (isLoading) {
-    return (
-      <div className="d-flex justify-content-center py-5">
-        <BootstrapSpinner animation="border" variant="primary" />
-      </div>
-    );
-  }
-
-  // Error state
   if (error) {
     return (
-       <div className="alert alert-danger mx-3 my-5">
-        {error.message || "Vacancies not found"}
+      <div className="alert alert-danger" role="alert">
+        Error loading applications: {error.message}
       </div>
     );
   }
 
   return (
     <>
-      <PageMetaData title="Job Vacancies" />
+      <PageMetaData title={jobId ? "Job Applications" : "All Applications"} />
 
       <Row>
         <Col>
@@ -205,15 +201,20 @@ const VacanciesList = withSwal(({ swal }: VacanciesListProps) => {
                     type="search"
                     className="form-control"
                     id="search"
-                    placeholder="Search vacancies..."
+                    placeholder="Search applications..."
                   />
                 </div>
-                <div>
-                  <Link to="/vacancies/create" className="btn btn-success ms-2">
-                    <IconifyIcon icon="bx:plus" className="me-1" />
-                    Post New Job
-                  </Link>
-                </div>
+                {!jobId && (
+                  <div>
+                    <Link
+                      to="/applications/create"
+                      className="btn btn-success ms-2"
+                    >
+                      <IconifyIcon icon="bx:plus" className="me-1" />
+                      New Application
+                    </Link>
+                  </div>
+                )}
               </div>
             </CardBody>
             <div>
@@ -221,103 +222,142 @@ const VacanciesList = withSwal(({ swal }: VacanciesListProps) => {
                 <table className="table text-nowrap mb-0">
                   <thead className="bg-light bg-opacity-50">
                     <tr>
-                      <th className="border-0 py-2">Job Title</th>
-                      <th className="border-0 py-2">Company</th>
-                      <th className="border-0 py-2">Location</th>
-                      <th className="border-0 py-2">Type</th>
-                      <th className="border-0 py-2">Posted Date</th>
+                      {!jobId && <th className="border-0 py-2">Job Title</th>}
+                      <th className="border-0 py-2">Candidate</th>
+                      <th className="border-0 py-2">Application Date</th>
                       <th className="border-0 py-2">Status</th>
-                      <th className="border-0 py-2">Applications</th>
+                      <th className="border-0 py-2">Source</th>
                       <th className="border-0 py-2">Action</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {vacancies?.content.map((vacancy) => (
-                      <tr key={vacancy.id}>
-                        <td>
-                          <Link
-                            to={`/vacancies/${vacancy.id}`}
-                            className="fw-medium"
-                          >
-                            {vacancy.title}
-                          </Link>
+                    {isLoading ? (
+                      <tr>
+                        <td
+                          colSpan={jobId ? 5 : 6}
+                          className="text-center py-4"
+                        >
+                          <div className="flex flex-col items-center gap-4">
+                            <div className="flex gap-2">
+                              <Spinner
+                                type="bordered"
+                                className="m-2"
+                                color="primary"
+                              />
+                              <Spinner
+                                type="bordered"
+                                className="m-2"
+                                color="secondary"
+                              />
+                              <Spinner
+                                type="bordered"
+                                className="m-2"
+                                color="success"
+                              />
+                              <Spinner
+                                type="bordered"
+                                className="m-2"
+                                color="danger"
+                              />
+                            </div>
+                            <span className="text-center">
+                              Loading applications...
+                            </span>
+                          </div>
                         </td>
-                        <td>{vacancy.company.name}</td>
-                        <td>{`${vacancy.country}, ${vacancy.city}`}</td>
-                        <td>{vacancy.type}</td>
-                        <td>
-                          {new Date(vacancy.createdAt).toLocaleDateString()}
-                        </td>
-                        <td>
-                          <span
-                            className={`badge badge-soft-${
-                              vacancy.status === "CLOSED"
-                                ? "danger"
-                                : vacancy.status === "PENDING"
-                                  ? "warning"
-                                  : "success"
-                            }`}
-                          >
-                            {vacancy.status}
-                          </span>
-                        </td>
-                        <td>
-                          <div className="d-flex align-items-center">
-                            <Badge bg="primary" className="me-2 p-2">
-                              {vacancy.applicationCount}
-                            </Badge>
+                      </tr>
+                    ) : applications?.content?.length ? (
+                      applications.content.map((application) => (
+                        <tr key={application.id}>
+                          {!jobId && (
+                            <td>
+                              <Link
+                                to={`/jobs/${application.job.id}`}
+                                className="fw-medium"
+                              >
+                                {application.job.title}
+                              </Link>
+                            </td>
+                          )}
+                          <td>
+                            <Link
+                              to={`/candidates/${application.candidate.id}`}
+                              className="fw-medium"
+                            >
+                              {application.candidate.user.firstName +
+                                " " +
+                                application.candidate.user.lastName}
+                            </Link>
+                          </td>
+                          <td>
+                            {new Date(
+                              application.createdAt
+                            ).toLocaleDateString()}
+                          </td>
+                          <td>
+                            <span
+                              className={`badge badge-soft-${
+                                application.status === "REJECTED"
+                                  ? "danger"
+                                  : application.status === "APPLIED"
+                                    ? "warning"
+                                    : application.status === "INTERVIEW"
+                                      ? "info"
+                                      : "success"
+                              }`}
+                            >
+                              {application.status}
+                            </span>
+                          </td>
+                          <td>{application.applicationSource || "N/A"}</td>
+                          <td>
                             <Button
                               variant="soft-secondary"
                               size="sm"
                               className="me-2"
                               onClick={() =>
-                                navigate(
-                                  `/vacancies/${vacancy.id}/applications`
-                                )
+                                navigate(`/applications/edit/${application.id}`)
                               }
                             >
-                              <IconifyIcon icon="bx:show" className="fs-16" />
+                              <IconifyIcon icon="bx:edit" className="fs-16" />
                             </Button>
-                          </div>
-                        </td>
-                        <td>
-                          <Button
-                            variant="soft-secondary"
-                            size="sm"
-                            className="me-2"
-                            onClick={() =>
-                              navigate(`/vacancies/edit/${vacancy.id}`)
-                            }
-                          >
-                            <IconifyIcon icon="bx:edit" className="fs-16" />
-                          </Button>
-                          <Button
-                            variant="soft-danger"
-                            size="sm"
-                            onClick={() => handleDelete(vacancy.id)}
-                            disabled={deleteMutation.isLoading}
-                          >
-                            <IconifyIcon icon="bx:trash" className="fs-16" />
-                          </Button>
+                            <Button
+                              variant="soft-danger"
+                              size="sm"
+                              onClick={() => handleDelete(application.id)}
+                              disabled={deleteMutation.isLoading}
+                            >
+                              <IconifyIcon icon="bx:trash" className="fs-16" />
+                            </Button>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td
+                          colSpan={jobId ? 5 : 6}
+                          className="text-center py-4"
+                        >
+                          No applications found
                         </td>
                       </tr>
-                    ))}
+                    )}
                   </tbody>
                 </table>
               </div>
-              {!isLoading && vacancies && vacancies.totalElements > 0 && (
+              {!isLoading && applications && applications.totalElements > 0 && (
                 <div className="align-items-center justify-content-between row g-0 text-center text-sm-start p-3 border-top">
                   <div className="col-sm">
                     <div className="text-muted">
                       Showing{" "}
                       <span className="fw-semibold">
-                        {vacancies.numberOfElements}
+                        {applications.numberOfElements}
                       </span>{" "}
                       of{" "}
                       <span className="fw-semibold">
-                        {vacancies.totalElements}
+                        {applications.totalElements}
                       </span>{" "}
-                      jobs
+                      applications
                       <select
                         className="form-select form-select-sm ms-2 d-inline-block w-auto"
                         value={pagination.size}
@@ -336,23 +376,23 @@ const VacanciesList = withSwal(({ swal }: VacanciesListProps) => {
                   <Col sm="auto" className="mt-3 mt-sm-0">
                     <ul className="pagination pagination-rounded m-0">
                       <li
-                        className={`page-item ${vacancies.first ? "disabled" : ""}`}
+                        className={`page-item ${applications.first ? "disabled" : ""}`}
                       >
                         <button
                           className="page-link"
                           onClick={() => handlePageChange(0)}
-                          disabled={vacancies.first}
+                          disabled={applications.first}
                         >
                           <IconifyIcon icon="bx:left-arrow-alt" />
                         </button>
                       </li>
                       <li
-                        className={`page-item ${vacancies.first ? "disabled" : ""}`}
+                        className={`page-item ${applications.first ? "disabled" : ""}`}
                       >
                         <button
                           className="page-link"
                           onClick={() => handlePageChange(pagination.page - 1)}
-                          disabled={vacancies.first}
+                          disabled={applications.first}
                         >
                           Prev
                         </button>
@@ -361,23 +401,25 @@ const VacanciesList = withSwal(({ swal }: VacanciesListProps) => {
                       {renderPaginationButtons()}
 
                       <li
-                        className={`page-item ${vacancies.last ? "disabled" : ""}`}
+                        className={`page-item ${applications.last ? "disabled" : ""}`}
                       >
                         <button
                           className="page-link"
                           onClick={() => handlePageChange(pagination.page + 1)}
-                          disabled={vacancies.last}
+                          disabled={applications.last}
                         >
                           Next
                         </button>
                       </li>
                       <li
-                        className={`page-item ${vacancies.last ? "disabled" : ""}`}
+                        className={`page-item ${applications.last ? "disabled" : ""}`}
                       >
                         <button
                           className="page-link"
-                          onClick={() => handlePageChange(vacancies.totalPages - 1)}
-                          disabled={vacancies.last}
+                          onClick={() =>
+                            handlePageChange(applications.totalPages - 1)
+                          }
+                          disabled={applications.last}
                         >
                           <IconifyIcon icon="bx:right-arrow-alt" />
                         </button>
@@ -394,4 +436,4 @@ const VacanciesList = withSwal(({ swal }: VacanciesListProps) => {
   );
 });
 
-export default VacanciesList;
+export default ApplicationsList;

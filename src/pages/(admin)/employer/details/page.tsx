@@ -49,9 +49,9 @@ const CompanyDetails = () => {
                       />
                     </div>
                     <address className="mt-3">
-                      {company.city.name || "Address not specified"}
+                      {company.country || "Address not specified"}
                       <br />
-                      {company.city?.name || "City not specified"}
+                      {company.city || "City not specified"}
                       <br />
                       <abbr title="Phone">P:</abbr> {company.mobileNumber}
                     </address>
@@ -144,7 +144,7 @@ const CompanyDetails = () => {
                           <tr>
                             <td>Location</td>
                             <td>
-                              {company.city?.name || "Not specified"}
+                              {company.city || "Not specified"}
                             </td>
                           </tr>
                         </tbody>

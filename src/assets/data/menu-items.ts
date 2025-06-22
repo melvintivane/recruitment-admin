@@ -40,8 +40,20 @@ export const MENU_ITEMS: MenuItemType[] = [
     url: "/vacancies",
   },
   {
+    key: "page-applications",
+    label: "Applications",
+    icon: "solar:document-broken",
+    url: "/applications",
+  },
+  {
+    key: "page-candidates",
+    label: "Candidates",
+    icon: "solar:user-id-broken",
+    url: "/candidates",
+  },
+  {
     key: "page-employers",
-    label: "Employeres",
+    label: "Companies",
     icon: "solar:users-group-two-rounded-broken",
     url: "/companies",
   },

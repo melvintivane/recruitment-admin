@@ -15,6 +15,10 @@ const EmployerList = lazy(() => import("@/pages/(admin)/employer/list/page"));
 const EmployerCreate = lazy(() => import("@/pages/(admin)/employer/create/page"));
 const EmployerDetails = lazy(() => import("@/pages/(admin)/employer/details/page"));
 const EmployerEdit = lazy(() => import("@/pages/(admin)/employer/edit/page"));
+const CandidateList = lazy(() => import("@/pages/(admin)/candidate/list/page"));
+const CandidateCreate = lazy(() => import("@/pages/(admin)/candidate/create/page"));
+const CandidateDetails = lazy(() => import("@/pages/(admin)/candidate/details/page"));
+const CandidateEdit = lazy(() => import("@/pages/(admin)/candidate/edit/page"));
 
 // Dashboard Routes
 const Analytics = lazy(() => import("@/pages/(admin)/dashboard/analytics/page"));
@@ -106,6 +110,26 @@ const appsRoutes: RoutesProps[] = [
     name:"Employer Edit",
     path:"/companies/edit/:companyId",
     element:<EmployerEdit/>
+  },
+  {
+    name:"Candidate List",
+    path:"/candidates",
+    element:<CandidateList/>
+  },
+  {
+    name:"Candidate Create",
+    path:"/candidates/create",
+    element:<CandidateCreate/>
+  },
+  {
+    name:"Candidate Details",
+    path:"/candidates/:candidateId",
+    element:<CandidateDetails/>
+  },
+  {
+    name:"Candidate Edit",
+    path:"/candidates/edit/:candidateId",
+    element:<CandidateEdit/>
   },
   {
     name: "Job Categories",

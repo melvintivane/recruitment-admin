@@ -7,5 +7,6 @@ export const API_ENDPOINTS = {
   COMPANIES: `${API_BASE_URL}/employers`,
   VACANCIES: `${API_BASE_URL}/vacancies`,
   CATEGORIES: `${API_BASE_URL}/vacancies/categories`,
+  CANDIDATES: `${API_BASE_URL}/candidates`,
 };
 

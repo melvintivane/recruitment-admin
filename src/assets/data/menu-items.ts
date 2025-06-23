@@ -46,6 +46,12 @@ export const MENU_ITEMS: MenuItemType[] = [
     url: "/companies",
   },
   {
+    key: "page-candidates",
+    label: "Candidates",
+    icon: "solar:user-circle-bold",
+    url: "/candidates",
+  },
+  {
     key: "page-categories",
     label: "Categories",
     icon: "solar:layers-broken",

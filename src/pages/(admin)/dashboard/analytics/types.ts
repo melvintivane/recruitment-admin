@@ -6,14 +6,6 @@ export interface JobSourceType {
   variant: 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'info' | 'light' | 'dark';
 }
 
-export interface ApplicantType {
-  name: string;
-  percentage: string | number;
-  count: number;
-  // Optional stage property for recruitment pipeline
-  stage?: 'Applied' | 'Screened' | 'Interviewed' | 'Offered' | 'Hired';
-}
-
 export interface JobType {
   title: string;
   views: number;

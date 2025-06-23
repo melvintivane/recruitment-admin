@@ -1,10 +1,13 @@
-
-
 export interface Application {
   id: string;
   job: {
     id: string;
     title: string;
+    country: string;
+    company: {
+      id: string;
+      name: string;
+    }
   };
   candidate: {
     id: string;
@@ -20,7 +23,9 @@ export interface Application {
   };
   applicationSource?: string;
   status: "APPLIED" | "SHORTLISTED" | "INTERVIEW" | "REJECTED" | "HIRED";
+  priority: "UNDEFINED" | "LOW" | "MEDIUM" | "HIGH";
   feedback?: string;
+  notes: string;
   createdAt: string;
   updatedAt: string;
 }

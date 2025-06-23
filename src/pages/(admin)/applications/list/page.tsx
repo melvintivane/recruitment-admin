@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button, Card, CardBody, Col, Row } from "react-bootstrap";
+import { Alert, Button, Card, CardBody, Col, Row } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "react-query";
 import { withSwal } from "react-sweetalert2";
@@ -342,7 +342,9 @@ const ApplicationsList = withSwal(({ swal, jobId }: ApplicationsListProps) => {
                           colSpan={jobId ? 5 : 6}
                           className="text-center py-4"
                         >
-                          No applications found
+                          <Alert variant="info" className="text-center">
+                            No applications found.
+                          </Alert>
                         </td>
                       </tr>
                     )}

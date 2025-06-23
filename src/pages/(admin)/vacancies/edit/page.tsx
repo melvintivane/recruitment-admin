@@ -147,7 +147,7 @@ const VacancyEdit = () => {
           remoteAllowed: data.remoteAllowed || false,
           type: data.type,
           status: data.status,
-          country: data.country || "", // Changed from city.id
+          country: data.country || "",
           state: data.state || "",
           city: data.city || "",
           yearsOfExperience: data.yearsOfExperience,

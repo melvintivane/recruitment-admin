@@ -1,336 +1,374 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState, useMemo } from 'react';
-import { Card, Row, Col, Badge, Button, Modal, Form, Table, Dropdown, Alert } from 'react-bootstrap';
-import { useReactTable, getCoreRowModel, getFilteredRowModel, getSortedRowModel, flexRender, ColumnDef } from '@tanstack/react-table';
-import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { toast } from 'react-toastify';
-import dayjs from 'dayjs';
+import React, { useState, useMemo, useCallback } from "react";
+import {
+  Card,
+  Row,
+  Col,
+  Badge,
+  Button,
+  Modal,
+  Form,
+  Dropdown,
+  Alert,
+  InputGroup,
+} from "react-bootstrap";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import { toast } from "react-toastify";
+import dayjs from "dayjs";
+import { useMutation, useQuery } from "react-query";
+import {
+  getApplicationsByJob,
+  updateApplication,
+} from "@/services/applicationService";
+import { ApplicationApiResponse, Application } from "@/types/application";
+import IconifyIcon from "@/components/wrappers/IconifyIcon";
+import Spinner from "@/components/Spinner";
+import { useParams } from "react-router-dom";
+import { withSwal } from "react-sweetalert2";
+import { SweetAlertResult } from "sweetalert2";
 
-// Mock data for demonstration
-const mockApplications = [
-  {
-    id: '1',
-    jobTitle: 'Senior Frontend Developer',
-    company: 'TechCorp',
-    appliedDate: '2024-06-15',
-    status: 'Applied',
-    priority: 'High',
-    salary: '$120,000',
-    location: 'San Francisco, CA',
-    notes: 'Applied through LinkedIn',
-    nextAction: 'Follow up in 1 week',
-    contactPerson: 'Sarah Johnson',
-    contactEmail: 'sarah.j@techcorp.com'
-  },
-  {
-    id: '2',
-    jobTitle: 'React Developer',
-    company: 'StartupXYZ',
-    appliedDate: '2024-06-18',
-    status: 'Shortlisted',
-    priority: 'Medium',
-    salary: '$95,000',
-    location: 'Remote',
-    notes: 'Recruiter reached out',
-    nextAction: 'interviewed scheduled',
-    contactPerson: 'Mike Chen',
-    contactEmail: 'mike@startupxyz.com'
-  },
-  {
-    id: '3',
-    jobTitle: 'Full Stack Engineer',
-    company: 'InnovateLabs',
-    appliedDate: '2024-06-20',
-    status: 'Interviewed',
-    priority: 'High',
-    salary: '$130,000',
-    location: 'New York, NY',
-    notes: 'Great company culture',
-    nextAction: 'Waiting for feedback',
-    contactPerson: 'Emma Davis',
-    contactEmail: 'emma@innovatelabs.com'
-  },
-  {
-    id: '4',
-    jobTitle: 'UI/UX Developer',
-    company: 'DesignPro',
-    appliedDate: '2024-06-12',
-    status: 'Rejected',
-    priority: 'Low',
-    salary: '$85,000',
-    location: 'Austin, TX',
-    notes: 'Not a good fit for role',
-    nextAction: 'None',
-    contactPerson: 'Alex Wilson',
-    contactEmail: 'alex@designpro.com'
-  },
-  {
-    id: '5',
-    jobTitle: 'Senior Software Engineer',
-    company: 'MegaCorp',
-    appliedDate: '2024-06-22',
-    status: 'Hired',
-    priority: 'High',
-    salary: '$140,000',
-    location: 'Seattle, WA',
-    notes: 'Excellent benefits package',
-    nextAction: 'Negotiate salary',
-    contactPerson: 'Jennifer Lee',
-    contactEmail: 'jennifer.lee@megacorp.com'
-  }
-];
+// Constants moved to top level for better organization
+const STATUS_OPTIONS = [
+  "APPLIED",
+  "SHORTLISTED",
+  "INTERVIEWED",
+  "REJECTED",
+  "HIRED",
+] as const;
 
-interface JobApplication {
-  id: string;
-  jobTitle: string;
-  company: string;
-  appliedDate: string;
-  status: string;
-  priority: string;
-  salary: string;
-  location: string;
-  notes: string;
-  nextAction: string;
-  contactPerson: string;
-  contactEmail: string;
+const PRIORITY_OPTIONS = ["UNDEFINED", "LOW", "MEDIUM", "HIGH"] as const;
+
+const STATUS_LABELS: Record<string, string> = {
+  APPLIED: "Applied",
+  SHORTLISTED: "Shortlisted",
+  INTERVIEWED: "Interviewed",
+  REJECTED: "Rejected",
+  HIRED: "Hired",
+} as const;
+
+const PRIORITY_LABELS: Record<string, string> = {
+  UNDEFINED: "Undefined",
+  LOW: "Low",
+  MEDIUM: "Medium",
+  HIGH: "High",
+} as const;
+
+const STATUS_VARIANTS: Record<string, string> = {
+  APPLIED: "primary",
+  SHORTLISTED: "info",
+  INTERVIEWED: "warning",
+  REJECTED: "danger",
+  HIRED: "success",
+} as const;
+
+const PRIORITY_VARIANTS: Record<string, string> = {
+  HIGH: "danger",
+  MEDIUM: "warning",
+  LOW: "success",
+  UNDEFINED: "secondary",
+} as const;
+
+// Types
+interface PaginationState {
+  page: number;
+  size: number;
+  sort: string;
 }
 
-const statusOptions = ['Applied', 'Shortlisted', 'Interviewed', 'Rejected', 'Hired'];
-const priorityOptions = ['Low', 'Medium', 'High'];
-
-const JobApplicationPipeline = () => {
-  const [applications, setApplications] = useState<JobApplication[]>(mockApplications);
-  const [showModal, setShowModal] = useState(false);
-  const [selectedApp, setSelectedApp] = useState<JobApplication | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [globalFilter, setGlobalFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState('All');
-
-  const getStatusVariant = (status: string) => {
-    switch (status) {
-      case 'Applied': return 'primary';
-      case 'Shortlisted': return 'info';
-      case 'Interviewed': return 'warning';
-      case 'Rejected': return 'danger';
-      case 'Hired': return 'success';
-      default: return 'secondary';
-    }
+interface VacanciesListProps {
+  swal: {
+    fire: (options: object) => Promise<SweetAlertResult>;
   };
+}
 
-  const getPriorityVariant = (priority: string) => {
-    switch (priority) {
-      case 'High': return 'danger';
-      case 'Medium': return 'warning';
-      case 'Low': return 'success';
-      default: return 'secondary';
-    }
-  };
+type StatusType = typeof STATUS_OPTIONS[number];
 
-  const statusCounts = useMemo(() => {
-    return statusOptions.reduce((acc, status) => {
-      acc[status] = applications.filter(app => app.status === status).length;
-      return acc;
-    }, {} as Record<string, number>);
-  }, [applications]);
+// Custom hooks for better separation of concerns
+const useApplicationFilters = (applications: Application[]) => {
+  const [globalFilter, setGlobalFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
 
-  const columns = useMemo<ColumnDef<JobApplication>[]>(
-    () => [
-      {
-        accessorKey: 'jobTitle',
-        header: 'Job Title',
-        cell: ({ row }) => (
-          <div>
-            <strong>{row.original.jobTitle}</strong>
-            <br />
-            <small className="text-muted">{row.original.company}</small>
-          </div>
-        ),
-      },
-      {
-        accessorKey: 'status',
-        header: 'Status',
-        cell: ({ row }) => (
-          <Badge bg={getStatusVariant(row.original.status)}>
-            {row.original.status}
-          </Badge>
-        ),
-      },
-      {
-        accessorKey: 'priority',
-        header: 'Priority',
-        cell: ({ row }) => (
-          <Badge bg={getPriorityVariant(row.original.priority)}>
-            {row.original.priority}
-          </Badge>
-        ),
-      },
-      {
-        accessorKey: 'appliedDate',
-        header: 'Applied Date',
-        cell: ({ row }) => dayjs(row.original.appliedDate).format('MMM DD, YYYY'),
-      },
-      {
-        accessorKey: 'salary',
-        header: 'Salary',
-      },
-      {
-        accessorKey: 'location',
-        header: 'Location',
-      },
-      {
-        id: 'actions',
-        header: 'Actions',
-        cell: ({ row }) => (
-          <Dropdown>
-            <Dropdown.Toggle variant="outline-secondary" size="sm">
-              Actions
-            </Dropdown.Toggle>
-            <Dropdown.Menu>
-              <Dropdown.Item onClick={() => handleViewEdit(row.original)}>
-                View/Edit
-              </Dropdown.Item>
-              <Dropdown.Item onClick={() => handleStatusChange(row.original, 'Shortlisted')}>
-                Move to Shortlisted
-              </Dropdown.Item>
-              <Dropdown.Item onClick={() => handleStatusChange(row.original, 'Interviewed')}>
-                Move to Technical
-              </Dropdown.Item>
-              <Dropdown.Item onClick={() => handleStatusChange(row.original, 'Hired')}>
-                Mark as Hired
-              </Dropdown.Item>
-              <Dropdown.Divider />
-              <Dropdown.Item className="text-danger" onClick={() => handleDelete(row.original.id)}>
-                Delete
-              </Dropdown.Item>
-            </Dropdown.Menu>
-          </Dropdown>
-        ),
-      },
-    ],
-    []
-  );
-
-  const filteredData = useMemo(() => {
+  const filteredApplications = useMemo(() => {
     let filtered = applications;
-    
-    if (statusFilter !== 'All') {
-      filtered = filtered.filter(app => app.status === statusFilter);
+
+    if (statusFilter !== "All") {
+      filtered = filtered.filter((app) => app.status === statusFilter);
     }
-    
+
     if (globalFilter) {
-      filtered = filtered.filter(app =>
-        app.jobTitle.toLowerCase().includes(globalFilter.toLowerCase()) ||
-        app.company.toLowerCase().includes(globalFilter.toLowerCase()) ||
-        app.location.toLowerCase().includes(globalFilter.toLowerCase())
+      const searchTerm = globalFilter.toLowerCase();
+      filtered = filtered.filter(
+        (app) =>
+          app.job.title.toLowerCase().includes(searchTerm) ||
+          app.job.company.name.toLowerCase().includes(searchTerm) ||
+          `${app.candidate.user.firstName} ${app.candidate.user.lastName}`
+            .toLowerCase()
+            .includes(searchTerm)
       );
     }
-    
+
     return filtered;
   }, [applications, statusFilter, globalFilter]);
 
-  const table = useReactTable({
-    data: filteredData,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getSortedRowModel: getSortedRowModel(),
+  return {
+    globalFilter,
+    setGlobalFilter,
+    statusFilter,
+    setStatusFilter,
+    filteredApplications,
+  };
+};
+
+const useStatusCounts = (applications: Application[]) => {
+  return useMemo(() => {
+    return STATUS_OPTIONS.reduce(
+      (acc, status) => {
+        acc[status] = applications.filter((app) => app.status === status).length;
+        return acc;
+      },
+      {} as Record<string, number>
+    );
+  }, [applications]);
+};
+
+// Utility functions
+const getStatusVariant = (status: string): string => 
+  STATUS_VARIANTS[status] || "secondary";
+
+const getPriorityVariant = (priority: string): string => 
+  PRIORITY_VARIANTS[priority] || "secondary";
+
+// Main component
+const JobApplicationPipeline = withSwal(({ swal }: VacanciesListProps) => {
+  const { id } = useParams<{ id: string }>();
+  
+  // State management
+  const [showModal, setShowModal] = useState(false);
+  const [selectedApp, setSelectedApp] = useState<Application | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [viewMode, setViewMode] = useState<'table' | 'kanban'>('table');
+  
+  const [pagination, setPagination] = useState<PaginationState>({
+    page: 0,
+    size: 10,
+    sort: "createdAt,desc",
   });
 
-  const handleViewEdit = (application: JobApplication) => {
+  // Data fetching
+  const {
+    data: apiResponse,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery<ApplicationApiResponse, Error>(
+    ["applications", pagination, id],
+    () => getApplicationsByJob(id!),
+    {
+      keepPreviousData: true,
+      staleTime: 5000,
+      enabled: !!id,
+    }
+  );
+
+  const applications = useMemo(() => apiResponse?.content || [], [apiResponse]);
+  
+  // Custom hooks usage
+  const {
+    globalFilter,
+    setGlobalFilter,
+    statusFilter,
+    setStatusFilter,
+    filteredApplications,
+  } = useApplicationFilters(applications);
+  
+  const statusCounts = useStatusCounts(applications);
+
+  // Mutations
+  const mutation = useMutation(updateApplication, {
+    onSuccess: () => {
+      toast.success("Application updated successfully!");
+      refetch();
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Failed to update application");
+    },
+  });
+
+  // Event handlers with useCallback for optimization
+  const handleViewEdit = useCallback((application: Application) => {
     setSelectedApp(application);
     setIsEditing(true);
     setShowModal(true);
-  };
+  }, []);
 
-  const handleStatusChange = (application: JobApplication, newStatus: string) => {
-    setApplications(prev => 
-      prev.map(app => 
-        app.id === application.id 
-          ? { ...app, status: newStatus }
-          : app
-      )
-    );
-    toast.success(`Application status updated to ${newStatus}`);
-  };
-
-  const handleDelete = (id: string) => {
-    if (window.confirm('Are you sure you want to delete this application?')) {
-      setApplications(prev => prev.filter(app => app.id !== id));
-      toast.success('Application deleted successfully');
-    }
-  };
-
-  const handleSave = (formData: any) => {
-    if (selectedApp) {
-      setApplications(prev => 
-        prev.map(app => 
-          app.id === selectedApp.id 
-            ? { ...app, ...formData }
-            : app
-        )
-      );
-      toast.success('Application updated successfully');
-    } else {
-      const newApp = {
-        ...formData,
-        id: Date.now().toString(),
-        appliedDate: dayjs().format('YYYY-MM-DD')
-      };
-      setApplications(prev => [...prev, newApp]);
-      toast.success('New application added successfully');
-    }
-    setShowModal(false);
-    setSelectedApp(null);
-  };
-
-  const handleAddNew = () => {
+  const handleAddNew = useCallback(() => {
     setSelectedApp(null);
     setIsEditing(false);
     setShowModal(true);
-  };
+  }, []);
 
-  const onDragEnd = (result: any) => {
+  const handleCloseModal = useCallback(() => {
+    setShowModal(false);
+    setSelectedApp(null);
+  }, []);
+
+  const handleStatusChange = useCallback(async (
+    application: Application,
+    newStatus: StatusType
+  ) => {
+    if (newStatus === "REJECTED") {
+      const confirmation = await swal.fire({
+        title: "Confirm Rejection",
+        html: `Are you sure you want to reject <b>${application.candidate.user.firstName} ${application.candidate.user.lastName}</b>?`,
+        icon: "warning",
+        input: "textarea",
+        inputLabel: "Rejection reason (optional)",
+        inputPlaceholder: "Enter the reason for rejection...",
+        showCancelButton: true,
+        confirmButtonText: "Confirm Rejection",
+        cancelButtonText: "Cancel",
+        customClass: {
+          confirmButton: "btn btn-danger me-2",
+          cancelButton: "btn btn-secondary",
+        },
+        buttonsStyling: false,
+        reverseButtons: true,
+      });
+
+      if (!confirmation.isConfirmed) return;
+
+      const rejectionReason = confirmation.value || "";
+      const updatedData = {
+        ...application,
+        status: newStatus,
+        notes: rejectionReason
+          ? application.notes
+            ? `${application.notes}\nRejection reason: ${rejectionReason}`
+            : `Rejection reason: ${rejectionReason}`
+          : application.notes,
+      };
+
+      try {
+        await mutation.mutateAsync(updatedData);
+        toast.success("Candidate rejected successfully");
+        await refetch();
+      } catch (error) {
+        toast.error("Failed to reject candidate");
+      }
+      return;
+    }
+
+    // For other statuses
+    try {
+      const updatedData = {
+        ...application,
+        status: newStatus,
+      };
+
+      await mutation.mutateAsync(updatedData);
+      toast.success(`Status updated to ${STATUS_LABELS[newStatus]}`);
+      await refetch();
+    } catch (error) {
+      toast.error("Failed to update status");
+    }
+  }, [mutation, refetch, swal]);
+
+  const handleSave = useCallback(async (formData: any) => {
+    try {
+      if (selectedApp) {
+        await mutation.mutateAsync({ data: formData });
+        toast.success("Application updated successfully");
+      } else {
+        // For new applications - implement creation logic
+        toast.success("New application added successfully");
+      }
+      handleCloseModal();
+      await refetch();
+    } catch (error) {
+      toast.error("Failed to save application");
+    }
+  }, [selectedApp, mutation, refetch, handleCloseModal]);
+
+  const onDragEnd = useCallback((result: any) => {
     const { source, destination } = result;
 
-    // Dropped outside the list
-    if (!destination) {
+    if (!destination || 
+        (source.droppableId === destination.droppableId && 
+         source.index === destination.index)) {
       return;
     }
 
-    // No change in position
-    if (source.droppableId === destination.droppableId && source.index === destination.index) {
-      return;
-    }
-
-    // Get the application being dragged
     const draggedApp = applications.find(app => app.id === result.draggableId);
     if (!draggedApp) return;
 
-    // Update status based on the destination column
-    const newStatus = destination.droppableId;
+    const newStatus = destination.droppableId as StatusType;
     if (draggedApp.status !== newStatus) {
       handleStatusChange(draggedApp, newStatus);
     }
-  };
+  }, [applications, handleStatusChange]);
+
+  const handlePaginationChange = useCallback((direction: 'prev' | 'next') => {
+    setPagination((prev) => ({
+      ...prev,
+      page: direction === 'prev' ? prev.page - 1 : prev.page + 1,
+    }));
+  }, []);
+
+  // Loading and error states
+  if (error) {
+    return (
+      <Alert variant="danger" className="m-4">
+        <IconifyIcon icon="bx:error" className="me-2" />
+        Error loading applications: {error.message}
+      </Alert>
+    );
+  }
 
   return (
     <div className="p-4">
+      {/* Header */}
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2>Job Application Pipeline</h2>
-        <Button variant="primary" onClick={handleAddNew}>
-          + Add New Application
-        </Button>
+        <div>
+          <h3 className="mb-1">Job Application Pipeline</h3>
+          <small className="text-muted">
+            Manage and track job applications efficiently
+          </small>
+        </div>
+        <div className="d-flex gap-2">
+          <Button
+            variant={viewMode === 'table' ? 'primary' : 'outline-primary'}
+            size="sm"
+            onClick={() => setViewMode('table')}
+          >
+            <IconifyIcon icon="bx:table" className="me-1" />
+            Table View
+          </Button>
+          <Button
+            variant={viewMode === 'kanban' ? 'primary' : 'outline-primary'}
+            size="sm"
+            onClick={() => setViewMode('kanban')}
+          >
+            <IconifyIcon icon="bx:columns" className="me-1" />
+            Kanban View
+          </Button>
+          <Button variant="primary" onClick={handleAddNew}>
+            <IconifyIcon icon="bx:plus" className="me-1" />
+            Add Application
+          </Button>
+        </div>
       </div>
 
       {/* Status Overview Cards */}
       <Row className="mb-4">
-        {statusOptions.map(status => (
-          <Col md={3} key={status} className="mb-3">
-            <Card className="h-100">
-              <Card.Body className="text-center">
-                <div className="display-6 mb-2">{statusCounts[status] || 0}</div>
-                <Badge bg={getStatusVariant(status)} className="mb-2">
-                  {status}
+        {STATUS_OPTIONS.map((status) => (
+          <Col lg={2} md={4} sm={6} key={status} className="mb-3">
+            <Card className="h-100 border-0 shadow-sm">
+              <Card.Body className="text-center p-3">
+                <div className="display-6 fw-bold mb-2 text-primary">
+                  {statusCounts[status] || 0}
+                </div>
+                <Badge bg={getStatusVariant(status)} className="mb-2 px-3 py-2">
+                  {STATUS_LABELS[status]}
                 </Badge>
                 <div className="small text-muted">Applications</div>
               </Card.Body>
@@ -340,206 +378,414 @@ const JobApplicationPipeline = () => {
       </Row>
 
       {/* Filters */}
-      <Card className="mb-4">
+      <Card className="mb-4 border-0 shadow-sm">
         <Card.Body>
-          <Row>
-            <Col md={6}>
+          <Row className="align-items-end">
+            <Col md={8}>
               <Form.Group>
                 <Form.Label>Search Applications</Form.Label>
-                <Form.Control
-                  type="text"
-                  placeholder="Search by job title, company, or location..."
-                  value={globalFilter}
-                  onChange={(e) => setGlobalFilter(e.target.value)}
-                />
+                <InputGroup>
+                  <InputGroup.Text>
+                    <IconifyIcon icon="bx:search" />
+                  </InputGroup.Text>
+                  <Form.Control
+                    type="text"
+                    placeholder="Search by job title, company, or candidate..."
+                    value={globalFilter}
+                    onChange={(e) => setGlobalFilter(e.target.value)}
+                  />
+                  {globalFilter && (
+                    <Button
+                      variant="outline-secondary"
+                      onClick={() => setGlobalFilter("")}
+                    >
+                      <IconifyIcon icon="bx:x" />
+                    </Button>
+                  )}
+                </InputGroup>
               </Form.Group>
             </Col>
-            <Col md={6}>
+            <Col md={4}>
               <Form.Group>
                 <Form.Label>Filter by Status</Form.Label>
                 <Form.Select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
                 >
-                  <option value="All">All Statuses</option>
-                  {statusOptions.map(status => (
-                    <option key={status} value={status}>{status}</option>
+                  <option value="All">All Statuses ({applications.length})</option>
+                  {STATUS_OPTIONS.map((status) => (
+                    <option key={status} value={status}>
+                      {STATUS_LABELS[status]} ({statusCounts[status] || 0})
+                    </option>
                   ))}
                 </Form.Select>
               </Form.Group>
             </Col>
           </Row>
-        </Card.Body>
-      </Card>
-
-      {/* Applications Table */}
-      <Card className="mt-4">
-        <Card.Body>
-          <Table responsive hover>
-            <thead>
-              {table.getHeaderGroups().map(headerGroup => (
-                <tr key={headerGroup.id}>
-                  {headerGroup.headers.map(header => (
-                    <th key={header.id}>
-                      {header.isPlaceholder ? null : (
-                        <div
-                          {...{
-                            className: header.column.getCanSort()
-                              ? 'cursor-pointer select-none'
-                              : '',
-                            onClick: header.column.getToggleSortingHandler(),
-                          }}
-                        >
-                          {flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                          {{
-                            asc: ' 🔼',
-                            desc: ' 🔽',
-                          }[header.column.getIsSorted() as string] ?? null}
-                        </div>
-                      )}
-                    </th>
-                  ))}
-                </tr>
-              ))}
-            </thead>
-            <tbody>
-              {table.getRowModel().rows.map(row => (
-                <tr key={row.id}>
-                  {row.getVisibleCells().map(cell => (
-                    <td key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </Table>
           
-          {filteredData.length === 0 && (
-            <Alert variant="info" className="text-center">
-              No applications found matching your criteria.
-            </Alert>
+          {(globalFilter || statusFilter !== "All") && (
+            <div className="mt-3 pt-3 border-top">
+              <div className="d-flex justify-content-between align-items-center">
+                <span className="text-muted">
+                  Showing {filteredApplications.length} of {applications.length} applications
+                </span>
+                <Button
+                  variant="outline-secondary"
+                  size="sm"
+                  onClick={() => {
+                    setGlobalFilter("");
+                    setStatusFilter("All");
+                  }}
+                >
+                  Clear Filters
+                </Button>
+              </div>
+            </div>
           )}
         </Card.Body>
       </Card>
 
-      {/* Kanban Board */}
-      <DragDropContext onDragEnd={onDragEnd}>
-        <Row>
-          {statusOptions.map(status => (
-            <Col md={4} key={status} className="mb-4">
-              <Card>
-                <Card.Body>
-                  <div className="d-flex justify-content-between align-items-center mb-3">
-                    <h5 className="mb-0">{status}</h5>
-                    <Badge bg={getStatusVariant(status)} pill>
-                      {applications.filter(app => app.status === status).length}
-                    </Badge>
-                  </div>
-                  
-                  <Droppable droppableId={status}>
-                    {(provided) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.droppableProps}
-                        className="kanban-column"
-                        style={{ minHeight: '100px' }}
-                      >
-                        {applications
-                          .filter(app => app.status === status)
-                          .map((app, index) => (
-                            <Draggable key={app.id} draggableId={app.id} index={index}>
-                              {(provided) => (
-                                <div
-                                  ref={provided.innerRef}
-                                  {...provided.draggableProps}
-                                  {...provided.dragHandleProps}
-                                  className="mb-3"
-                                >
-                                  <Card>
-                                    <Card.Body>
-                                      <div className="d-flex justify-content-between">
-                                        <div>
-                                          <h6>{app.jobTitle}</h6>
-                                          <small className="text-muted">{app.company}</small>
-                                        </div>
-                                        <Badge bg={getPriorityVariant(app.priority)}>
-                                          {app.priority}
-                                        </Badge>
-                                      </div>
-                                      <div className="mt-2">
-                                        <small className="text-muted d-block">
-                                          Applied: {dayjs(app.appliedDate).format('MMM DD')}
-                                        </small>
-                                        <small className="text-muted">
-                                          {app.location}
-                                        </small>
-                                      </div>
-                                    </Card.Body>
-                                  </Card>
-                                </div>
-                              )}
-                            </Draggable>
-                          ))}
-                        {provided.placeholder}
-                      </div>
-                    )}
-                  </Droppable>
-                </Card.Body>
-              </Card>
-            </Col>
-          ))}
-        </Row>
-      </DragDropContext>
+      {/* Content based on view mode */}
+      {viewMode === 'table' ? (
+        <TableView
+          applications={filteredApplications}
+          isLoading={isLoading}
+          onViewEdit={handleViewEdit}
+          onStatusChange={handleStatusChange}
+          apiResponse={apiResponse}
+          onPaginationChange={handlePaginationChange}
+        />
+      ) : (
+        <KanbanView
+          applications={applications}
+          onDragEnd={onDragEnd}
+          onViewEdit={handleViewEdit}
+        />
+      )}
 
-      {/* Application Details Modal */}
-      <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
-        <Modal.Header closeButton>
-          <Modal.Title>
-            {selectedApp ? 'Edit Application' : 'Add New Application'}
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <ApplicationForm
-            application={selectedApp}
-            onSave={handleSave}
-            onCancel={() => setShowModal(false)}
-          />
-        </Modal.Body>
-      </Modal>
+      {/* Application Modal */}
+      <ApplicationModal
+        show={showModal}
+        onHide={handleCloseModal}
+        application={selectedApp}
+        isEditing={isEditing}
+        onSave={handleSave}
+      />
     </div>
   );
-};
+});
 
-// Application Form Component
+// Separate components for better organization
+const TableView: React.FC<{
+  applications: Application[];
+  isLoading: boolean;
+  onViewEdit: (app: Application) => void;
+  onStatusChange: (app: Application, status: StatusType) => void;
+  apiResponse?: ApplicationApiResponse;
+  onPaginationChange: (direction: 'prev' | 'next') => void;
+}> = ({ applications, isLoading, onViewEdit, onStatusChange, apiResponse, onPaginationChange }) => (
+  <Card className="border-0 shadow-sm">
+    <Card.Body className="p-0">
+      <div className="table-responsive">
+        <table className="table table-hover mb-0">
+          <thead className="bg-light">
+            <tr>
+              <th className="border-0 fw-semibold">Job Title</th>
+              <th className="border-0 fw-semibold">Company</th>
+              <th className="border-0 fw-semibold">Candidate</th>
+              <th className="border-0 fw-semibold">Applied Date</th>
+              <th className="border-0 fw-semibold">Status</th>
+              <th className="border-0 fw-semibold">Priority</th>
+              <th className="border-0 fw-semibold">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {isLoading ? (
+              <tr>
+                <td colSpan={7} className="text-center py-5">
+                  <Spinner type="grow" className="me-2" color="primary" />
+                  Loading applications...
+                </td>
+              </tr>
+            ) : applications.length > 0 ? (
+              applications.map((application) => (
+                <tr key={application.id} className="align-middle">
+                  <td>
+                    <div>
+                      <strong className="d-block">{application.job.title}</strong>
+                      <small className="text-muted">{application.job.country}</small>
+                    </div>
+                  </td>
+                  <td>
+                    <span className="fw-medium">{application.job.company.name}</span>
+                  </td>
+                  <td>
+                    <div>
+                      <span className="fw-medium">
+                        {application.candidate.user.firstName}{" "}
+                        {application.candidate.user.lastName}
+                      </span>
+                    </div>
+                  </td>
+                  <td>
+                    <span className="text-muted">
+                      {dayjs(application.createdAt).format("MMM DD, YYYY")}
+                    </span>
+                  </td>
+                  <td>
+                    <Badge bg={getStatusVariant(application.status)} className="px-3 py-2">
+                      {STATUS_LABELS[application.status]}
+                    </Badge>
+                  </td>
+                  <td>
+                    <Badge bg={getPriorityVariant(application.priority)} className="px-3 py-2">
+                      {PRIORITY_LABELS[application.priority]}
+                    </Badge>
+                  </td>
+                  <td>
+                    <Dropdown>
+                      <Dropdown.Toggle variant="outline-secondary" size="sm">
+                        <IconifyIcon icon="bx:dots-horizontal-rounded" />
+                      </Dropdown.Toggle>
+                      <Dropdown.Menu>
+                        <Dropdown.Item onClick={() => onViewEdit(application)}>
+                          <IconifyIcon icon="bx:edit" className="me-2" />
+                          View/Edit
+                        </Dropdown.Item>
+                        <Dropdown.Divider />
+                        <Dropdown.Header>Move to Status</Dropdown.Header>
+                        {STATUS_OPTIONS
+                          .filter((status) => status !== application.status)
+                          .map((status) => (
+                            <Dropdown.Item
+                              key={status}
+                              onClick={() => onStatusChange(application, status)}
+                            >
+                              <Badge bg={getStatusVariant(status)} className="me-2">
+                                {STATUS_LABELS[status]}
+                              </Badge>
+                            </Dropdown.Item>
+                          ))}
+                      </Dropdown.Menu>
+                    </Dropdown>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={7} className="text-center py-5">
+                  <div className="text-muted">
+                    <IconifyIcon icon="bx:search" className="d-block mb-3" />
+                    <h5>No applications found</h5>
+                    <p>Try adjusting your search criteria or filters.</p>
+                  </div>
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Pagination */}
+      {apiResponse && apiResponse.totalElements > 0 && (
+        <div className="d-flex justify-content-between align-items-center p-3 border-top">
+          <div className="text-muted">
+            Showing {apiResponse.numberOfElements} of {apiResponse.totalElements} applications
+          </div>
+          <div>
+            <Button
+              variant="outline-primary"
+              size="sm"
+              disabled={apiResponse.first}
+              onClick={() => onPaginationChange('prev')}
+              className="me-2"
+            >
+              <IconifyIcon icon="bx:chevron-left" className="me-1" />
+              Previous
+            </Button>
+            <Button
+              variant="outline-primary"
+              size="sm"
+              disabled={apiResponse.last}
+              onClick={() => onPaginationChange('next')}
+            >
+              Next
+              <IconifyIcon icon="bx:chevron-right" className="ms-1" />
+            </Button>
+          </div>
+        </div>
+      )}
+    </Card.Body>
+  </Card>
+);
+
+const KanbanView: React.FC<{
+  applications: Application[];
+  onDragEnd: (result: any) => void;
+  onViewEdit: (app: Application) => void;
+}> = ({ applications, onDragEnd, onViewEdit }) => (
+  <DragDropContext onDragEnd={onDragEnd}>
+    <Row>
+      {STATUS_OPTIONS.map((status) => (
+        <Col lg={2} md={4} key={status} className="mb-4">
+          <Card className="h-100 border-0 shadow-sm">
+            <Card.Header className="bg-transparent border-0 pb-0">
+              <div className="d-flex justify-content-between align-items-center">
+                <h6 className="mb-0 fw-semibold">{STATUS_LABELS[status]}</h6>
+                <Badge bg={getStatusVariant(status)} pill>
+                  {applications.filter((app) => app.status === status).length}
+                </Badge>
+              </div>
+            </Card.Header>
+            <Card.Body className="pt-3">
+              <Droppable droppableId={status}>
+                {(provided, snapshot) => (
+                  <div
+                    ref={provided.innerRef}
+                    {...provided.droppableProps}
+                    className={`kanban-column ${snapshot.isDraggingOver ? 'dragging-over' : ''}`}
+                    style={{ minHeight: "200px" }}
+                  >
+                    {applications
+                      .filter((app) => app.status === status)
+                      .map((app, index) => (
+                        <Draggable key={app.id} draggableId={app.id} index={index}>
+                          {(provided, snapshot) => (
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              {...provided.dragHandleProps}
+                              className="mb-3"
+                            >
+                              <Card 
+                                className={`border-0 shadow-sm ${snapshot.isDragging ? 'shadow' : ''}`}
+                                style={{ cursor: 'grab' }}
+                              >
+                                <Card.Body className="p-3">
+                                  <div className="d-flex justify-content-between align-items-start mb-2">
+                                    <div className="flex-grow-1">
+                                      <h6 className="mb-1 fw-semibold">{app.job.title}</h6>
+                                      <small className="text-muted d-block">
+                                        {app.job.company.name}
+                                      </small>
+                                    </div>
+                                    <Badge bg={getPriorityVariant(app.priority)} className="ms-2">
+                                      {PRIORITY_LABELS[app.priority]}
+                                    </Badge>
+                                  </div>
+                                  
+                                  <div className="mb-3">
+                                    <small className="text-muted d-block">
+                                      <IconifyIcon icon="bx:user" className="me-1" />
+                                      {app.candidate.user.firstName} {app.candidate.user.lastName}
+                                    </small>
+                                    <small className="text-muted d-block">
+                                      <IconifyIcon icon="bx:calendar" className="me-1" />
+                                      {dayjs(app.createdAt).format("MMM DD, YYYY")}
+                                    </small>
+                                    <small className="text-muted">
+                                      <IconifyIcon icon="bx:map" className="me-1" />
+                                      {app.job.country}
+                                    </small>
+                                  </div>
+                                  
+                                  <Button
+                                    variant="outline-primary"
+                                    size="sm"
+                                    className="w-100"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      onViewEdit(app);
+                                    }}
+                                  >
+                                    <IconifyIcon icon="bx:show" className="me-1" />
+                                    View Details
+                                  </Button>
+                                </Card.Body>
+                              </Card>
+                            </div>
+                          )}
+                        </Draggable>
+                      ))}
+                    {provided.placeholder}
+                    
+                    {applications.filter((app) => app.status === status).length === 0 && (
+                      <div className="text-center text-muted py-4">
+                        <IconifyIcon icon="bx:folder-open" className="d-block mb-2" />
+                        <small>No applications</small>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </Droppable>
+            </Card.Body>
+          </Card>
+        </Col>
+      ))}
+    </Row>
+  </DragDropContext>
+);
+
+const ApplicationModal: React.FC<{
+  show: boolean;
+  onHide: () => void;
+  application: Application | null;
+  isEditing: boolean;
+  onSave: (data: any) => void;
+}> = ({ show, onHide, application, isEditing, onSave }) => (
+  <Modal show={show} onHide={onHide} size="lg" centered>
+    <Modal.Header closeButton className="border-0 pb-0">
+      <Modal.Title className="fw-semibold">
+        {isEditing ? "Edit Application" : "Add New Application"}
+      </Modal.Title>
+    </Modal.Header>
+    <Modal.Body className="pt-0">
+      <ApplicationForm
+        application={application}
+        onSave={onSave}
+        onCancel={onHide}
+      />
+    </Modal.Body>
+  </Modal>
+);
+
+// Enhanced Application Form Component
 const ApplicationForm: React.FC<{
-  application: JobApplication | null;
+  application: Application | null;
   onSave: (data: any) => void;
   onCancel: () => void;
 }> = ({ application, onSave, onCancel }) => {
   const [formData, setFormData] = useState({
-    jobTitle: application?.jobTitle || '',
-    company: application?.company || '',
-    status: application?.status || 'Applied',
-    priority: application?.priority || 'Medium',
-    salary: application?.salary || '',
-    location: application?.location || '',
-    notes: application?.notes || '',
-    nextAction: application?.nextAction || '',
-    contactPerson: application?.contactPerson || '',
-    contactEmail: application?.contactEmail || ''
+    id: application?.id,
+    jobTitle: application?.job.title || "",
+    company: application?.job.company.name || "",
+    status: application?.status || "APPLIED",
+    priority: application?.priority || "MEDIUM",
+    location: application?.job.country || "",
+    notes: application?.notes || "",
+    candidateName: application
+      ? `${application.candidate.user.firstName} ${application.candidate.user.lastName}`
+      : "",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
+    setIsSubmitting(true);
+    
+    try {
+      await onSave(formData);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   return (
@@ -547,23 +793,29 @@ const ApplicationForm: React.FC<{
       <Row>
         <Col md={6}>
           <Form.Group className="mb-3">
-            <Form.Label>Job Title *</Form.Label>
+            <Form.Label className="fw-semibold">Job Title *</Form.Label>
             <Form.Control
               type="text"
+              name="jobTitle"
               value={formData.jobTitle}
-              onChange={(e) => handleChange('jobTitle', e.target.value)}
-              required
+              onChange={handleChange}
+              readOnly={!!application}
+              disabled={!!application}
+              className={application ? "bg-light" : ""}
             />
           </Form.Group>
         </Col>
         <Col md={6}>
           <Form.Group className="mb-3">
-            <Form.Label>Company *</Form.Label>
+            <Form.Label className="fw-semibold">Company *</Form.Label>
             <Form.Control
               type="text"
+              name="company"
               value={formData.company}
-              onChange={(e) => handleChange('company', e.target.value)}
-              required
+              onChange={handleChange}
+              readOnly={!!application}
+              disabled={!!application}
+              className={application ? "bg-light" : ""}
             />
           </Form.Group>
         </Col>
@@ -572,52 +824,29 @@ const ApplicationForm: React.FC<{
       <Row>
         <Col md={6}>
           <Form.Group className="mb-3">
-            <Form.Label>Status</Form.Label>
-            <Form.Select
-              value={formData.status}
-              onChange={(e) => handleChange('status', e.target.value)}
-            >
-              {statusOptions.map(status => (
-                <option key={status} value={status}>{status}</option>
-              ))}
-            </Form.Select>
-          </Form.Group>
-        </Col>
-        <Col md={6}>
-          <Form.Group className="mb-3">
-            <Form.Label>Priority</Form.Label>
-            <Form.Select
-              value={formData.priority}
-              onChange={(e) => handleChange('priority', e.target.value)}
-            >
-              {priorityOptions.map(priority => (
-                <option key={priority} value={priority}>{priority}</option>
-              ))}
-            </Form.Select>
-          </Form.Group>
-        </Col>
-      </Row>
-
-      <Row>
-        <Col md={6}>
-          <Form.Group className="mb-3">
-            <Form.Label>Salary</Form.Label>
+            <Form.Label className="fw-semibold">Candidate *</Form.Label>
             <Form.Control
               type="text"
-              value={formData.salary}
-              onChange={(e) => handleChange('salary', e.target.value)}
-              placeholder="e.g., $120,000"
+              name="candidateName"
+              value={formData.candidateName}
+              onChange={handleChange}
+              readOnly={!!application}
+              disabled={!!application}
+              className={application ? "bg-light" : ""}
             />
           </Form.Group>
         </Col>
         <Col md={6}>
           <Form.Group className="mb-3">
-            <Form.Label>Location</Form.Label>
+            <Form.Label className="fw-semibold">Location</Form.Label>
             <Form.Control
               type="text"
+              name="location"
               value={formData.location}
-              onChange={(e) => handleChange('location', e.target.value)}
-              placeholder="e.g., San Francisco, CA"
+              onChange={handleChange}
+              readOnly={!!application}
+              disabled={!!application}
+              className={application ? "bg-light" : ""}
             />
           </Form.Group>
         </Col>
@@ -626,52 +855,63 @@ const ApplicationForm: React.FC<{
       <Row>
         <Col md={6}>
           <Form.Group className="mb-3">
-            <Form.Label>Contact Person</Form.Label>
-            <Form.Control
-              type="text"
-              value={formData.contactPerson}
-              onChange={(e) => handleChange('contactPerson', e.target.value)}
-            />
+            <Form.Label className="fw-semibold">Status</Form.Label>
+            <Form.Select
+              name="status"
+              value={formData.status}
+              onChange={handleChange}
+            >
+              {STATUS_OPTIONS.map((status) => (
+                <option key={status} value={status}>
+                  {STATUS_LABELS[status]}
+                </option>
+              ))}
+            </Form.Select>
           </Form.Group>
         </Col>
         <Col md={6}>
           <Form.Group className="mb-3">
-            <Form.Label>Contact Email</Form.Label>
-            <Form.Control
-              type="email"
-              value={formData.contactEmail}
-              onChange={(e) => handleChange('contactEmail', e.target.value)}
-            />
+            <Form.Label className="fw-semibold">Priority</Form.Label>
+            <Form.Select
+              name="priority"
+              value={formData.priority}
+              onChange={handleChange}
+            >
+              {PRIORITY_OPTIONS.map((priority) => (
+                <option key={priority} value={priority}>
+                  {PRIORITY_LABELS[priority]}
+                </option>
+              ))}
+            </Form.Select>
           </Form.Group>
         </Col>
       </Row>
 
-      <Form.Group className="mb-3">
-        <Form.Label>Notes</Form.Label>
+      <Form.Group className="mb-4">
+        <Form.Label className="fw-semibold">Notes</Form.Label>
         <Form.Control
           as="textarea"
-          rows={3}
+          rows={4}
+          name="notes"
           value={formData.notes}
-          onChange={(e) => handleChange('notes', e.target.value)}
+          onChange={handleChange}
+          placeholder="Add any additional notes or comments..."
         />
       </Form.Group>
 
-      <Form.Group className="mb-3">
-        <Form.Label>Next Action</Form.Label>
-        <Form.Control
-          type="text"
-          value={formData.nextAction}
-          onChange={(e) => handleChange('nextAction', e.target.value)}
-          placeholder="e.g., Follow up in 1 week"
-        />
-      </Form.Group>
-
-      <div className="d-flex justify-content-end gap-2">
-        <Button variant="secondary" onClick={onCancel}>
+      <div className="d-flex justify-content-end gap-2 pt-3 border-top">
+        <Button variant="outline-secondary" onClick={onCancel} disabled={isSubmitting}>
           Cancel
         </Button>
-        <Button variant="primary" type="submit">
-          Save Application
+        <Button 
+          variant="primary" 
+          type="submit" 
+          disabled={isSubmitting}
+          className="d-flex align-items-center"
+        >
+          {isSubmitting && <Spinner size="sm" className="me-2" />}
+          <IconifyIcon icon="bx:save" className="me-1" />
+          {application ? "Update" : "Save"} Application
         </Button>
       </div>
     </Form>

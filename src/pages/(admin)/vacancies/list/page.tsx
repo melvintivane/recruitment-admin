@@ -1,10 +1,11 @@
+import PageMetaData from "@/components/PageTitle";
+import Spinner from "@/components/Spinner";
+import IconifyIcon from "@/components/wrappers/IconifyIcon";
 import { useState } from "react";
-import { Spinner as BootstrapSpinner, Badge, Button, Card, CardBody, Col, Row } from "react-bootstrap";
+import { Badge, Button, Card, CardBody, Col, Row, Alert } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "react-query";
 import { withSwal } from "react-sweetalert2";
-import PageMetaData from "@/components/PageTitle";
-import IconifyIcon from "@/components/wrappers/IconifyIcon";
 import { getAllVacancies, deleteVacancy } from "@/services/vacancyService";
 import { VacancyApiResponse } from "@/types/vacancy";
 import { SweetAlertResult } from "sweetalert2";
@@ -170,15 +171,6 @@ const VacanciesList = withSwal(({ swal }: VacanciesListProps) => {
     return buttons;
   };
 
-  // Loading state
-  if (isLoading) {
-    return (
-      <div className="d-flex justify-content-center py-5">
-        <BootstrapSpinner animation="border" variant="primary" />
-      </div>
-    );
-  }
-
   // Error state
   if (error) {
     return (
@@ -232,7 +224,42 @@ const VacanciesList = withSwal(({ swal }: VacanciesListProps) => {
                     </tr>
                   </thead>
                   <tbody>
-                    {vacancies?.content.map((vacancy) => (
+                    {isLoading ? (
+                      <tr>
+                        <td
+                          colSpan={8}
+                          className="text-center py-4"
+                        >
+                          <div className="flex flex-col items-center gap-4">
+                            <div className="flex gap-2">
+                              <Spinner
+                                type="bordered"
+                                className="m-2"
+                                color="primary"
+                              />
+                              <Spinner
+                                type="bordered"
+                                className="m-2"
+                                color="secondary"
+                              />
+                              <Spinner
+                                type="bordered"
+                                className="m-2"
+                                color="success"
+                              />
+                              <Spinner
+                                type="bordered"
+                                className="m-2"
+                                color="danger"
+                              />
+                            </div>
+                            <span className="text-center">
+                              Loading applications...
+                            </span>
+                          </div>
+                        </td>
+                      </tr>) : vacancies?.content.length ? (
+                    vacancies?.content.map((vacancy) => (
                       <tr key={vacancy.id}>
                         <td>
                           <Link
@@ -301,7 +328,18 @@ const VacanciesList = withSwal(({ swal }: VacanciesListProps) => {
                           </Button>
                         </td>
                       </tr>
-                    ))}
+                    ))) : (
+                      <tr>
+                        <td
+                          colSpan={8}
+                          className="text-center py-4"
+                        >
+                          <Alert variant="info" className="text-center">
+                            No vacancies found.
+                          </Alert>
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>

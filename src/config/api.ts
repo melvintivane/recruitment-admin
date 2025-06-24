@@ -9,6 +9,9 @@ export const API_ENDPOINTS = {
   JOB_APPLICATIONS: `${API_BASE_URL}/job-applications`,
   CANDIDATES: `${API_BASE_URL}/candidates`,
   CATEGORIES: `${API_BASE_URL}/vacancies/categories`,
-
+  USERS: `${API_BASE_URL}/users`,
+  BLOGS: `${API_BASE_URL}/blogs`,
+  BLOG_CATEGORIES: `${API_BASE_URL}/blog-categories`,
+  BLOG_TAGS: `${API_BASE_URL}/blog-tags`,
 };
 

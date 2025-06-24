@@ -86,6 +86,18 @@ export const MENU_ITEMS: MenuItemType[] = [
         url: "/blogs/categories",
         parentKey: "page-blogs"
       },
+      {
+        key: "blog-tags",
+        label: "Blog Tags",
+        url: "/blogs/tags",
+        parentKey: "page-blogs"
+      },
+      {
+        key: "blog-commentary",
+        label: "Blog Commentary",
+        url: "/blogs/commentary",
+        parentKey: "page-blogs"
+      },
     ],
   },
   {

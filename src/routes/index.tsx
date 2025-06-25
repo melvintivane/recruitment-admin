@@ -1,5 +1,4 @@
 import JobApplicationPipeline from "@/pages/(admin)/applications/pipeline/page";
-import BlogPosts from "@/pages/(admin)/blog/page";
 import CategoriesCreate from "@/pages/(admin)/categories/create/page";
 import CategoriesList from "@/pages/(admin)/categories/list/page";
 import { lazy } from "react";
@@ -23,6 +22,17 @@ const CandidateList = lazy(() => import("@/pages/(admin)/candidate/list/page"));
 const CandidateCreate = lazy(() => import("@/pages/(admin)/candidate/create/page"));
 const CandidateDetails = lazy(() => import("@/pages/(admin)/candidate/details/page"));
 const CandidateEdit = lazy(() => import("@/pages/(admin)/candidate/edit/page"));
+const UserList = lazy(() => import("@/pages/(admin)/user/list/page"));
+const UserEdit = lazy(() => import("@/pages/(admin)/user/edit/page"));
+const UserCreate = lazy(() => import("@/pages/(admin)/user/create/page"));
+const BlogCreate = lazy(() => import("@/pages/(admin)/blog/create/page"));
+const BlogList = lazy(() => import("@/pages/(admin)/blog/list/page"));
+const BlogCategoryList = lazy(() => import("@/pages/(admin)/blogCategory/list/page"));
+const BlogCategoryCreate = lazy(() => import("@/pages/(admin)/blogCategory/create/page"));
+const BlogCategoryEdit = lazy(() => import("@/pages/(admin)/blogCategory/edit/page"));
+const BlogTagList = lazy(() => import("@/pages/(admin)/blogTag/list/page"));
+const BlogTagCreate = lazy(() => import("@/pages/(admin)/blogTag/create/page"));
+const BlogTagEdit = lazy(() => import("@/pages/(admin)/blogTag/edit/page"));
 
 // Dashboard Routes
 const Analytics = lazy(() => import("@/pages/(admin)/dashboard/analytics/page"));
@@ -71,9 +81,44 @@ const appsRoutes: RoutesProps[] = [
     element: <Email />,
   },
   {
-    name: "Blog Posts",
+    name: "Blog Create",
+    path: "/blogs/create",
+    element: <BlogCreate />,
+  },
+  {
+    name: "Blog List",
     path: "/blogs",
-    element: <BlogPosts />,
+    element: <BlogList />,
+  },
+  {
+    name: "Blog Categories",
+    path: "/blogs/categories",
+    element: <BlogCategoryList />,
+  },
+  {
+    name:"Blog Category Create",
+    path:"/blogs/categories/create",
+    element: <BlogCategoryCreate />,
+  },
+  {
+    name: "Blog Category Edit",
+    path: "/blogs/categories/edit/:categoryId",
+    element: <BlogCategoryEdit />,
+  },
+  {
+    name: "Blog Tags",
+    path: "/blogs/tags",
+    element: <BlogTagList />,
+  },
+  {
+    name: "Blog Tag Create",
+    path: "/blogs/tags/create",
+    element: <BlogTagCreate />,
+  },
+  {
+    name: "Blog Tag Edit",
+    path: "/blogs/tags/edit/:tagId",
+    element: <BlogTagEdit />,
   },
   {
     name: "Vacancies List",
@@ -154,6 +199,21 @@ const appsRoutes: RoutesProps[] = [
     name: "Job Category Create",
     path: "/categories/create",
     element: <CategoriesCreate />,
+  },
+  {
+    name: "User List",
+    path: "/users",
+    element: <UserList />,
+  },
+  {
+    name: "User Edit",
+    path: "/users/edit/:userId",
+    element: <UserEdit />,
+  },
+  {
+    name: "User Create",
+    path: "/users/create",
+    element: <UserCreate />,
   }
 ];
 

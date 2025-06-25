@@ -28,10 +28,9 @@ export const MENU_ITEMS: MenuItemType[] = [
     url: "/apps/email",
   },
   {
-    key: "apps-invoices",
-    icon: "solar:bill-list-broken",
-    label: "Blogs",
-    url: "/blogs",
+    key: "pages",
+    label: "PAGES",
+    isTitle: true,
   },
   {
     key: "page-vacancies",
@@ -62,6 +61,44 @@ export const MENU_ITEMS: MenuItemType[] = [
     label: "Categories",
     icon: "solar:layers-broken",
     url: "/categories",
+  },
+  {
+    key: "page-blogs",
+    label: "Blogs",
+    isTitle: false,
+    icon: "solar:bill-list-broken",
+    children: [
+      {
+        key: "blog-list",
+        label: "Blog List",
+        url: "/blogs",
+        parentKey: "page-blogs"
+      },
+      {
+        key: "blog-create",
+        label: "Create Blog",
+        url: "/blogs/create",
+        parentKey: "page-blogs"
+      },
+      {
+        key: "blog-categories",
+        label: "Blog Categories",
+        url: "/blogs/categories",
+        parentKey: "page-blogs"
+      },
+      {
+        key: "blog-tags",
+        label: "Blog Tags",
+        url: "/blogs/tags",
+        parentKey: "page-blogs"
+      },
+      {
+        key: "blog-commentary",
+        label: "Blog Commentary",
+        url: "/blogs/commentary",
+        parentKey: "page-blogs"
+      },
+    ],
   },
   {
     key: "page-user",

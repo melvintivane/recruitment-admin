@@ -1,28 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import ComponentContainerCard from "@/components/ComponentContainerCard";
 import PageMetaData from "@/components/PageTitle";
+import { getAllBlogCategories } from "@/services/blogCategoryService";
 import { createBlog } from "@/services/blogService";
 import { Icon } from "@iconify/react";
 import { useState } from "react";
-import { Button, Col, Form, Row } from "react-bootstrap";
-import { useMutation } from "react-query";
+import { Button, Col, Form, Row, Spinner } from "react-bootstrap";
+import { useMutation, useQuery } from "react-query";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-
-const allCategories = [
-  { id: "uuid-1", name: "Tech" },
-  { id: "uuid-2", name: "Business" },
-  { id: "uuid-3", name: "Lifestyle" },
-];
-
-const allTags = [
-  { id: 1, name: "Java" },
-  { id: 2, name: "Spring Boot" },
-  { id: 3, name: "React" },
-  { id: 4, name: "Tailwind" },
-];
 
 const BlogCreate = () => {
   const navigate = useNavigate();
@@ -38,6 +26,23 @@ const BlogCreate = () => {
     ],
   };
 
+  // Fetch categories and tags from API
+  const { data: categories, isLoading: isLoadingCategories } = useQuery(
+    "blogCategories",
+    getAllBlogCategories
+  );
+  /*const { data: tags, isLoading: isLoadingTags } = useQuery(
+    "blogTags",
+    getAllBlogTags
+  );*/
+
+  const allTags = [
+  { id: 1, name: "Java" },
+  { id: 2, name: "Spring Boot" },
+  { id: 3, name: "React" },
+  { id: 4, name: "Tailwind" },
+];
+
   const [formData, setFormData] = useState({
     title: "",
     subtitle: "",
@@ -45,7 +50,7 @@ const BlogCreate = () => {
     quote: "",
     image: "",
     author: "",
-    categoryIds: [] as string[], // UUIDs
+    categoryId: "", // Changed to single string for category
     tagIds: [] as number[], // IDs
   });
 
@@ -61,7 +66,7 @@ const BlogCreate = () => {
   });
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -69,16 +74,6 @@ const BlogCreate = () => {
 
   const handleBodyChange = (value: string) => {
     setFormData(prev => ({ ...prev, body: value }));
-  };
-
-  const handleCategorySelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selected = e.target.value;
-    if (selected && !formData.categoryIds.includes(selected)) {
-      setFormData(prev => ({
-        ...prev,
-        categoryIds: [...prev.categoryIds, selected],
-      }));
-    }
   };
 
   const handleTagSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -89,13 +84,6 @@ const BlogCreate = () => {
         tagIds: [...prev.tagIds, selected],
       }));
     }
-  };
-
-  const removeCategory = (id: string) => {
-    setFormData(prev => ({
-      ...prev,
-      categoryIds: prev.categoryIds.filter(c => c !== id),
-    }));
   };
 
   const removeTag = (id: number) => {
@@ -110,7 +98,7 @@ const BlogCreate = () => {
 
     const blogData = {
       ...formData,
-      categoryId: formData.categoryIds[0] || "", // se necessário enviar apenas um
+      categoryId: formData.categoryId, // Already single value
     };
 
     mutation.mutate(blogData);
@@ -184,36 +172,37 @@ const BlogCreate = () => {
               <Row className="mb-3">
                 <Col md={6}>
                   <Form.Group controlId="categoryId">
-                    <Form.Label>Categories *</Form.Label>
-                    <Form.Select onChange={handleCategorySelect}>
-                      <option value="">Select a category</option>
-                      {allCategories.map(c => (
-                        <option key={c.id} value={c.id}>
-                          {c.name}
-                        </option>
-                      ))}
-                    </Form.Select>
-                    <div className="mt-2 d-flex flex-wrap gap-2">
-                      {formData.categoryIds.map(id => {
-                        const cat = allCategories.find(c => c.id === id);
-                        return (
-                          <span
-                            key={id}
-                            className="badge bg-primary d-flex align-items-center gap-1"
-                          >
-                            {cat?.name}
-                            <Icon
-                              icon="mdi:close-circle"
-                              className="text-danger cursor-pointer"
-                              onClick={() => removeCategory(id)}
-                            />
-                          </span>
-                        );
-                      })}
-                    </div>
+                    <Form.Label>Category *</Form.Label>
+                    {isLoadingCategories ? (
+                      <Spinner animation="border" size="sm" />
+                    ) : (
+                      <>
+                        <Form.Select
+                          name="categoryId"
+                          value={formData.categoryId}
+                          onChange={handleChange}
+                          required
+                        >
+                          <option value="">Select a category</option>
+                          {categories?.content?.map(c => (
+                            <option key={c.id} value={c.id}>
+                              {c.name}
+                            </option>
+                          ))}
+                        </Form.Select>
+                        {formData.categoryId && (
+                          <div className="mt-2">
+                            <span className="badge bg-primary">
+                              {categories?.content?.find(c => c.id === formData.categoryId)?.name}
+                            </span>
+                          </div>
+                        )}
+                      </>
+                    )}
                   </Form.Group>
                 </Col>
 
+                
                 <Col md={6}>
                   <Form.Group controlId="tagIds">
                     <Form.Label>Tags</Form.Label>
@@ -276,7 +265,7 @@ const BlogCreate = () => {
                 <Button
                   variant="primary"
                   type="submit"
-                  disabled={mutation.isLoading}
+                  disabled={mutation.isLoading || isLoadingCategories }
                   className="me-1"
                 >
                   {mutation.isLoading ? "Creating..." : "Create Blog"}

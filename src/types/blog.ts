@@ -1,6 +1,7 @@
 export interface BlogSummaryDTO {
   id: string;
   title: string;
+  author?: string;
   subtitle: string;
   image?: string;
   createdAt: string;

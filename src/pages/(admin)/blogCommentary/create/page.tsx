@@ -1,134 +1,156 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import ComponentContainerCard from "@/components/ComponentContainerCard";
 import PageMetaData from "@/components/PageTitle";
-import { createBlogTag } from "@/services/blogTagService"; // novo service
+import { createBlogCommentary } from "@/services/blogCommentaryService";
+import { getAllBlogs } from "@/services/blogService";
+import { BlogSummaryDTO } from "@/types/blog";
 import { useState } from "react";
-import { Button, Col, Form, Row } from "react-bootstrap";
-import { useMutation } from "react-query";
-import ReactQuill from "react-quill";
-import "react-quill/dist/quill.snow.css";
+import { Button, Col, Form, Row, Spinner } from "react-bootstrap";
+import { useMutation, useQuery } from "react-query";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
-const BlogTagCreate = () => {
+const BlogCommentaryCreate = () => {
   const navigate = useNavigate();
-
-  const modules = {
-    toolbar: [
-      [{ header: [1, 2, false] }],
-      ["bold", "italic", "underline"],
-      [{ list: "ordered" }, { list: "bullet" }],
-      ["clean"],
-    ],
-  };
-
   const [formData, setFormData] = useState({
-    name: "",
-    code: "",
-    description: ""
+    blogId: "",
+    commentary: ""
   });
+  /*const [currentUser, setCurrentUser] = useState<{id: string, name: string} | null>(null);
+   useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const decoded = JSON.parse(atob(token.split('.')[1]));
+        setCurrentUser({
+          id: decoded.sub || decoded.userId,
+          name: decoded.name || "Usuário"
+        });
+      } catch (error) {
+        console.error("Erro ao decodificar token:", error);
+      }
+    }
+  }, []);*/
 
-  const mutation = useMutation(createBlogTag, {
+  // Busca todos os blogs para o select
+  const { data: blogs, isLoading: isLoadingBlogs } = useQuery<BlogSummaryDTO[]>(
+    "blogsForCommentary",
+    async () => {
+      const response = await getAllBlogs();
+      return response.content; // Assumindo que a API retorna paginação
+    }
+  );
+
+ const mutation = useMutation(createBlogCommentary, {
     onSuccess: () => {
-      toast.success("Blog tag created successfully!");
-      navigate("/blogs/tags");
+      toast.success("Comentário criado com sucesso!");
+      navigate("/blogs/commentaries");
     },
     onError: (error: any) => {
-      console.error("Error creating blog tag:", error.message);
-      toast.error(error.message || "Failed to create tag");
+      toast.error(error.message || "Falha ao criar comentário");
     },
   });
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleDescriptionChange = (value: string) => {
-    setFormData(prev => ({ ...prev, description: value }));
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.name.trim()) {
-      toast.error("Name is required");
+    if (!formData.blogId) {
+      toast.error("Selecione um blog");
       return;
     }
 
-    mutation.mutate(formData);
+    if (!formData.commentary.trim()) {
+      toast.error("Digite o comentário");
+      return;
+    }
+
+    mutation.mutate({
+      blogId: formData.blogId,
+      commentary: formData.commentary
+      // O userId será adicionado automaticamente no service
+    });
   };
 
   return (
     <>
-      <PageMetaData title="Create Blog Tag" />
+      <PageMetaData title="Criar Comentário" />
 
       <Row>
         <Col>
           <ComponentContainerCard
-            id="blog-tag-create-form"
-            title="Create New Blog Tag"
-            description="Fill in the form to add a new blog tag"
+            id="blog-commentary-create-form"
+            title="Novo Comentário"
+            description="Adicione um comentário ao blog selecionado"
           >
-            <Form onSubmit={handleSubmit}>
-              <Row className="mb-3">
-                <Col md={6}>
-                  <Form.Group controlId="name">
-                    <Form.Label>Name *</Form.Label>
-                    <Form.Control
-                      type="text"
-                      name="name"
-                      placeholder="e.g. React"
-                      value={formData.name}
-                      onChange={handleChange}
-                      required
-                    />
-                  </Form.Group>
-                </Col>
-                <Col md={6}>
-                  <Form.Group controlId="code">
-                    <Form.Label>Code *</Form.Label>
-                    <Form.Control
-                      type="text"
-                      name="code"
-                      placeholder="e.g. react"
-                      value={formData.code}
-                      onChange={handleChange}
-                      required
-                    />
-                  </Form.Group>
-                </Col>
-              </Row>
-
-              <div className="mb-4">
-                <Form.Label>Description</Form.Label>
-                <ReactQuill
-                  theme="snow"
-                  value={formData.description}
-                  onChange={handleDescriptionChange}
-                  modules={modules}
-                />
+            {isLoadingBlogs ? (
+              <div className="text-center py-4">
+                <Spinner animation="border" variant="primary" />
+                <p>Carregando blogs...</p>
               </div>
+            ) : (
+              <Form onSubmit={handleSubmit}>
+                <Row className="mb-3">
+                  <Col>
+                    <Form.Group controlId="blogId">
+                      <Form.Label>Selecione o Blog *</Form.Label>
+                      <Form.Select
+                        name="blogId"
+                        value={formData.blogId}
+                        onChange={handleChange}
+                        required
+                      >
+                        <option value="">Selecione um blog</option>
+                        {blogs?.map(blog => (
+                          <option key={blog.id} value={blog.id}>
+                            {blog.title} | {blog.author || "Autor não especificado"}
+                          </option>
+                        ))}
+                      </Form.Select>
+                    </Form.Group>
+                  </Col>
+                </Row>
 
-              <div className="mt-4">
-                <Button
-                  variant="primary"
-                  type="submit"
-                  disabled={mutation.isLoading}
-                  className="me-2"
-                >
-                  {mutation.isLoading ? "Creating..." : "Create Tag"}
-                </Button>
-                <Button
-                  variant="secondary"
-                  onClick={() => navigate("/blogs/tags")}
-                >
-                  Cancel
-                </Button>
-              </div>
-            </Form>
+                <Row className="mb-3">
+                  <Col>
+                    <Form.Group controlId="commentary">
+                      <Form.Label>Comentário *</Form.Label>
+                      <Form.Control
+                        as="textarea"
+                        rows={5}
+                        name="commentary"
+                        placeholder="Digite seu comentário..."
+                        value={formData.commentary}
+                        onChange={handleChange}
+                        required
+                      />
+                    </Form.Group>
+                  </Col>
+                </Row>
+
+                <div className="mt-4">
+                  <Button
+                    variant="primary"
+                    type="submit"
+                    disabled={mutation.isLoading}
+                    className="me-2"
+                  >
+                    {mutation.isLoading ? "Enviando..." : "Publicar Comentário"}
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    onClick={() => navigate("/blogs/commentaries")}
+                  >
+                    Cancelar
+                  </Button>
+                </div>
+              </Form>
+            )}
           </ComponentContainerCard>
         </Col>
       </Row>
@@ -136,4 +158,4 @@ const BlogTagCreate = () => {
   );
 };
 
-export default BlogTagCreate;
+export default BlogCommentaryCreate;

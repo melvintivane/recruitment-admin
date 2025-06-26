@@ -1,98 +1,67 @@
 import ComponentContainerCard from "@/components/ComponentContainerCard";
 import PageMetaData from "@/components/PageTitle";
-import { getBlogTagById, updateBlogTag } from "@/services/blogTagService";
-import { BlogTagType, BlogTagUpdateDto } from "@/types/blogTag";
+import { getBlogCommentaryById, updateBlogCommentary } from "@/services/blogCommentaryService";
+import { BlogCommentaryResponseDTO, BlogCommentaryUpdateDTO } from "@/types/blogCommentary";
 import { useState } from "react";
-import {
-  Spinner as BootstrapSpinner,
-  Button,
-  Col,
-  Form,
-  Row,
-} from "react-bootstrap";
+import { Spinner as BootstrapSpinner, Button, Col, Form, Row } from "react-bootstrap";
 import { useMutation, useQuery } from "react-query";
-import ReactQuill from "react-quill";
-import "react-quill/dist/quill.snow.css";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 
-interface BlogTagFormData {
-  name: string;
-  code: string;
-  description: string;
+interface BlogCommentaryFormData {
+  commentary: string;
 }
 
-const BlogTagEdit = () => {
-  const { tagId } = useParams<{ tagId: string }>();
+const BlogCommentaryEdit = () => {
+  const { commentaryId } = useParams<{ commentaryId: string }>();
   const navigate = useNavigate();
 
-  const modules = {
-    toolbar: [
-      [{ header: [1, 2, false] }],
-      ["bold", "italic", "underline"],
-      [{ list: "ordered" }, { list: "bullet" }],
-      ["clean"],
-    ],
-  };
-
-  const [formData, setFormData] = useState<BlogTagFormData>({
-    name: "",
-    code: "",
-    description: "",
+  const [formData, setFormData] = useState<BlogCommentaryFormData>({
+    commentary: "",
   });
 
   const {
-    data: tagData,
+    data: commentaryData,
     isLoading: isFetching,
     error: fetchError,
-  } = useQuery<BlogTagType, Error>(
-    ["blogTag", tagId],
+  } = useQuery<BlogCommentaryResponseDTO, Error>(
+    ["blogCommentary", commentaryId],
     () => {
-      if (!tagId) throw new Error("Tag ID is required");
-      return getBlogTagById(tagId);
+      if (!commentaryId) throw new Error("Commentary ID is required");
+      return getBlogCommentaryById(commentaryId);
     },
     {
-      enabled: !!tagId,
+      enabled: !!commentaryId,
       onSuccess: (data) => {
         setFormData({
-          name: data.name,
-          code: data.code,
-          description: data.description,
+          commentary: data.commentary,
         });
       },
       onError: (error) => {
-        toast.error(error.message || "Failed to load tag");
-        navigate("/blogs/tags");
+        toast.error(error.message || "Failed to load commentary");
+        navigate(-1); // Volta para a página anterior
       },
     }
   );
 
   const mutation = useMutation(
-    (params: { tagId: string; data: BlogTagUpdateDto }) =>
-      updateBlogTag(params.tagId, params.data),
+    (params: { commentaryId: string; data: BlogCommentaryUpdateDTO }) =>
+      updateBlogCommentary(params.commentaryId, params.data),
     {
       onSuccess: () => {
-        toast.success("Tag updated successfully!");
-        navigate("/blogs/tags");
+        toast.success("Commentary updated successfully!");
+        navigate(-1); // Volta para a página anterior após edição
       },
       onError: (error: any) => {
-        toast.error(error.message || "Failed to update tag");
+        toast.error(error.message || "Failed to update commentary");
       },
     }
   );
 
-  const handleDescriptionChange = (value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      description: value,
-    }));
-  };
-
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-
     setFormData((prev) => ({
       ...prev,
       [name]: value,
@@ -102,13 +71,11 @@ const BlogTagEdit = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const updatedData: BlogTagUpdateDto = {
-      name: formData.name,
-      code: formData.code,
-      description: formData.description,
+    const updatedData: BlogCommentaryUpdateDTO = {
+      commentary: formData.commentary,
     };
 
-    mutation.mutate({ tagId: tagId!, data: updatedData });
+    mutation.mutate({ commentaryId: commentaryId!, data: updatedData });
   };
 
   if (isFetching) {
@@ -119,63 +86,41 @@ const BlogTagEdit = () => {
     );
   }
 
-  if (fetchError || !tagData) {
+  if (fetchError || !commentaryData) {
     return (
       <div className="alert alert-danger mx-3 my-5">
-        {fetchError?.message || "Tag not found"}
+        {fetchError?.message || "Commentary not found"}
       </div>
     );
   }
 
   return (
     <>
-      <PageMetaData title={`Edit ${formData.name || "Tag"}`} />
+      <PageMetaData title={`Edit Commentary`} />
 
       <Row>
         <Col>
           <ComponentContainerCard
-            id="blog-tag-edit-form"
-            title={`Edit ${formData.name || "Blog Tag"}`}
-            description="Update the blog tag details below"
+            id="blog-commentary-edit-form"
+            title="Edit Blog Commentary"
+            description="Update the commentary content below"
           >
             <Form onSubmit={handleSubmit}>
               <Row className="mb-3">
-                <Col md={6}>
-                  <Form.Group controlId="name" className="mb-3">
-                    <Form.Label>Name *</Form.Label>
+                <Col>
+                  <Form.Group controlId="commentary" className="mb-3">
+                    <Form.Label>Commentary *</Form.Label>
                     <Form.Control
-                      type="text"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleChange}
-                      required
-                    />
-                  </Form.Group>
-                </Col>
-                <Col md={6}>
-                  <Form.Group controlId="code" className="mb-3">
-                    <Form.Label>Code *</Form.Label>
-                    <Form.Control
-                      type="text"
-                      name="code"
-                      value={formData.code}
+                      as="textarea"
+                      rows={5}
+                      name="commentary"
+                      value={formData.commentary}
                       onChange={handleChange}
                       required
                     />
                   </Form.Group>
                 </Col>
               </Row>
-
-              <div className="mb-4">
-                <Form.Label>Description</Form.Label>
-                <ReactQuill
-                  theme="snow"
-                  value={formData.description}
-                  onChange={handleDescriptionChange}
-                  modules={modules}
-                  placeholder="Write a short description of the tag..."
-                />
-              </div>
 
               <div className="mt-4">
                 <Button
@@ -197,12 +142,12 @@ const BlogTagEdit = () => {
                       Updating...
                     </>
                   ) : (
-                    "Update Tag"
+                    "Update Commentary"
                   )}
                 </Button>
                 <Button
                   variant="secondary"
-                  onClick={() => navigate("/blogs/tags")}
+                  onClick={() => navigate(-1)}
                   disabled={mutation.isLoading}
                 >
                   Cancel
@@ -216,4 +161,4 @@ const BlogTagEdit = () => {
   );
 };
 
-export default BlogTagEdit;
+export default BlogCommentaryEdit;

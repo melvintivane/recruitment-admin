@@ -1,48 +1,37 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import ComponentContainerCard from "@/components/ComponentContainerCard";
-import LocationSelector from "@/components/LocationSelector";
 import PageMetaData from "@/components/PageTitle";
-import { getCompanyById, updateCompany } from "@/services/companyService";
-import { CompanyType, CompanyUpdateDto } from "@/types/company";
+import { getAllBlogCategories } from "@/services/blogCategoryService";
+import { getBlogById, updateBlog } from "@/services/blogService";
+import { BlogResponseDTO, BlogUpdateDTO } from "@/types/blog";
+import { Icon } from "@iconify/react";
 import { useState } from "react";
-import {
-  Spinner as BootstrapSpinner,
-  Button,
-  Col,
-  Form,
-  Row,
-} from "react-bootstrap";
+import { Spinner as BootstrapSpinner, Button, Col, Form, Row } from "react-bootstrap";
 import { useMutation, useQuery } from "react-query";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 
-interface CompanyFormData {
-  name: string;
-  slug: string;
-  mobileNumber: string;
-  email: string;
-  website: string;
-  linkedin: string;
-  country: string;
-  state: string;
-  city: string;
-  industry: string;
-  foundedYear: number;
-  numberOfEmployees: number;
-  businessType: string;
-  description: string;
+interface BlogFormData {
+  title: string;
+  subtitle: string;
+  body: string;
+  quote?: string;
+  image?: string;
+  author?: string;
+  categoryId: string;
+  tagIds: number[];
 }
 
-const CompanyEdit = () => {
-  const { companyId } = useParams<{ companyId: string }>();
+const BlogEdit = () => {
+  const { blogId } = useParams<{ blogId: string }>();
   const navigate = useNavigate();
 
   // Quill editor configuration
   const modules = {
     toolbar: [
-      [{ header: [1, 2, 3, 4, 5, 6, false] }],
+      [{ header: [1, 2, 3, 4, false] }],
       ["bold", "italic", "underline", "strike"],
       [{ color: [] }, { background: [] }],
       [{ list: "ordered" }, { list: "bullet" }],
@@ -51,131 +40,133 @@ const CompanyEdit = () => {
     ],
   };
 
-  // Form state with TypeScript interface
-  const [formData, setFormData] = useState<CompanyFormData>({
-    name: "",
-    slug: "",
-    mobileNumber: "",
-    email: "",
-    website: "",
-    linkedin: "",
-    country: "",
-    state: "",
-    city: "",
-    industry: "",
-    foundedYear: new Date().getFullYear(),
-    numberOfEmployees: 0,
-    businessType: "",
-    description: "",
+  // Form state
+  const [formData, setFormData] = useState<BlogFormData>({
+    title: "",
+    subtitle: "",
+    body: "",
+    quote: "",
+    image: "",
+    author: "",
+    categoryId: "",
+    tagIds: [],
   });
 
-  // Fetch company data
+  // Fetch blog data
   const {
-    data: companyData,
+    data: blogData,
     isLoading: isFetching,
     error: fetchError,
-  } = useQuery<CompanyType, Error>(
-    ["company", companyId],
+  } = useQuery<BlogResponseDTO, Error>(
+    ["blog", blogId],
     () => {
-      if (!companyId) throw new Error("Company ID is required");
-      return getCompanyById(companyId);
+      if (!blogId) throw new Error("Blog ID is required");
+      return getBlogById(blogId);
     },
     {
-      enabled: !!companyId,
+      enabled: !!blogId,
       onSuccess: (data) => {
+        // Handle cases where blogCategory or blogTags might be empty strings
+        const categoryId = typeof data.blogCategory === 'object' ?
+          data.blogCategory?.id || "" : "";
+
+        const tagIds = Array.isArray(data.blogTags) ?
+          data.blogTags.map(tag => typeof tag === 'object' ? tag.id : 0).filter(id => id !== 0) :
+          [];
+
         setFormData({
-          name: data.name,
-          slug: data.slug,
-          mobileNumber: data.mobileNumber,
-          email: data.email,
-          website: data.website,
-          linkedin: data.linkedin,
-          country: data.country,
-          state: data.state,
-          city: data.city,
-          industry: data.industry,
-          foundedYear: data.foundedYear,
-          numberOfEmployees: data.numberOfEmployees,
-          businessType: data.businessType,
-          description: data.description,
+          title: data.title,
+          subtitle: data.subtitle,
+          body: data.body,
+          quote: data.quote || "",
+          image: data.image || "",
+          author: data.author || "",
+          categoryId,
+          tagIds,
         });
       },
       onError: (error) => {
-        toast.error(error.message || "Failed to load company data");
-        navigate("/companies");
+        toast.error(error.message || "Failed to load blog data");
+        navigate("/blogs");
       },
     }
   );
 
-  // Update company mutation
-  const mutation = useMutation(updateCompany, {
-    onSuccess: () => {
-      toast.success("Company updated successfully!");
-      navigate("/companies");
-    },
-    onError: (error: any) => {
-      toast.error(error.message);
-    },
-  });
+  // Fetch categories and tags
+  const { data: categories } = useQuery("blogCategories", getAllBlogCategories);
+  const allTags = [
+    { id: 1, name: "Java" },
+    { id: 2, name: "Spring Boot" },
+    { id: 3, name: "React" },
+    { id: 4, name: "Tailwind" },
+  ];
 
-  // Handle description change for Quill editor
-  const handleDescriptionChange = (value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      description: value,
-    }));
+  // Update blog mutation
+  const mutation = useMutation(
+    (data: { blogId: string; data: BlogUpdateDTO }) =>
+      updateBlog(data.blogId, data.data),
+    {
+      onSuccess: () => {
+        toast.success("Blog updated successfully!");
+        navigate("/blogs");
+      },
+      onError: (error: any) => {
+        toast.error(error.message || "Failed to update blog");
+      },
+    }
+  );
+
+  const handleBodyChange = (value: string) => {
+    setFormData(prev => ({ ...prev, body: value }));
   };
 
-  // Handle form field changes
   const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
 
-    setFormData((prev) => ({
+  const handleTagSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selected = Number(e.target.value);
+    if (selected && !formData.tagIds.includes(selected)) {
+      setFormData(prev => ({
+        ...prev,
+        tagIds: [...prev.tagIds, selected],
+      }));
+    }
+  };
+
+  const removeTag = (id: number) => {
+    setFormData(prev => ({
       ...prev,
-      [name]: value,
+      tagIds: prev.tagIds.filter(t => t !== id),
     }));
   };
 
-  const handleLocationChange = (newLocation: {
-    country: string;
-    state: string;
-    city: string;
-  }) => {
-    setFormData((prev) => ({
-      ...prev,
-      ...newLocation, // Atualiza country, state e city diretamente no formData
-    }));
-  };
-
-  // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const updatedData = {
-      name: formData.name,
-      slug: formData.slug,
-      mobileNumber: formData.mobileNumber,
-      email: formData.email,
-      website: formData.website,
-      linkedin: formData.linkedin,
-      country: formData.country,
-      state: formData.state,
-      city: formData.city,
-      industry: formData.industry,
-      foundedYear: formData.foundedYear,
-      numberOfEmployees: formData.numberOfEmployees,
-      businessType: formData.businessType,
-      description: formData.description,
-    } as CompanyUpdateDto;
+    // Prepare data according to BlogUpdateDTO
+    const updatedData: BlogUpdateDTO = {
+      title: formData.title,
+      subtitle: formData.subtitle,
+      body: formData.body,
+      ...(formData.quote && { quote: formData.quote }),
+      ...(formData.image && { image: formData.image }),
+      ...(formData.author && { author: formData.author }),
+      ...(formData.categoryId && { categoryId: formData.categoryId }),
+      ...(formData.tagIds.length > 0 && { tagIds: formData.tagIds }),
+    };
 
-    mutation.mutate({ companyId: companyId!, data: updatedData });
+    if (!blogId) {
+      toast.error("Blog ID is missing");
+      return;
+    }
+
+    mutation.mutate({ blogId, data: updatedData });
   };
 
-  // Loading state
   if (isFetching) {
     return (
       <div className="d-flex justify-content-center py-5">
@@ -184,205 +175,154 @@ const CompanyEdit = () => {
     );
   }
 
-  // Error state
-  if (fetchError || !companyData) {
+  if (fetchError || !blogData) {
     return (
       <div className="alert alert-danger mx-3 my-5">
-        {fetchError?.message || "Company not found"}
+        {fetchError?.message || "Blog not found"}
       </div>
     );
   }
 
   return (
     <>
-      <PageMetaData title={`Edit ${formData.name || "Company"}`} />
+      <PageMetaData title={`Edit ${formData.title || "Blog"}`} />
 
       <Row>
         <Col>
           <ComponentContainerCard
-            id="company-edit-form"
-            title={`Edit ${formData.name || "Company"}`}
-            description="Update the company information below"
+            id="blog-edit-form"
+            title={`Edit ${formData.title || "Blog"}`}
+            description="Update the blog post below"
           >
             <Form onSubmit={handleSubmit}>
-              {/* Basic Information Section */}
+              <Row className="mb-3">
+                <Col md={6}>
+                  <Form.Group controlId="title">
+                    <Form.Label>Title *</Form.Label>
+                    <Form.Control
+                      type="text"
+                      name="title"
+                      value={formData.title}
+                      onChange={handleChange}
+                      required
+                    />
+                  </Form.Group>
+                </Col>
+                <Col md={6}>
+                  <Form.Group controlId="subtitle">
+                    <Form.Label>Subtitle *</Form.Label>
+                    <Form.Control
+                      type="text"
+                      name="subtitle"
+                      value={formData.subtitle}
+                      onChange={handleChange}
+                      required
+                    />
+                  </Form.Group>
+                </Col>
+              </Row>
+
+              <Row className="mb-3">
+                <Col md={6}>
+                  <Form.Group controlId="author">
+                    <Form.Label>Author</Form.Label>
+                    <Form.Control
+                      type="text"
+                      name="author"
+                      value={formData.author}
+                      onChange={handleChange}
+                    />
+                  </Form.Group>
+                </Col>
+                <Col md={6}>
+                  <Form.Group controlId="image">
+                    <Form.Label>Image URL</Form.Label>
+                    <Form.Control
+                      type="text"
+                      name="image"
+                      value={formData.image}
+                      onChange={handleChange}
+                    />
+                  </Form.Group>
+                </Col>
+              </Row>
+
+              <Row className="mb-3">
+                <Col md={6}>
+                  <Form.Group controlId="categoryId">
+                    <Form.Label>Category *</Form.Label>
+                    <Form.Select
+                      name="categoryId"
+                      value={formData.categoryId}
+                      onChange={handleChange}
+                      required
+                    >
+                      <option value="">Select a category</option>
+                      {categories?.content?.map(category => (
+                        <option key={category.id} value={category.id}>
+                          {category.name}
+                        </option>
+                      ))}
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
+                <Col md={6}>
+                  <Form.Group controlId="tagIds">
+                    <Form.Label>Tags</Form.Label>
+                    <Form.Select onChange={handleTagSelect}>
+                      <option value="">Select a tag</option>
+                      {allTags.map(tag => (
+                        <option key={tag.id} value={tag.id}>
+                          {tag.name}
+                        </option>
+                      ))}
+                    </Form.Select>
+                    <div className="mt-2 d-flex flex-wrap gap-2">
+                      {formData.tagIds.map(id => {
+                        const tag = allTags.find(t => t.id === id);
+                        return (
+                          <span
+                            key={id}
+                            className="badge bg-secondary d-flex align-items-center gap-1"
+                          >
+                            {tag?.name}
+                            <Icon
+                              icon="mdi:close-circle"
+                              className="text-danger cursor-pointer"
+                              onClick={() => removeTag(id)}
+                            />
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </Form.Group>
+                </Col>
+              </Row>
+
+              <Row className="mb-3">
+                <Col>
+                  <Form.Group controlId="quote">
+                    <Form.Label>Quote</Form.Label>
+                    <Form.Control
+                      type="text"
+                      name="quote"
+                      value={formData.quote}
+                      onChange={handleChange}
+                    />
+                  </Form.Group>
+                </Col>
+              </Row>
+
               <div className="mb-4">
-                <h5 className="mb-3">Basic Information</h5>
-
-                <Row className="mb-3">
-                  <Col md={6}>
-                    <Form.Group controlId="name" className="mb-3">
-                      <Form.Label>Company Name *</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleChange}
-                        required
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col md={6}>
-                    <Form.Group controlId="slug" className="mb-3">
-                      <Form.Label>Slug *</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="slug"
-                        value={formData.slug}
-                        onChange={handleChange}
-                        required
-                      />
-                    </Form.Group>
-                  </Col>
-                </Row>
-
-                <Row className="mb-3">
-                  <Col md={6}>
-                    <Form.Group controlId="mobileNumber" className="mb-3">
-                      <Form.Label>Phone Number *</Form.Label>
-                      <Form.Control
-                        type="tel"
-                        name="mobileNumber"
-                        value={formData.mobileNumber}
-                        onChange={handleChange}
-                        required
-                        placeholder="+1234567890"
-                      />
-                    </Form.Group>
-                  </Col>
-                </Row>
-
-                <Row className="mb-3">
-                  <Col md={6}>
-                    <Form.Group controlId="email" className="mb-3">
-                      <Form.Label>Email *</Form.Label>
-                      <Form.Control
-                        type="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        required
-                        placeholder="contact@company.com"
-                      />
-                    </Form.Group>
-                  </Col>
-                </Row>
-
-                <LocationSelector
-                  onLocationChange={handleLocationChange}
-                  initialValues={{
-                    country: formData.country,
-                    state: formData.state,
-                    city: formData.city,
-                  }}
-                  key={`${formData.country}-${formData.state}-${formData.city}`}
-                />
-              </div>
-
-              {/* Company Details Section */}
-              <div className="mb-4">
-                <h5 className="mb-3">Company Details</h5>
-
-                <Row className="mb-3">
-                  <Col md={6}>
-                    <Form.Group controlId="industry" className="mb-3">
-                      <Form.Label>Industry *</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="industry"
-                        value={formData.industry}
-                        onChange={handleChange}
-                        required
-                        placeholder="e.g., Technology"
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col md={6}>
-                    <Form.Group controlId="businessType" className="mb-3">
-                      <Form.Label>Business Type *</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="businessType"
-                        value={formData.businessType}
-                        onChange={handleChange}
-                        required
-                        placeholder="e.g., Corporation, LLC"
-                      />
-                    </Form.Group>
-                  </Col>
-                </Row>
-
-                <Row className="mb-3">
-                  <Col md={6}>
-                    <Form.Group controlId="foundedYear" className="mb-3">
-                      <Form.Label>Founded Year *</Form.Label>
-                      <Form.Control
-                        type="number"
-                        name="foundedYear"
-                        value={formData.foundedYear}
-                        onChange={handleChange}
-                        required
-                        min="1800"
-                        max={new Date().getFullYear()}
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col md={6}>
-                    <Form.Group controlId="numberOfEmployees" className="mb-3">
-                      <Form.Label>Number of Employees *</Form.Label>
-                      <Form.Control
-                        type="number"
-                        name="numberOfEmployees"
-                        value={formData.numberOfEmployees}
-                        onChange={handleChange}
-                        required
-                        min="0"
-                      />
-                    </Form.Group>
-                  </Col>
-                </Row>
-
-                <Row className="mb-3">
-                  <Col md={6}>
-                    <Form.Group controlId="website" className="mb-3">
-                      <Form.Label>Website</Form.Label>
-                      <Form.Control
-                        type="url"
-                        name="website"
-                        value={formData.website}
-                        onChange={handleChange}
-                        placeholder="https://company.com"
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col md={6}>
-                    <Form.Group controlId="linkedin" className="mb-3">
-                      <Form.Label>LinkedIn</Form.Label>
-                      <Form.Control
-                        type="url"
-                        name="linkedin"
-                        value={formData.linkedin}
-                        onChange={handleChange}
-                        placeholder="https://linkedin.com/company"
-                      />
-                    </Form.Group>
-                  </Col>
-                </Row>
-              </div>
-
-              {/* Description Section */}
-              <div className="mb-4">
-                <h5 className="mb-3">Company Description *</h5>
+                <h5 className="mb-3">Content *</h5>
                 <ReactQuill
                   theme="snow"
-                  value={formData.description}
-                  onChange={handleDescriptionChange}
+                  value={formData.body}
+                  onChange={handleBodyChange}
                   modules={modules}
-                  placeholder="Describe your company..."
                 />
               </div>
 
-              {/* Form Actions */}
               <div className="mt-4">
                 <Button
                   variant="primary"
@@ -403,13 +343,12 @@ const CompanyEdit = () => {
                       Updating...
                     </>
                   ) : (
-                    "Update Company"
+                    "Update Blog"
                   )}
                 </Button>
                 <Button
                   variant="secondary"
-                  onClick={() => navigate("/companies")}
-                  disabled={mutation.isLoading}
+                  onClick={() => navigate("/blogs")}
                 >
                   Cancel
                 </Button>
@@ -422,4 +361,4 @@ const CompanyEdit = () => {
   );
 };
 
-export default CompanyEdit;
+export default BlogEdit;

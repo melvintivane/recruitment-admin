@@ -27,12 +27,16 @@ const UserEdit = lazy(() => import("@/pages/(admin)/user/edit/page"));
 const UserCreate = lazy(() => import("@/pages/(admin)/user/create/page"));
 const BlogCreate = lazy(() => import("@/pages/(admin)/blog/create/page"));
 const BlogList = lazy(() => import("@/pages/(admin)/blog/list/page"));
+const BlogEdit = lazy(() => import("@/pages/(admin)/blog/edit/page"));
+const BlogDetails = lazy(() => import("@/pages/(admin)/blog/details/page"));
 const BlogCategoryList = lazy(() => import("@/pages/(admin)/blogCategory/list/page"));
 const BlogCategoryCreate = lazy(() => import("@/pages/(admin)/blogCategory/create/page"));
 const BlogCategoryEdit = lazy(() => import("@/pages/(admin)/blogCategory/edit/page"));
 const BlogTagList = lazy(() => import("@/pages/(admin)/blogTag/list/page"));
 const BlogTagCreate = lazy(() => import("@/pages/(admin)/blogTag/create/page"));
 const BlogTagEdit = lazy(() => import("@/pages/(admin)/blogTag/edit/page"));
+const BlogCommentaryList = lazy(() => import("@/pages/(admin)/blogCommentary/list/page"));
+const BlogCommentaryCreate = lazy(() => import("@/pages/(admin)/blogCommentary/create/page"));
 
 // Dashboard Routes
 const Analytics = lazy(() => import("@/pages/(admin)/dashboard/analytics/page"));
@@ -91,6 +95,16 @@ const appsRoutes: RoutesProps[] = [
     element: <BlogList />,
   },
   {
+    name: "Blog Edit",
+    path: "/blogs/edit/:blogId",
+    element: <BlogEdit />,
+  },
+  {
+    name: "Blog Details",
+    path: "/blogs/:blogId",
+    element: <BlogDetails />,
+  },
+  {
     name: "Blog Categories",
     path: "/blogs/categories",
     element: <BlogCategoryList />,
@@ -119,6 +133,16 @@ const appsRoutes: RoutesProps[] = [
     name: "Blog Tag Edit",
     path: "/blogs/tags/edit/:tagId",
     element: <BlogTagEdit />,
+  },
+  {
+    name: "Blog Commentaries",
+    path: "/blogs/commentaries",
+    element: <BlogCommentaryList />,
+  },
+  {
+    name: "Blog Commentary Create",
+    path: "/blogs/commentaries/create",
+    element: <BlogCommentaryCreate />,
   },
   {
     name: "Vacancies List",

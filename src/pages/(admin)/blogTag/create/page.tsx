@@ -75,6 +75,19 @@ const BlogTagCreate = () => {
             <Form onSubmit={handleSubmit}>
               <Row className="mb-3">
                 <Col md={6}>
+                  <Form.Group controlId="code">
+                    <Form.Label>Code </Form.Label>
+                    <Form.Control
+                      type="text"
+                      name="code"
+                      placeholder="e.g. TAG-001,generated automatically"
+                      value={formData.code}
+                      onChange={handleChange}
+                      disabled
+                    />
+                  </Form.Group>
+                </Col>
+                <Col md={6}>
                   <Form.Group controlId="name">
                     <Form.Label>Name *</Form.Label>
                     <Form.Control
@@ -87,19 +100,7 @@ const BlogTagCreate = () => {
                     />
                   </Form.Group>
                 </Col>
-                <Col md={6}>
-                  <Form.Group controlId="code">
-                    <Form.Label>Code *</Form.Label>
-                    <Form.Control
-                      type="text"
-                      name="code"
-                      placeholder="e.g. react"
-                      value={formData.code}
-                      onChange={handleChange}
-                      required
-                    />
-                  </Form.Group>
-                </Col>
+                
               </Row>
 
               <div className="mb-4">

@@ -141,6 +141,18 @@ const BlogTagEdit = () => {
             <Form onSubmit={handleSubmit}>
               <Row className="mb-3">
                 <Col md={6}>
+                  <Form.Group controlId="code" className="mb-3">
+                    <Form.Label>Code </Form.Label>
+                    <Form.Control
+                      type="text"
+                      name="code"
+                      value={formData.code}
+                      onChange={handleChange}
+                      disabled
+                    />
+                  </Form.Group>
+                </Col>
+                <Col md={6}>
                   <Form.Group controlId="name" className="mb-3">
                     <Form.Label>Name *</Form.Label>
                     <Form.Control
@@ -152,18 +164,7 @@ const BlogTagEdit = () => {
                     />
                   </Form.Group>
                 </Col>
-                <Col md={6}>
-                  <Form.Group controlId="code" className="mb-3">
-                    <Form.Label>Code *</Form.Label>
-                    <Form.Control
-                      type="text"
-                      name="code"
-                      value={formData.code}
-                      onChange={handleChange}
-                      required
-                    />
-                  </Form.Group>
-                </Col>
+                
               </Row>
 
               <div className="mb-4">

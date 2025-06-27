@@ -95,7 +95,7 @@ export const MENU_ITEMS: MenuItemType[] = [
       {
         key: "blog-commentary",
         label: "Blog Commentary",
-        url: "/blogs/commentary",
+        url: "/blogs/commentaries",
         parentKey: "page-blogs"
       },
     ],
@@ -109,7 +109,7 @@ export const MENU_ITEMS: MenuItemType[] = [
       {
         key: "user-list",
         label: "User List",
-        url: "/users/list",
+        url: "/users",
         parentKey: "page-user",
       },
       {

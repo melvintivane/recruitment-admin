@@ -1,8 +1,8 @@
 import {
-    BlogApiResponse,
-    BlogCreationDTO,
-    BlogResponseDTO,
-    BlogUpdateDTO
+  BlogApiResponse,
+  BlogCreationDTO,
+  BlogResponseDTO,
+  BlogUpdateDTO
 } from '@/types/blog';
 import { API_ENDPOINTS } from '../config/api';
 

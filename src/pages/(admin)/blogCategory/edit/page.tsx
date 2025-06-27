@@ -141,6 +141,19 @@ const BlogCategoryEdit = () => {
             <Form onSubmit={handleSubmit}>
               <Row className="mb-3">
                 <Col md={6}>
+                  <Form.Group controlId="code" className="mb-3">
+                    <Form.Label>Code</Form.Label>
+                    <Form.Control
+                      type="text"
+                      name="code"
+                      value={formData.code}
+                      onChange={handleChange}
+                      placeholder="e.g.CAT-001,generated automatically"
+                      disabled
+                    />
+                  </Form.Group>
+                </Col>
+                <Col md={6}>
                   <Form.Group controlId="name" className="mb-3">
                     <Form.Label>Name *</Form.Label>
                     <Form.Control
@@ -152,18 +165,7 @@ const BlogCategoryEdit = () => {
                     />
                   </Form.Group>
                 </Col>
-                <Col md={6}>
-                  <Form.Group controlId="code" className="mb-3">
-                    <Form.Label>code *</Form.Label>
-                    <Form.Control
-                      type="text"
-                      name="code"
-                      value={formData.code}
-                      onChange={handleChange}
-                      required
-                    />
-                  </Form.Group>
-                </Col>
+               
               </Row>
 
               <div className="mb-4">

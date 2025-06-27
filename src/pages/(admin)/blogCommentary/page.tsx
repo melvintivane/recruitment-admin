@@ -1,25 +1,54 @@
-import { useEffect, useState } from "react";
-import { Button, Card, CardBody, Col, Row } from "react-bootstrap";
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Button, Card, CardBody, Col, Row, Spinner } from "react-bootstrap";
+import { useQuery } from "react-query";
+import { Link, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 import PageMetaData from "@/components/PageTitle";
 import IconifyIcon from "@/components/wrappers/IconifyIcon";
-import { getAllPosts } from "@/helpers/data";
-import type { BlogPost } from "@/types/data";
+import { getBlogCommentaries } from "@/services/blogCommentaryService";
+import type { BlogCommentaryResponseDTO } from "@/types/blogCommentary";
 
-const BlogPosts = () => {
-  const [allPosts, setAllPosts] = useState<BlogPost[]>();
+const BlogCommentariesList = () => {
+  const navigate = useNavigate();
+  const [page, setPage] = useState(0);
+  const [size, setSize] = useState(10);
+  const [searchTerm, setSearchTerm] = useState("");
 
-  useEffect(() => {
-    (async () => {
-      const data = await getAllPosts();
-      setAllPosts(data);
-    })();
-  }, []);
+  // Properly typed query using BlogCommentaryResponseDTO
+  const { 
+    data: paginatedResponse, 
+    isLoading, 
+    error 
+  } = useQuery<{
+    content: BlogCommentaryResponseDTO[];
+    totalElements: number;
+  }>(
+    ['blogCommentaries', page, size],
+    () => getBlogCommentaries("", page, size),
+    {
+      keepPreviousData: true,
+      onError: () => {
+        toast.error("Failed to load commentaries");
+      }
+    }
+  );
+
+  const commentaries = paginatedResponse?.content || [];
+  const totalCommentaries = paginatedResponse?.totalElements || 0;
+
+  const filteredCommentaries = commentaries.filter(commentary =>
+    commentary.commentary.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    commentary.user.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+  };
 
   return (
     <>
-      <PageMetaData title="Blog Posts" />
+      <PageMetaData title="Blog Commentaries" />
 
       <Row>
         <Col>
@@ -27,150 +56,121 @@ const BlogPosts = () => {
             <CardBody>
               <div className="d-flex flex-wrap justify-content-between gap-3">
                 <div className="search-bar">
-                  <span>
-                    <IconifyIcon icon="bx:search-alt" className="mb-1" />
-                  </span>
+                  <IconifyIcon icon="bx:search-alt" className="mb-1" />
                   <input
                     type="search"
-                    className="form-control"
-                    id="search"
-                    placeholder="Search posts..."
+                    placeholder="Search commentaries..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
-                <div>
-                  <Button 
-                    variant="success" 
-                    // as={Link}
-                    // to="/posts/create"
-                  >
-                    <IconifyIcon icon="bx:plus" className="me-1" />
-                    Create Post
-                  </Button>
-                </div>
+                <Button 
+                  variant="success"
+                  onClick={() => navigate("/blogs/commentaries/create")}
+                >
+                  <IconifyIcon icon="bx:plus" className="me-1" />
+                  Add Commentary
+                </Button>
               </div>
             </CardBody>
-            <div>
-              <div className="table-responsive table-centered">
-                <table className="table text-nowrap mb-0">
-                  <thead className="bg-light bg-opacity-50">
-                    <tr>
-                      <th className="border-0 py-2">Post ID</th>
-                      <th className="border-0 py-2">Title</th>
-                      <th className="border-0 py-2">Author</th>
-                      <th className="border-0 py-2">Category</th>
-                      <th className="border-0 py-2">Created Date</th>
-                      <th className="border-0 py-2">Status</th>
-                      <th className="border-0 py-2">Views</th>
-                      <th className="border-0 py-2">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {allPosts?.map((post, idx) => (
-                      <tr key={idx}>
-                        <td>
-                          <Link
-                            to={`/posts/${post.id}`}
-                            className="fw-medium"
-                          >
-                            #{post.id}
-                          </Link>
-                        </td>
-                        <td>{post.title}</td>
-                        <td>
-                          <div className="d-flex align-items-center">
-                            {post.author && (
-                              <>
+
+            {isLoading ? (
+              <div className="text-center py-4">
+                <Spinner animation="border" />
+                <p>Loading commentaries...</p>
+              </div>
+            ) : error ? (
+              <div className="text-center py-4 text-danger">
+                Error loading commentaries
+              </div>
+            ) : (
+              <>
+                <div className="table-responsive">
+                  <table className="table table-hover">
+                    <thead>
+                      <tr>
+                        <th>Comment</th>
+                        <th>Author</th>
+                        <th>Blog Post</th>
+                        <th>Date</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredCommentaries.map((commentary: BlogCommentaryResponseDTO) => (
+                        <tr key={commentary.id}>
+                          <td>
+                            <Link to={`/blogs/commentaries/${commentary.id}`}>
+                              {commentary.commentary.substring(0, 60)}...
+                            </Link>
+                          </td>
+                          <td>
+                            <div className="d-flex align-items-center">
+                              {commentary.user.avatar && (
                                 <img
-                                  src={post.avatar}
-                                  alt="author"
+                                  src={commentary.user.avatar}
+                                  alt={commentary.user.name}
                                   className="avatar-xs rounded-circle me-2"
                                 />
-                                <span>{post.author}</span>
-                              </>
-                            )}
-                          </div>
-                        </td>
-                        <td>
-                          <span className="badge bg-primary">
-                            {post.category}
-                          </span>
-                        </td>
-                        <td>
-                          {post.createdAt && 
-                            new Date(post.createdAt).toLocaleDateString()}
-                        </td>
-                        <td>
-                          <span
-                            className={`badge badge-soft-${
-                              post.status === "Draft" ? "warning" : "success"
-                            }`}
-                          >
-                            {post.status}
-                          </span>
-                        </td>
-                        <td>{post.views?.toLocaleString()}</td>
-                        <td>
-                          <Button
-                            variant="soft-secondary"
-                            size="sm"
-                            type="button"
-                            className="me-2"
-                            // as={Link}
-                            // to={`/posts/edit/${post.id}`}
-                          >
-                            <IconifyIcon icon="bx:edit" className="fs-16" />
-                          </Button>
-                          <Button variant="soft-danger" size="sm" type="button">
-                            <IconifyIcon
-                              icon="bx:trash"
-                              className="bx bx-trash fs-16"
-                            />
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <div className="align-items-center justify-content-between row g-0 text-center text-sm-start p-3 border-top">
-                <div className="col-sm">
-                  <div className="text-muted">
-                    Showing&nbsp;
-                    <span className="fw-semibold">10</span>&nbsp; of&nbsp;
-                    <span className="fw-semibold">{allPosts?.length}</span>&nbsp; posts
+                              )}
+                              <span>{commentary.user.name}</span>
+                            </div>
+                          </td>
+                          <td>
+                            <Link to={`/blogs/${commentary.blog.id}`}>
+                              {commentary.blog.title.substring(0, 30)}...
+                            </Link>
+                          </td>
+                          <td>
+                            {new Date(commentary.createdAt).toLocaleDateString()}
+                          </td>
+                          <td>
+                            <Button
+                              variant="outline-primary"
+                              size="sm"
+                              onClick={() => navigate(`/blogs/commentaries/edit/${commentary.id}`)}
+                            >
+                              <IconifyIcon icon="bx:edit" />
+                            </Button>
+                            <Button
+                              variant="outline-danger"
+                              size="sm"
+                              className="ms-2"
+                              onClick={() => toast.info("Delete functionality coming soon")}
+                            >
+                              <IconifyIcon icon="bx:trash" />
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="d-flex justify-content-between p-3">
+                  <div>
+                    Showing {commentaries.length} of {totalCommentaries} commentaries
+                  </div>
+                  <div>
+                    <Button
+                      variant="outline-secondary"
+                      disabled={page === 0}
+                      onClick={() => handlePageChange(page - 1)}
+                    >
+                      Previous
+                    </Button>
+                    <Button
+                      variant="outline-secondary"
+                      className="ms-2"
+                      disabled={page + 1 >= Math.ceil(totalCommentaries / size)}
+                      onClick={() => handlePageChange(page + 1)}
+                    >
+                      Next
+                    </Button>
                   </div>
                 </div>
-                <Col sm="auto" className="mt-3 mt-sm-0">
-                  <ul className="pagination pagination-rounded m-0">
-                    <li className="page-item">
-                      <Link to="" className="page-link">
-                        <IconifyIcon icon="bx:left-arrow-alt" />
-                      </Link>
-                    </li>
-                    <li className="page-item active">
-                      <Link to="" className="page-link">
-                        1
-                      </Link>
-                    </li>
-                    <li className="page-item">
-                      <Link to="" className="page-link">
-                        2
-                      </Link>
-                    </li>
-                    <li className="page-item">
-                      <Link to="" className="page-link">
-                        3
-                      </Link>
-                    </li>
-                    <li className="page-item">
-                      <Link to="" className="page-link">
-                        <IconifyIcon icon="bx:right-arrow-alt" />
-                      </Link>
-                    </li>
-                  </ul>
-                </Col>
-              </div>
-            </div>
+              </>
+            )}
           </Card>
         </Col>
       </Row>
@@ -178,4 +178,4 @@ const BlogPosts = () => {
   );
 };
 
-export default BlogPosts;
+export default BlogCommentariesList;

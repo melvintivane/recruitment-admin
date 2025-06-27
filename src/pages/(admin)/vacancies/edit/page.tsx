@@ -1,20 +1,17 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { Button, Col, Form, Row } from "react-bootstrap";
-import { useNavigate, useParams } from "react-router-dom";
-import { useMutation, useQuery } from "react-query";
-import { getVacancyById, updateVacancy } from "@/services/vacancyService";
-import { useEffect, useState } from "react";
-import { toast } from "react-toastify";
-import { getAllCompanies } from "@/services/companyService";
-import { getAllCategories } from "@/services/categoryService";
-import { CompanyApiResponse } from "@/types/company";
-import { CategoryApiResponse } from "@/types/category";
 import ComponentContainerCard from "@/components/ComponentContainerCard";
-import PageMetaData from "@/components/PageTitle";
-import ReactQuill from "react-quill";
-
-import "react-quill/dist/quill.snow.css";
 import LocationSelector from "@/components/LocationSelector";
+import PageMetaData from "@/components/PageTitle";
+import SwitchCheckBox from "@/components/form/SwitchCheckBox";
+import { getAllCategories } from "@/services/categoryService";
+import { getAllCompanies } from "@/services/companyService";
+import { getVacancyById, updateVacancy } from "@/services/vacancyService";
+import { useState } from "react";
+import { Spinner as BootstrapSpinner, Button, Col, Form, Row, Spinner } from "react-bootstrap";
+import { useMutation, useQuery } from "react-query";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
+import { useNavigate, useParams } from "react-router-dom";
+import { toast } from "react-toastify";
 
 interface VacancyFormData {
   id: string;
@@ -25,78 +22,35 @@ interface VacancyFormData {
   remoteAllowed: boolean;
   type: string;
   status: string;
-  country: string; // Changed from cityId
+  sector: string;
+  country: string;
   state: string;
   city: string;
   yearsOfExperience: number;
   careerLevel: string;
-  degreeRequired: string;
+  educationRequired: string;
   genderPreference: string;
   minSalary: number;
   maxSalary: number;
   applicationDeadline: string;
-  requiredSkills: string;
+  skills: string[];
+  qualifications: string[];
+  responsibilities: string[];
 }
 
 const VacancyEdit = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [companies, setCompanies] = useState<CompanyApiResponse>({
-    content: [],
-    pageable: {
-      pageNumber: 0,
-      pageSize: 0,
-      sort: {
-        sorted: true,
-        empty: true,
-        unsorted: true,
-      },
-      offset: 0,
-      paged: true,
-      unpaged: true,
-    },
-    sort: {
-      sorted: true,
-      empty: true,
-      unsorted: true,
-    },
-    last: true,
-    totalElements: 0,
-    totalPages: 0,
-    first: true,
-    size: 0,
-    number: 0,
-    numberOfElements: 0,
-    empty: true,
-  });
-  const [categories, setCategories] = useState<CategoryApiResponse>({
-    content: [],
-    pageable: {
-      pageNumber: 0,
-      pageSize: 0,
-      sort: {
-        sorted: true,
-        empty: true,
-        unsorted: true,
-      },
-      offset: 0,
-      paged: true,
-      unpaged: true,
-    },
-    sort: {
-      sorted: true,
-      empty: true,
-      unsorted: true,
-    },
-    last: true,
-    totalElements: 0,
-    totalPages: 0,
-    first: true,
-    size: 0,
-    number: 0,
-    numberOfElements: 0,
-    empty: true,
-  });
+
+  // Fetch companies and categories
+  const { data: companies, isLoading: isLoadingCompanies } = useQuery(
+    "companies",
+    getAllCompanies
+  );
+  const { data: categories, isLoading: isLoadingCategories } = useQuery(
+    "categories",
+    getAllCategories
+  );
 
   const [formData, setFormData] = useState<VacancyFormData>({
     id: "",
@@ -107,17 +61,20 @@ const VacancyEdit = () => {
     remoteAllowed: false,
     type: "FULL_TIME",
     status: "ACTIVE",
+    sector: "PRIVATE",
     country: "",
     state: "",
     city: "",
     yearsOfExperience: 0,
     careerLevel: "JUNIOR",
-    degreeRequired: "",
+    educationRequired: "",
     genderPreference: "UNSPECIFIED",
     minSalary: 0,
     maxSalary: 0,
     applicationDeadline: "",
-    requiredSkills: "",
+    skills: [],
+    qualifications: [],
+    responsibilities: [],
   });
 
   const modules = {
@@ -132,7 +89,7 @@ const VacancyEdit = () => {
   };
 
   // Fetch vacancy data
-  const { isLoading: isVacancyLoading } = useQuery(
+  const { isLoading: isVacancyLoading ,error: fetchError} = useQuery(
     ["vacancy", id],
     () => getVacancyById(id!),
     {
@@ -147,19 +104,20 @@ const VacancyEdit = () => {
           remoteAllowed: data.remoteAllowed || false,
           type: data.type,
           status: data.status,
+          sector: data.sector || "PRIVATE",
           country: data.country || "",
           state: data.state || "",
           city: data.city || "",
           yearsOfExperience: data.yearsOfExperience,
           careerLevel: data.careerLevel,
-          degreeRequired: data.degreeRequired,
+          educationRequired: data.degreeRequired,
           genderPreference: data.genderPreference,
           minSalary: data.minSalary,
           maxSalary: data.maxSalary,
           applicationDeadline: data.applicationDeadline,
-          requiredSkills: data.requiredSkills
-            .map((s: { name: any }) => s.name)
-            .join(", "),
+          skills: data.skills?.map((s: any) => s.name) || [],
+          qualifications: data.qualifications?.map((q: any) => q.name) || [],
+          responsibilities: data.responsibilities?.map((r: any) => r.name) || [],
         });
       },
       onError: (error: any) => {
@@ -168,23 +126,6 @@ const VacancyEdit = () => {
       },
     }
   );
-
-  // Fetch companies and categories
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [companiesData, categoriesData] = await Promise.all([
-          getAllCompanies(),
-          getAllCategories(),
-        ]);
-        setCompanies(companiesData);
-        setCategories(categoriesData);
-      } catch (error) {
-        toast.error("Failed to load required data");
-      }
-    };
-    fetchData();
-  }, []);
 
   const mutation = useMutation(updateVacancy, {
     onSuccess: () => {
@@ -196,30 +137,23 @@ const VacancyEdit = () => {
     },
   });
 
-  const handleSkillChange = (value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      requiredSkills: value,
-    }));
+  const handleTextChange = (field: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleDescriptionChange = (value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      description: value,
-    }));
+  const handleArrayChange = (field: string, value: string) => {
+    const items = value
+      .split(';')
+      .map((item) => item.trim())
+      .filter((item) => item.length > 0);
+    setFormData((prev) => ({ ...prev, [field]: items }));
   };
 
   const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleLocationChange = (newLocation: {
@@ -227,52 +161,56 @@ const VacancyEdit = () => {
     state: string;
     city: string;
   }) => {
-    setFormData((prev) => ({
-      ...prev,
-      ...newLocation,
-    }));
+    setFormData((prev) => ({ ...prev, ...newLocation }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const skillsArray = formData.requiredSkills
-      ? formData.requiredSkills
-          .replace(/<[^>]*>/g, "") // Remove HTML tags
-          .split(/[\n,]+/) // Divide por vírgulas ou quebras de linha
-          .map((skill) => skill.trim())
-          .filter((skill) => skill.length > 0)
-      : [];
-
-    const descriptionText = formData.description
-      ? formData.description.replace(/<[^>]*>/g, "").trim()
-      : "";
-
     const vacancyData = {
       title: formData.title,
-      description: descriptionText,
+      description: formData.description,
       companyId: formData.companyId,
       jobCategoryId: formData.jobCategoryId,
       type: formData.type,
       status: formData.status,
+      sector: formData.sector,
       country: formData.country,
       state: formData.state,
       city: formData.city,
-      yearsOfExperience: formData.yearsOfExperience,
+      yearsOfExperience: Number(formData.yearsOfExperience),
       careerLevel: formData.careerLevel,
-      degreeRequired: formData.degreeRequired,
-      minSalary: formData.minSalary,
-      maxSalary: formData.maxSalary,
+      degreeRequired: formData.educationRequired,
+      minSalary: Number(formData.minSalary),
+      maxSalary: Number(formData.maxSalary),
       applicationDeadline: formData.applicationDeadline,
       genderPreference: formData.genderPreference,
-      requiredSkills: skillsArray,
+      remoteAllowed: formData.remoteAllowed,
+      skills: formData.skills.map((name) => ({ name })),
+      qualifications: formData.qualifications.map((name) => ({ name })),
+      responsibilities: formData.responsibilities.map((name) => ({ name })),
     };
 
     mutation.mutate({ id: id!, data: vacancyData });
   };
 
-  if (isVacancyLoading) {
-    return <div className="text-center py-4">Loading vacancy data...</div>;
+  if (isVacancyLoading || isLoadingCompanies || isLoadingCategories) {
+      return (
+        <div className="d-flex justify-content-center py-5">
+          <BootstrapSpinner animation="border" variant="primary" />
+        </div>
+      );
+    }
+  
+    if (fetchError || !formData) {
+      return (
+        <div className="alert alert-danger mx-3 my-5">
+          {fetchError?.message || "Vacancie not found"}
+        </div>
+      );
+    }
+  if (isVacancyLoading || isLoadingCompanies || isLoadingCategories) {
+    return <Spinner animation="border" />;
   }
 
   return (
@@ -315,7 +253,7 @@ const VacancyEdit = () => {
                         required
                       >
                         <option value="">Select company</option>
-                        {companies.content.map((company) => (
+                        {companies?.content?.map((company) => (
                           <option key={company.id} value={company.id}>
                             {company.name}
                           </option>
@@ -327,7 +265,7 @@ const VacancyEdit = () => {
 
                 <Row className="mb-3">
                   <Col md={4}>
-                    <Form.Group controlId="jobType">
+                    <Form.Group controlId="type">
                       <Form.Label>Job Type *</Form.Label>
                       <Form.Select
                         name="type"
@@ -337,24 +275,23 @@ const VacancyEdit = () => {
                       >
                         <option value="FULL_TIME">Full Time</option>
                         <option value="PART_TIME">Part Time</option>
-                        <option value="FIXED_TERM">Contract</option>
-                        <option value="FREELANCE">Freelance</option>
+                        <option value="CONTRACT">Contract</option>
                         <option value="INTERNSHIP">Internship</option>
                       </Form.Select>
                     </Form.Group>
                   </Col>
                   <Col md={4}>
-                    <Form.Group controlId="status">
-                      <Form.Label>Status *</Form.Label>
+                    <Form.Group controlId="sector">
+                      <Form.Label>Sector *</Form.Label>
                       <Form.Select
-                        name="status"
-                        value={formData.status}
+                        name="sector"
+                        value={formData.sector}
                         onChange={handleChange}
                         required
                       >
-                        <option value="ACTIVE">Active</option>
-                        <option value="CLOSED">Closed</option>
-                        <option value="PENDING">Pending</option>
+                        <option value="PRIVATE">Private</option>
+                        <option value="PUBLIC">Public</option>
+                        <option value="ONG">NGO</option>
                       </Form.Select>
                     </Form.Group>
                   </Col>
@@ -368,7 +305,7 @@ const VacancyEdit = () => {
                         required
                       >
                         <option value="">Select category</option>
-                        {categories.content.map((category) => (
+                        {categories?.content?.map((category) => (
                           <option key={category.id} value={category.id}>
                             {category.name}
                           </option>
@@ -378,34 +315,14 @@ const VacancyEdit = () => {
                   </Col>
                 </Row>
 
-                <Row className="mb-3">
-                  <LocationSelector
-                    onLocationChange={handleLocationChange}
-                    initialValues={{
-                      country: formData.country,
-                      state: formData.state,
-                      city: formData.city,
-                    }}
-                    key={`${formData.country}-${formData.state}-${formData.city}`}
-                  />
-                  <Col md={6}>
-                    <Form.Group controlId="remoteAllowed">
-                      <Form.Label>Remote Work</Form.Label>
-                      <Form.Check
-                        type="switch"
-                        id="remoteSwitch"
-                        label="Allow remote work"
-                        checked={formData.remoteAllowed}
-                        onChange={() =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            remoteAllowed: !prev.remoteAllowed,
-                          }))
-                        }
-                      />
-                    </Form.Group>
-                  </Col>
-                </Row>
+                <LocationSelector
+                  onLocationChange={handleLocationChange}
+                  initialValues={{
+                    country: formData.country,
+                    state: formData.state,
+                    city: formData.city,
+                  }}
+                />
               </div>
 
               {/* Requirements */}
@@ -436,11 +353,9 @@ const VacancyEdit = () => {
                         onChange={handleChange}
                         required
                       >
-                        <option value="TRAINEE">Trainee Level</option>
-                        <option value="JUNIOR">Junior Level</option>
+                        <option value="JUNIOR">Junior</option>
                         <option value="MID">Mid Level</option>
-                        <option value="SENIOR">Senior Level</option>
-                        <option value="HEAD">Head Level</option>
+                        <option value="SENIOR">Senior</option>
                       </Form.Select>
                     </Form.Group>
                   </Col>
@@ -452,7 +367,7 @@ const VacancyEdit = () => {
                         value={formData.genderPreference}
                         onChange={handleChange}
                       >
-                        <option value="UNSPECIFIED">No Preference</option>
+                        <option value="UNSPECIFIED">Unspecified</option>
                         <option value="MALE">Male</option>
                         <option value="FEMALE">Female</option>
                       </Form.Select>
@@ -461,14 +376,14 @@ const VacancyEdit = () => {
                 </Row>
 
                 <Row className="mb-3">
-                  <Col md={6}>
-                    <Form.Group controlId="degreeRequired">
-                      <Form.Label>Degree Requirement *</Form.Label>
+                  <Col>
+                    <Form.Group controlId="educationRequired">
+                      <Form.Label>Education Requirement *</Form.Label>
                       <Form.Control
                         type="text"
                         placeholder="e.g. Bachelor's degree in Computer Science"
-                        name="degreeRequired"
-                        value={formData.degreeRequired}
+                        name="educationRequired"
+                        value={formData.educationRequired}
                         onChange={handleChange}
                         required
                       />
@@ -478,13 +393,44 @@ const VacancyEdit = () => {
 
                 <Row className="mb-3">
                   <Col>
-                    <Form.Group controlId="requiredSkills">
-                      <Form.Label>Skills *</Form.Label>
-                      <ReactQuill
-                        theme="snow"
-                        value={formData.requiredSkills}
-                        onChange={handleSkillChange}
-                        modules={modules}
+                    <Form.Group controlId="qualifications">
+                      <Form.Label>Qualifications * <small>(Separate with semicolons)</small></Form.Label>
+                      <Form.Control
+                        as="textarea"
+                        rows={3}
+                        value={formData.qualifications.join('; ')}
+                        onChange={(e) => handleArrayChange('qualifications', e.target.value)}
+                        required
+                      />
+                    </Form.Group>
+                  </Col>
+                </Row>
+
+                <Row className="mb-3">
+                  <Col>
+                    <Form.Group controlId="responsibilities">
+                      <Form.Label>Responsibilities * <small>(Separate with semicolons)</small></Form.Label>
+                      <Form.Control
+                        as="textarea"
+                        rows={3}
+                        value={formData.responsibilities.join('; ')}
+                        onChange={(e) => handleArrayChange('responsibilities', e.target.value)}
+                        required
+                      />
+                    </Form.Group>
+                  </Col>
+                </Row>
+
+                <Row className="mb-3">
+                  <Col>
+                    <Form.Group controlId="skills">
+                      <Form.Label>Skills * <small>(Separate with semicolons)</small></Form.Label>
+                      <Form.Control
+                        as="textarea"
+                        rows={3}
+                        value={formData.skills.join('; ')}
+                        onChange={(e) => handleArrayChange('skills', e.target.value)}
+                        required
                       />
                     </Form.Group>
                   </Col>
@@ -496,7 +442,7 @@ const VacancyEdit = () => {
                 <h5 className="mb-3">Compensation</h5>
 
                 <Row className="mb-3">
-                  <Col md={3}>
+                  <Col md={6}>
                     <Form.Group controlId="minSalary">
                       <Form.Label>Minimum Salary *</Form.Label>
                       <Form.Control
@@ -510,7 +456,7 @@ const VacancyEdit = () => {
                       />
                     </Form.Group>
                   </Col>
-                  <Col md={3}>
+                  <Col md={6}>
                     <Form.Group controlId="maxSalary">
                       <Form.Label>Maximum Salary *</Form.Label>
                       <Form.Control
@@ -533,14 +479,14 @@ const VacancyEdit = () => {
                 <ReactQuill
                   theme="snow"
                   value={formData.description}
-                  onChange={handleDescriptionChange}
+                  onChange={(value) => handleTextChange('description', value)}
                   modules={modules}
                 />
               </div>
 
-              {/* Dates */}
+              {/* Dates & Settings */}
               <div className="mb-4">
-                <h5 className="mb-3">Dates</h5>
+                <h5 className="mb-3">Dates & Settings</h5>
 
                 <Row className="mb-3">
                   <Col md={6}>
@@ -552,6 +498,19 @@ const VacancyEdit = () => {
                         value={formData.applicationDeadline}
                         onChange={handleChange}
                         required
+                      />
+                    </Form.Group>
+                  </Col>
+                  <Col md={6}>
+                    <Form.Group controlId="remoteAllowed">
+                      <Form.Label>Remote Work</Form.Label>
+                      <SwitchCheckBox
+                        name="remoteAllowed"
+                        label="Allowed"
+                        initialValue={formData.remoteAllowed}
+                        onChange={(checked) => 
+                          setFormData(prev => ({ ...prev, remoteAllowed: checked }))
+                        }
                       />
                     </Form.Group>
                   </Col>

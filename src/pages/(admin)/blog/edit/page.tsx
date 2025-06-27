@@ -1,10 +1,10 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import ComponentContainerCard from "@/components/ComponentContainerCard";
+import ChoicesFormInput from "@/components/form/ChoicesFormInput";
 import PageMetaData from "@/components/PageTitle";
 import { getAllBlogCategories } from "@/services/blogCategoryService";
 import { getBlogById, updateBlog } from "@/services/blogService";
-import { BlogResponseDTO, BlogUpdateDTO } from "@/types/blog";
-import { Icon } from "@iconify/react";
+import { getAllBlogTags } from "@/services/blogTagService"; // Added for tags
+import { BlogResponseDTO } from "@/types/blog";
 import { useState } from "react";
 import { Spinner as BootstrapSpinner, Button, Col, Form, Row } from "react-bootstrap";
 import { useMutation, useQuery } from "react-query";
@@ -18,7 +18,8 @@ interface BlogFormData {
   subtitle: string;
   body: string;
   quote?: string;
-  image?: string;
+  imageFile?: File | null; // Changed to handle file upload
+  currentImage?: string; // To show existing image
   author?: string;
   categoryId: string;
   tagIds: number[];
@@ -28,7 +29,6 @@ const BlogEdit = () => {
   const { blogId } = useParams<{ blogId: string }>();
   const navigate = useNavigate();
 
-  // Quill editor configuration
   const modules = {
     toolbar: [
       [{ header: [1, 2, 3, 4, false] }],
@@ -40,23 +40,22 @@ const BlogEdit = () => {
     ],
   };
 
-  // Form state
   const [formData, setFormData] = useState<BlogFormData>({
     title: "",
     subtitle: "",
     body: "",
     quote: "",
-    image: "",
+    currentImage: "",
     author: "",
     categoryId: "",
-    tagIds: [],
+    tagIds: [] as number[],
   });
 
   // Fetch blog data
   const {
     data: blogData,
     isLoading: isFetching,
-    error: fetchError,
+    error: fetchError
   } = useQuery<BlogResponseDTO, Error>(
     ["blog", blogId],
     () => {
@@ -66,20 +65,15 @@ const BlogEdit = () => {
     {
       enabled: !!blogId,
       onSuccess: (data) => {
-        // Handle cases where blogCategory or blogTags might be empty strings
-        const categoryId = typeof data.blogCategory === 'object' ?
-          data.blogCategory?.id || "" : "";
-
-        const tagIds = Array.isArray(data.blogTags) ?
-          data.blogTags.map(tag => typeof tag === 'object' ? tag.id : 0).filter(id => id !== 0) :
-          [];
+        const categoryId = data.blogCategory?.id?.toString() || "";
+        const tagIds = data.blogTags?.map(tag => tag.id) || [];
 
         setFormData({
           title: data.title,
           subtitle: data.subtitle,
           body: data.body,
           quote: data.quote || "",
-          image: data.image || "",
+          currentImage: data.image || "",
           author: data.author || "",
           categoryId,
           tagIds,
@@ -94,23 +88,18 @@ const BlogEdit = () => {
 
   // Fetch categories and tags
   const { data: categories } = useQuery("blogCategories", getAllBlogCategories);
-  const allTags = [
-    { id: 1, name: "Java" },
-    { id: 2, name: "Spring Boot" },
-    { id: 3, name: "React" },
-    { id: 4, name: "Tailwind" },
-  ];
+  const { data: tags } = useQuery("blogTags", getAllBlogTags);
 
-  // Update blog mutation
   const mutation = useMutation(
-    (data: { blogId: string; data: BlogUpdateDTO }) =>
-      updateBlog(data.blogId, data.data),
+    (data: { blogId: string; data: FormData }) => {
+      return updateBlog(data.blogId, data.data);
+    },
     {
       onSuccess: () => {
         toast.success("Blog updated successfully!");
         navigate("/blogs");
       },
-      onError: (error: any) => {
+      onError: (error: Error) => {
         toast.error(error.message || "Failed to update blog");
       },
     }
@@ -125,6 +114,15 @@ const BlogEdit = () => {
   ) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setFormData(prev => ({
+        ...prev,
+        imageFile: e.target.files![0]
+      }));
+    }
   };
 
   const handleTagSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -144,27 +142,32 @@ const BlogEdit = () => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Prepare data according to BlogUpdateDTO
-    const updatedData: BlogUpdateDTO = {
-      title: formData.title,
-      subtitle: formData.subtitle,
-      body: formData.body,
-      ...(formData.quote && { quote: formData.quote }),
-      ...(formData.image && { image: formData.image }),
-      ...(formData.author && { author: formData.author }),
-      ...(formData.categoryId && { categoryId: formData.categoryId }),
-      ...(formData.tagIds.length > 0 && { tagIds: formData.tagIds }),
-    };
 
     if (!blogId) {
       toast.error("Blog ID is missing");
       return;
     }
 
-    mutation.mutate({ blogId, data: updatedData });
+    // Validate required fields
+    if (!formData.title || !formData.subtitle || !formData.body || !formData.categoryId) {
+      toast.error("Please fill all required fields");
+      return;
+    }
+
+    const formDataToSend = new FormData();
+    formDataToSend.append("title", formData.title);
+    formDataToSend.append("subtitle", formData.subtitle);
+    formDataToSend.append("body", formData.body);
+    formDataToSend.append("categoryId", formData.categoryId);
+
+    if (formData.quote) formDataToSend.append("quote", formData.quote);
+    if (formData.author) formDataToSend.append("author", formData.author);
+    if (formData.imageFile) formDataToSend.append("image", formData.imageFile);
+    formData.tagIds.forEach(tagId => formDataToSend.append("tagIds", tagId.toString()));
+
+    mutation.mutate({ blogId, data: formDataToSend });
   };
 
   if (isFetching) {
@@ -190,7 +193,6 @@ const BlogEdit = () => {
       <Row>
         <Col>
           <ComponentContainerCard
-            id="blog-edit-form"
             title={`Edit ${formData.title || "Blog"}`}
             description="Update the blog post below"
           >
@@ -236,13 +238,17 @@ const BlogEdit = () => {
                 </Col>
                 <Col md={6}>
                   <Form.Group controlId="image">
-                    <Form.Label>Image URL</Form.Label>
+                    <Form.Label>Image</Form.Label>
                     <Form.Control
-                      type="text"
-                      name="image"
-                      value={formData.image}
-                      onChange={handleChange}
+                      type="file"
+                      onChange={handleFileChange}
+                      accept="image/*"
                     />
+                    {formData.currentImage && (
+                      <div className="mt-2 small text-muted">
+                        Current image: {formData.currentImage}
+                      </div>
+                    )}
                   </Form.Group>
                 </Col>
               </Row>
@@ -266,37 +272,29 @@ const BlogEdit = () => {
                     </Form.Select>
                   </Form.Group>
                 </Col>
+
                 <Col md={6}>
                   <Form.Group controlId="tagIds">
                     <Form.Label>Tags</Form.Label>
-                    <Form.Select onChange={handleTagSelect}>
-                      <option value="">Select a tag</option>
-                      {allTags.map(tag => (
+                    <ChoicesFormInput
+                      multiple
+                      onChange={handleTagSelect}
+                      options={{
+                        removeItemButton: true,
+                        searchEnabled: true,
+                        duplicateItemsAllowed: false,
+                      }}
+                  
+                    >
+                      {tags?.content?.map(tag => (
                         <option key={tag.id} value={tag.id}>
                           {tag.name}
                         </option>
                       ))}
-                    </Form.Select>
-                    <div className="mt-2 d-flex flex-wrap gap-2">
-                      {formData.tagIds.map(id => {
-                        const tag = allTags.find(t => t.id === id);
-                        return (
-                          <span
-                            key={id}
-                            className="badge bg-secondary d-flex align-items-center gap-1"
-                          >
-                            {tag?.name}
-                            <Icon
-                              icon="mdi:close-circle"
-                              className="text-danger cursor-pointer"
-                              onClick={() => removeTag(id)}
-                            />
-                          </span>
-                        );
-                      })}
-                    </div>
+                    </ChoicesFormInput>
                   </Form.Group>
                 </Col>
+                
               </Row>
 
               <Row className="mb-3">
@@ -304,7 +302,8 @@ const BlogEdit = () => {
                   <Form.Group controlId="quote">
                     <Form.Label>Quote</Form.Label>
                     <Form.Control
-                      type="text"
+                      as="textarea"
+                      rows={3}
                       name="quote"
                       value={formData.quote}
                       onChange={handleChange}

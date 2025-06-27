@@ -1,5 +1,6 @@
 import JobApplicationPipeline from "@/pages/(admin)/applications/pipeline/page";
 import CategoriesCreate from "@/pages/(admin)/categories/create/page";
+import CategoriesEdit from "@/pages/(admin)/categories/edit/page";
 import CategoriesList from "@/pages/(admin)/categories/list/page";
 import { lazy } from "react";
 import { Navigate, type RouteProps } from "react-router-dom";
@@ -223,6 +224,11 @@ const appsRoutes: RoutesProps[] = [
     name: "Job Category Create",
     path: "/categories/create",
     element: <CategoriesCreate />,
+  },
+  {
+    name : "Job Category Edit",
+    path: "/categories/edit/:categoryId",
+    element: <CategoriesEdit />,
   },
   {
     name: "User List",

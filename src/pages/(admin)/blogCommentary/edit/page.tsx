@@ -3,28 +3,25 @@ import PageMetaData from "@/components/PageTitle";
 import { getBlogCommentaryById, updateBlogCommentary } from "@/services/blogCommentaryService";
 import { BlogCommentaryResponseDTO, BlogCommentaryUpdateDTO } from "@/types/blogCommentary";
 import { useState } from "react";
-import { Spinner as BootstrapSpinner, Button, Col, Form, Row } from "react-bootstrap";
+import { Alert, Button, Col, Form, Row, Spinner } from "react-bootstrap";
 import { useMutation, useQuery } from "react-query";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
-
-interface BlogCommentaryFormData {
-  commentary: string;
-}
 
 const BlogCommentaryEdit = () => {
   const { commentaryId } = useParams<{ commentaryId: string }>();
   const navigate = useNavigate();
 
-  const [formData, setFormData] = useState<BlogCommentaryFormData>({
+  const [formData, setFormData] = useState<BlogCommentaryUpdateDTO>({
     commentary: "",
   });
 
-  const {
-    data: commentaryData,
-    isLoading: isFetching,
-    error: fetchError,
-  } = useQuery<BlogCommentaryResponseDTO, Error>(
+  // Fetch commentary data
+  const { 
+    data: commentaryData, 
+    isLoading: isFetching, 
+    error: fetchError 
+  } = useQuery<BlogCommentaryResponseDTO>(
     ["blogCommentary", commentaryId],
     () => {
       if (!commentaryId) throw new Error("Commentary ID is required");
@@ -37,32 +34,33 @@ const BlogCommentaryEdit = () => {
           commentary: data.commentary,
         });
       },
-      onError: (error) => {
+      onError: (error: Error) => {
         toast.error(error.message || "Failed to load commentary");
-        navigate(-1); // Volta para a página anterior
+        navigate("/blogs/commentaries");
       },
     }
   );
 
+  // Update commentary mutation
   const mutation = useMutation(
-    (params: { commentaryId: string; data: BlogCommentaryUpdateDTO }) =>
-      updateBlogCommentary(params.commentaryId, params.data),
+    (updateData: BlogCommentaryUpdateDTO) => {
+      if (!commentaryId) throw new Error("Commentary ID is required");
+      return updateBlogCommentary(commentaryId, updateData);
+    },
     {
       onSuccess: () => {
         toast.success("Commentary updated successfully!");
-        navigate(-1); // Volta para a página anterior após edição
+        navigate(`/blogs/commentaries/${commentaryId}`);
       },
-      onError: (error: any) => {
+      onError: (error: Error) => {
         toast.error(error.message || "Failed to update commentary");
       },
     }
   );
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLTextAreaElement>
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
       [name]: value,
     }));
@@ -70,46 +68,40 @@ const BlogCommentaryEdit = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    const updatedData: BlogCommentaryUpdateDTO = {
-      commentary: formData.commentary,
-    };
-
-    mutation.mutate({ commentaryId: commentaryId!, data: updatedData });
+    mutation.mutate(formData);
   };
 
   if (isFetching) {
     return (
       <div className="d-flex justify-content-center py-5">
-        <BootstrapSpinner animation="border" variant="primary" />
+        <Spinner animation="border" variant="primary" />
       </div>
     );
   }
 
   if (fetchError || !commentaryData) {
     return (
-      <div className="alert alert-danger mx-3 my-5">
+      <Alert variant="danger" className="mx-3 my-5">
         {fetchError?.message || "Commentary not found"}
-      </div>
+      </Alert>
     );
   }
 
   return (
     <>
-      <PageMetaData title={`Edit Commentary`} />
+      <PageMetaData title="Edit Commentary" />
 
       <Row>
         <Col>
           <ComponentContainerCard
-            id="blog-commentary-edit-form"
-            title="Edit Blog Commentary"
-            description="Update the commentary content below"
+            title="Edit Commentary"
+            description="Update the content of your commentary"
           >
             <Form onSubmit={handleSubmit}>
               <Row className="mb-3">
                 <Col>
-                  <Form.Group controlId="commentary" className="mb-3">
-                    <Form.Label>Commentary *</Form.Label>
+                  <Form.Group controlId="commentary">
+                    <Form.Label>Comment Content *</Form.Label>
                     <Form.Control
                       as="textarea"
                       rows={5}
@@ -117,6 +109,7 @@ const BlogCommentaryEdit = () => {
                       value={formData.commentary}
                       onChange={handleChange}
                       required
+                      disabled={mutation.isLoading}
                     />
                   </Form.Group>
                 </Col>
@@ -131,23 +124,21 @@ const BlogCommentaryEdit = () => {
                 >
                   {mutation.isLoading ? (
                     <>
-                      <BootstrapSpinner
+                      <Spinner
                         as="span"
                         animation="border"
                         size="sm"
-                        role="status"
-                        aria-hidden="true"
-                        className="me-1"
+                        className="me-2"
                       />
-                      Updating...
+                      Saving...
                     </>
                   ) : (
-                    "Update Commentary"
+                    "Save Changes"
                   )}
                 </Button>
                 <Button
-                  variant="secondary"
-                  onClick={() => navigate(-1)}
+                  variant="outline-secondary"
+                  onClick={() => navigate(`/blogs/commentaries/${commentaryId}`)}
                   disabled={mutation.isLoading}
                 >
                   Cancel

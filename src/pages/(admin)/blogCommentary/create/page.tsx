@@ -3,6 +3,7 @@ import PageMetaData from "@/components/PageTitle";
 import { createBlogCommentary } from "@/services/blogCommentaryService";
 import { getAllBlogs } from "@/services/blogService";
 import { BlogSummaryDTO } from "@/types/blog";
+import { BlogCommentaryCreationDTO } from "@/types/blogCommentary";
 import { useState } from "react";
 import { Button, Col, Form, Row, Spinner } from "react-bootstrap";
 import { useMutation, useQuery } from "react-query";
@@ -11,41 +12,29 @@ import { toast } from "react-toastify";
 
 const BlogCommentaryCreate = () => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<BlogCommentaryCreationDTO>({
     blogId: "",
     commentary: ""
   });
-  /*const [currentUser, setCurrentUser] = useState<{id: string, name: string} | null>(null);
-   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      try {
-        const decoded = JSON.parse(atob(token.split('.')[1]));
-        setCurrentUser({
-          id: decoded.sub || decoded.userId,
-          name: decoded.name || "Usuário"
-        });
-      } catch (error) {
-        console.error("Erro ao decodificar token:", error);
-      }
-    }
-  }, []);*/
 
   // Busca todos os blogs para o select
-  const { data: blogs, isLoading: isLoadingBlogs } = useQuery<BlogSummaryDTO[]>(
+  const { data: blogs, isLoading: isLoadingBlogs, error: blogsError } = useQuery<BlogSummaryDTO[]>(
     "blogsForCommentary",
-    async () => {
-      const response = await getAllBlogs();
-      return response.content; // Assumindo que a API retorna paginação
+    getAllBlogs,
+    {
+      select: (response) => response.content, // Extrai o array de blogs da resposta paginada
+      onError: () => {
+        toast.error("Falha ao carregar a lista de blogs");
+      }
     }
   );
 
- const mutation = useMutation(createBlogCommentary, {
+  const mutation = useMutation(createBlogCommentary, {
     onSuccess: () => {
       toast.success("Comentário criado com sucesso!");
       navigate("/blogs/commentaries");
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(error.message || "Falha ao criar comentário");
     },
   });
@@ -70,11 +59,7 @@ const BlogCommentaryCreate = () => {
       return;
     }
 
-    mutation.mutate({
-      blogId: formData.blogId,
-      commentary: formData.commentary
-      // O userId será adicionado automaticamente no service
-    });
+    mutation.mutate(formData);
   };
 
   return (
@@ -93,6 +78,10 @@ const BlogCommentaryCreate = () => {
                 <Spinner animation="border" variant="primary" />
                 <p>Carregando blogs...</p>
               </div>
+            ) : blogsError ? (
+              <div className="text-center py-4 text-danger">
+                Falha ao carregar a lista de blogs
+              </div>
             ) : (
               <Form onSubmit={handleSubmit}>
                 <Row className="mb-3">
@@ -104,11 +93,12 @@ const BlogCommentaryCreate = () => {
                         value={formData.blogId}
                         onChange={handleChange}
                         required
+                        disabled={mutation.isLoading}
                       >
                         <option value="">Selecione um blog</option>
                         {blogs?.map(blog => (
                           <option key={blog.id} value={blog.id}>
-                            {blog.title} | {blog.author || "Autor não especificado"}
+                            {blog.title} {blog.author && `| ${blog.author}`}
                           </option>
                         ))}
                       </Form.Select>
@@ -128,6 +118,7 @@ const BlogCommentaryCreate = () => {
                         value={formData.commentary}
                         onChange={handleChange}
                         required
+                        disabled={mutation.isLoading}
                       />
                     </Form.Group>
                   </Col>
@@ -140,11 +131,19 @@ const BlogCommentaryCreate = () => {
                     disabled={mutation.isLoading}
                     className="me-2"
                   >
-                    {mutation.isLoading ? "Enviando..." : "Publicar Comentário"}
+                    {mutation.isLoading ? (
+                      <>
+                        <Spinner animation="border" size="sm" className="me-2" />
+                        Enviando...
+                      </>
+                    ) : (
+                      "Publicar Comentário"
+                    )}
                   </Button>
                   <Button
                     variant="secondary"
                     onClick={() => navigate("/blogs/commentaries")}
+                    disabled={mutation.isLoading}
                   >
                     Cancelar
                   </Button>

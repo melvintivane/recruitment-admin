@@ -1,11 +1,11 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import ComponentContainerCard from "@/components/ComponentContainerCard";
+import ChoicesFormInput from "@/components/form/ChoicesFormInput";
 import PageMetaData from "@/components/PageTitle";
 import { getAllBlogCategories } from "@/services/blogCategoryService";
 import { createBlog } from "@/services/blogService";
-import { Icon } from "@iconify/react";
+import { getAllBlogTags } from "@/services/blogTagService"; // Novo serviço para tags
 import { useState } from "react";
-import { Button, Col, Form, Row, Spinner } from "react-bootstrap";
+import { Button, Col, Form, Row } from "react-bootstrap";
 import { useMutation, useQuery } from "react-query";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
@@ -15,6 +15,7 @@ import { toast } from "react-toastify";
 const BlogCreate = () => {
   const navigate = useNavigate();
 
+  // Configuração do editor
   const modules = {
     toolbar: [
       [{ header: [1, 2, 3, 4, false] }],
@@ -26,23 +27,18 @@ const BlogCreate = () => {
     ],
   };
 
-  // Fetch categories and tags from API
+  // Busca categorias e tags da API
   const { data: categories, isLoading: isLoadingCategories } = useQuery(
     "blogCategories",
     getAllBlogCategories
   );
-  /*const { data: tags, isLoading: isLoadingTags } = useQuery(
+
+  const { data: tags, isLoading: isLoadingTags } = useQuery(
     "blogTags",
     getAllBlogTags
-  );*/
+  );
 
-  const allTags = [
-  { id: 1, name: "Java" },
-  { id: 2, name: "Spring Boot" },
-  { id: 3, name: "React" },
-  { id: 4, name: "Tailwind" },
-];
-
+  // Estado do formulário
   const [formData, setFormData] = useState({
     title: "",
     subtitle: "",
@@ -50,21 +46,23 @@ const BlogCreate = () => {
     quote: "",
     image: "",
     author: "",
-    categoryId: "", // Changed to single string for category
-    tagIds: [] as number[], // IDs
+    categoryId: "",
+    tagIds: [] as number[],
   });
 
+  // Mutação para criação
   const mutation = useMutation(createBlog, {
     onSuccess: () => {
-      toast.success("Blog created successfully!");
+      toast.success("Blog criado com sucesso!");
       navigate("/blogs");
     },
-    onError: (error: any) => {
-      console.error("Error creating blog:", error.message);
-      toast.error(error.message || "Failed to create blog");
+    onError: (error: Error) => {
+      console.error("Erro ao criar blog:", error.message);
+      toast.error(error.message || "Falha ao criar blog");
     },
   });
 
+  // Manipuladores de eventos
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
@@ -76,8 +74,8 @@ const BlogCreate = () => {
     setFormData(prev => ({ ...prev, body: value }));
   };
 
-  const handleTagSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selected = Number(e.target.value);
+  const handleTagSelect = (value: string) => {
+    const selected = Number(value);
     if (selected && !formData.tagIds.includes(selected)) {
       setFormData(prev => ({
         ...prev,
@@ -96,9 +94,22 @@ const BlogCreate = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Validação dos campos obrigatórios
+    if (!formData.title || !formData.subtitle || !formData.body || !formData.categoryId) {
+      toast.error("Preencha todos os campos obrigatórios");
+      return;
+    }
+
+    // Preparar dados no formato esperado pelo backend
     const blogData = {
-      ...formData,
-      categoryId: formData.categoryId, // Already single value
+      title: formData.title,
+      subtitle: formData.subtitle,
+      body: formData.body,
+      quote: formData.quote || undefined,
+      image: formData.image || undefined,
+      author: formData.author || undefined,
+      categoryId: formData.categoryId,
+      tagIds: formData.tagIds.length > 0 ? formData.tagIds : undefined,
     };
 
     mutation.mutate(blogData);
@@ -111,7 +122,6 @@ const BlogCreate = () => {
       <Row>
         <Col>
           <ComponentContainerCard
-            id="blog-create-form"
             title="Create New Blog"
             description="Fill in the form to publish a new blog post"
           >
@@ -146,13 +156,12 @@ const BlogCreate = () => {
               <Row className="mb-3">
                 <Col md={6}>
                   <Form.Group controlId="author">
-                    <Form.Label>Author *</Form.Label>
+                    <Form.Label>Author</Form.Label>
                     <Form.Control
                       type="text"
                       name="author"
                       value={formData.author}
                       onChange={handleChange}
-                      required
                     />
                   </Form.Group>
                 </Col>
@@ -160,10 +169,11 @@ const BlogCreate = () => {
                   <Form.Group controlId="image">
                     <Form.Label>Image URL</Form.Label>
                     <Form.Control
-                      type="text"
+                      type="file"
                       name="image"
                       value={formData.image}
                       onChange={handleChange}
+                      placeholder="Paste image URL"
                     />
                   </Form.Group>
                 </Col>
@@ -173,65 +183,42 @@ const BlogCreate = () => {
                 <Col md={6}>
                   <Form.Group controlId="categoryId">
                     <Form.Label>Category *</Form.Label>
-                    {isLoadingCategories ? (
-                      <Spinner animation="border" size="sm" />
-                    ) : (
-                      <>
-                        <Form.Select
-                          name="categoryId"
-                          value={formData.categoryId}
-                          onChange={handleChange}
-                          required
-                        >
-                          <option value="">Select a category</option>
-                          {categories?.content?.map(c => (
-                            <option key={c.id} value={c.id}>
-                              {c.name}
-                            </option>
-                          ))}
-                        </Form.Select>
-                        {formData.categoryId && (
-                          <div className="mt-2">
-                            <span className="badge bg-primary">
-                              {categories?.content?.find(c => c.id === formData.categoryId)?.name}
-                            </span>
-                          </div>
-                        )}
-                      </>
-                    )}
+                    <Form.Select
+                      name="categoryId"
+                      value={formData.categoryId}
+                      onChange={handleChange}
+                      required
+                      disabled={isLoadingCategories}
+                    >
+                      <option value="">Select a category</option>
+                      {categories?.content?.map(c => (
+                        <option key={c.id} value={c.id}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </Form.Select>
                   </Form.Group>
                 </Col>
 
-                
                 <Col md={6}>
                   <Form.Group controlId="tagIds">
                     <Form.Label>Tags</Form.Label>
-                    <Form.Select onChange={handleTagSelect}>
-                      <option value="">Select a tag</option>
-                      {allTags.map(tag => (
+                    <ChoicesFormInput
+                      multiple
+                      onChange={handleTagSelect}
+                      options={{
+                        removeItemButton: true,
+                        searchEnabled: true,
+                        duplicateItemsAllowed: false,
+                      }}
+                      disabled={isLoadingTags}
+                    >
+                      {tags?.content?.map(tag => (
                         <option key={tag.id} value={tag.id}>
                           {tag.name}
                         </option>
                       ))}
-                    </Form.Select>
-                    <div className="mt-2 d-flex flex-wrap gap-2">
-                      {formData.tagIds.map(id => {
-                        const tag = allTags.find(t => t.id === id);
-                        return (
-                          <span
-                            key={id}
-                            className="badge bg-secondary d-flex align-items-center gap-1"
-                          >
-                            {tag?.name}
-                            <Icon
-                              icon="mdi:close-circle"
-                              className="text-danger cursor-pointer"
-                              onClick={() => removeTag(id)}
-                            />
-                          </span>
-                        );
-                      })}
-                    </div>
+                    </ChoicesFormInput>
                   </Form.Group>
                 </Col>
               </Row>
@@ -241,7 +228,8 @@ const BlogCreate = () => {
                   <Form.Group controlId="quote">
                     <Form.Label>Quote</Form.Label>
                     <Form.Control
-                      type="text"
+                      as="textarea"
+                      rows={3}
                       name="quote"
                       value={formData.quote}
                       onChange={handleChange}
@@ -258,6 +246,7 @@ const BlogCreate = () => {
                   value={formData.body}
                   onChange={handleBodyChange}
                   modules={modules}
+                  placeholder="Enter blog content..."
                 />
               </div>
 
@@ -265,12 +254,15 @@ const BlogCreate = () => {
                 <Button
                   variant="primary"
                   type="submit"
-                  disabled={mutation.isLoading || isLoadingCategories }
-                  className="me-1"
+                  disabled={mutation.isLoading || isLoadingCategories || isLoadingTags}
                 >
                   {mutation.isLoading ? "Creating..." : "Create Blog"}
                 </Button>
-                <Button variant="secondary" onClick={() => navigate("/blogs")}>
+                <Button 
+                  variant="secondary" 
+                  onClick={() => navigate("/blogs")}
+                  className="ms-2"
+                >
                   Cancel
                 </Button>
               </div>

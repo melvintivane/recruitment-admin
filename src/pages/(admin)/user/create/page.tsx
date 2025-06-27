@@ -162,7 +162,7 @@ const UsersCreate = () => {
                     <Form.Group controlId="picture">
                       <Form.Label>Profile Picture URL</Form.Label>
                       <Form.Control
-                        type="url"
+                        type="file"
                         name="picture"
                         placeholder="https://example.com/profile.jpg"
                         value={formData.picture || ""}

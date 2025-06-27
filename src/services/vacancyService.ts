@@ -1,7 +1,6 @@
 // services/vacancyService.ts
-import { VacancyType, VacancyApiResponse } from "../types/vacancy";
 import { API_ENDPOINTS } from "../config/api";
-
+import { VacancyApiResponse, VacancyType } from "../types/vacancy";
 
 export interface VacancyCreateDto {
   title: string;
@@ -10,6 +9,7 @@ export interface VacancyCreateDto {
   jobCategoryId: string;
   type: string;
   status: string;
+  sector: string;
   country: string;
   state: string;
   city: string;
@@ -20,47 +20,51 @@ export interface VacancyCreateDto {
   maxSalary: number;
   applicationDeadline: string;
   genderPreference: string;
-  skills: string[];
+  remoteAllowed: boolean;
+  skills: Array<{ name: string }>;
+  qualifications: Array<{ name: string }>;
+  responsibilities: Array<{ name: string }>;
 }
-
 export interface VacancyUpdateDto {
-  title?: string;
-  description?: string;
-  companyId?: string;
-  jobCategoryId?: string;
-  remoteAllowed?: boolean;
-  type?: string;
-  status?: string;
+  title: string;
+  description: string;
+  companyId: string;
+  jobCategoryId: string;
+  type: string;
+  status: string;
+  sector: string;
   country: string;
   state: string;
   city: string;
-  yearsOfExperience?: number;
-  careerLevel?: string;
-  degreeRequired?: string;
-  genderPreference?: string;
-  minSalary?: number;
-  maxSalary?: number;
-  applicationDeadline?: string;
-  requiredSkills?: string[];
+  yearsOfExperience: number;
+  careerLevel: string;
+  degreeRequired: string;
+  minSalary: number;
+  maxSalary: number;
+  applicationDeadline: string;
+  genderPreference: string;
+  remoteAllowed: boolean;
+  skills: Array<{ name: string }>;
+  qualifications: Array<{ name: string }>;
+  responsibilities: Array<{ name: string }>;
 }
 
-
-export const createVacancy = async ( vacancyData: VacancyCreateDto ): Promise<VacancyType> => {
-
-  const response = await fetch(`${API_ENDPOINTS.VACANCIES}`, {
+export const createVacancy = async (vacancyData: VacancyCreateDto) => {
+  const response = await fetch(API_ENDPOINTS.VACANCIES, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { 
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify(vacancyData),
   });
 
- if (!response.ok) {
+  if (!response.ok) {
     const errorBody = await response.json();
-    throw new Error(errorBody.message || "Failed to create vacancy");
+    throw new Error(errorBody.message || "Falha ao criar vaga");
   }
 
   return response.json();
 };
-
 
 export const getAllVacancies = async (page: number = 0, size: number = 10): Promise<VacancyApiResponse> => {
 

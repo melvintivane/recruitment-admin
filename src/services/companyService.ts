@@ -38,9 +38,9 @@ export interface CompanyUpdateDto {
   description?: string;
 }
 
-export const getAllCompanies = async (page: number = 0, size: number = 10): Promise<CompanyApiResponse> => {
+export const getAllCompanies = async (): Promise<CompanyApiResponse> => {
   const response = await fetch(
-    `${API_ENDPOINTS.COMPANIES}?page=${page}&size=${size}&sort=createdAt,desc`
+    `${API_ENDPOINTS.COMPANIES}`
   );
 
   if (!response.ok) {

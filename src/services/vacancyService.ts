@@ -1,55 +1,30 @@
 // services/vacancyService.ts
 import { API_ENDPOINTS } from "../config/api";
-import { VacancyApiResponse, VacancyType } from "../types/vacancy";
+import { GetAllVacanciesParams, UpdateVacancyParams, VacancyApiResponse, VacancyType } from "../types/vacancy";
 
 export interface VacancyCreateDto {
   title: string;
   description: string;
   companyId: string;
-  jobCategoryId: string;
-  type: string;
-  status: string;
-  sector: string;
+  type: 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERNSHIP';
+  status: 'PENDING' | 'CLOSED' | 'ACTIVE';
+  yearsOfExperience: number;
+  careerLevel: 'JUNIOR' | 'MID' | 'SENIOR' | 'LEAD' | 'MANAGER';
+  degreeRequired: string;
+  genderPreference: 'UNSPECIFIED' | 'MALE' | 'FEMALE';
+  deadline: string;
+  remoteAllowed: boolean;
+  minSalary: number;
+  maxSalary: number;
   country: string;
   state: string;
   city: string;
-  yearsOfExperience: number;
-  careerLevel: string;
-  degreeRequired: string;
-  minSalary: number;
-  maxSalary: number;
-  applicationDeadline: string;
-  genderPreference: string;
-  remoteAllowed: boolean;
   skills: Array<{ name: string }>;
   qualifications: Array<{ name: string }>;
-  responsibilities: Array<{ name: string }>;
-}
-export interface VacancyUpdateDto {
-  title: string;
-  description: string;
-  companyId: string;
-  jobCategoryId: string;
-  type: string;
-  status: string;
-  sector: string;
-  country: string;
-  state: string;
-  city: string;
-  yearsOfExperience: number;
-  careerLevel: string;
-  degreeRequired: string;
-  minSalary: number;
-  maxSalary: number;
-  applicationDeadline: string;
-  genderPreference: string;
-  remoteAllowed: boolean;
-  skills: Array<{ name: string }>;
-  qualifications: Array<{ name: string }>;
-  responsibilities: Array<{ name: string }>;
+  responsabilities: Array<{ name: string }>;
 }
 
-export const createVacancy = async (vacancyData: VacancyCreateDto) => {
+export const createVacancy = async (vacancyData: VacancyCreateDto): Promise<VacancyType> => {
   const response = await fetch(API_ENDPOINTS.VACANCIES, {
     method: "POST",
     headers: { 
@@ -66,11 +41,17 @@ export const createVacancy = async (vacancyData: VacancyCreateDto) => {
   return response.json();
 };
 
-export const getAllVacancies = async (page: number = 0, size: number = 10): Promise<VacancyApiResponse> => {
+export const getAllVacancies = async (
+  params?: GetAllVacanciesParams
+): Promise<VacancyApiResponse> => {
+  const { page = 0, size = 10, sort = 'createdAt,desc' } = params || {};
+  const url = new URL(API_ENDPOINTS.VACANCIES);
+  
+  url.searchParams.append('page', page.toString());
+  url.searchParams.append('size', size.toString());
+  url.searchParams.append('sort', sort);
 
-  const response = await fetch(
-    `${API_ENDPOINTS.VACANCIES}?page=${page}&size=${size}&sort=createdAt,desc`
-  );
+  const response = await fetch(url.toString());
 
   if (!response.ok) {
     const errorBody = await response.json();
@@ -80,22 +61,20 @@ export const getAllVacancies = async (page: number = 0, size: number = 10): Prom
   return response.json();
 };
 
-
 export const getVacancyById = async (id: string): Promise<VacancyType> => {
-
   const response = await fetch(`${API_ENDPOINTS.VACANCIES}/${id}`);
 
   if (!response.ok) {
     const errorBody = await response.json();
-    throw new Error(errorBody.message || "Failed to fetch vacancy with ID: " + id);
+    throw new Error(errorBody.message || `Failed to fetch vacancy with ID: ${id}`);
   }
 
   return response.json();
 };
 
-
-export const updateVacancy = async ({ id, data }: { id: string; data: VacancyUpdateDto;}): Promise<VacancyUpdateDto> => {
-
+export const updateVacancy = async (
+  { id, data }: UpdateVacancyParams
+): Promise<VacancyType> => {
   const response = await fetch(`${API_ENDPOINTS.VACANCIES}/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
@@ -104,12 +83,11 @@ export const updateVacancy = async ({ id, data }: { id: string; data: VacancyUpd
 
   if (!response.ok) {
     const errorBody = await response.json();
-    throw new Error(errorBody.message || "Failed to update vacancy with ID: " + id);
+    throw new Error(errorBody.message || `Failed to update vacancy with ID: ${id}`);
   }
 
   return response.json();
 };
-
 
 export const deleteVacancy = async (id: string): Promise<void> => {
   const response = await fetch(`${API_ENDPOINTS.VACANCIES}/${id}`, {
@@ -118,8 +96,6 @@ export const deleteVacancy = async (id: string): Promise<void> => {
 
   if (!response.ok) {
     const errorBody = await response.json();
-    throw new Error(errorBody.message || "Failed to delete vacancy with ID: " + id);
+    throw new Error(errorBody.message || `Failed to delete vacancy with ID: ${id}`);
   }
-
-  return;
 };

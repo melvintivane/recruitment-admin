@@ -1,13 +1,13 @@
 import PageMetaData from "@/components/PageTitle";
 import Spinner from "@/components/Spinner";
 import IconifyIcon from "@/components/wrappers/IconifyIcon";
+import { deleteVacancy, getAllVacancies } from "@/services/vacancyService";
+import { GetAllVacanciesParams, VacancyApiResponse } from "@/types/vacancy";
 import { useState } from "react";
-import { Badge, Button, Card, CardBody, Col, Row, Alert } from "react-bootstrap";
-import { Link, useNavigate } from "react-router-dom";
+import { Alert, Badge, Button, Card, CardBody, Col, Row } from "react-bootstrap";
 import { useMutation, useQuery, useQueryClient } from "react-query";
+import { Link, useNavigate } from "react-router-dom";
 import { withSwal } from "react-sweetalert2";
-import { getAllVacancies, deleteVacancy } from "@/services/vacancyService";
-import { VacancyApiResponse } from "@/types/vacancy";
 import { SweetAlertResult } from "sweetalert2";
 
 interface VacanciesListProps {
@@ -16,15 +16,9 @@ interface VacanciesListProps {
   };
 }
 
-interface PaginationState {
-  page: number;
-  size: number;
-  sort: string;
-}
-
 const VacanciesList = withSwal(({ swal }: VacanciesListProps) => {
   const navigate = useNavigate();
-  const [pagination, setPagination] = useState<PaginationState>({
+  const [pagination, setPagination] = useState<GetAllVacanciesParams>({
     page: 0,
     size: 10,
     sort: "createdAt,desc",
@@ -32,14 +26,13 @@ const VacanciesList = withSwal(({ swal }: VacanciesListProps) => {
 
   const queryClient = useQueryClient();
 
-  // Using react-query for better data fetching management
   const {
     data: vacancies,
     isLoading,
     error,
   } = useQuery<VacancyApiResponse, Error>(
     ["vacancies", pagination],
-    () => getAllVacancies(pagination.page, pagination.size),
+    () => getAllVacancies(pagination),
     {
       keepPreviousData: true,
       staleTime: 5000,
@@ -58,10 +51,10 @@ const VacanciesList = withSwal(({ swal }: VacanciesListProps) => {
         },
       });
     },
-    onError: () => {
+    onError: (error: Error) => {
       swal.fire({
         title: "Error!",
-        text: "An error occurred while deleting the vacancy.",
+        text: error.message || "An error occurred while deleting the vacancy.",
         icon: "error",
         customClass: {
           confirmButton: "btn btn-danger",
@@ -103,7 +96,7 @@ const VacanciesList = withSwal(({ swal }: VacanciesListProps) => {
     if (!vacancies?.totalPages) return null;
 
     const totalPages = vacancies.totalPages;
-    const currentPage = pagination.page;
+    const currentPage = pagination.page || 0;
     const buttons = [];
 
     // Always show first page
@@ -171,11 +164,10 @@ const VacanciesList = withSwal(({ swal }: VacanciesListProps) => {
     return buttons;
   };
 
-  // Error state
   if (error) {
     return (
-       <div className="alert alert-danger mx-3 my-5">
-        {error.message || "Vacancies not found"}
+      <div className="alert alert-danger mx-3 my-5">
+        {error.message || "Failed to load vacancies"}
       </div>
     );
   }
@@ -226,10 +218,7 @@ const VacanciesList = withSwal(({ swal }: VacanciesListProps) => {
                   <tbody>
                     {isLoading ? (
                       <tr>
-                        <td
-                          colSpan={8}
-                          className="text-center py-4"
-                        >
+                        <td colSpan={8} className="text-center py-4">
                           <div className="flex flex-col items-center gap-4">
                             <div className="flex gap-2">
                               <Spinner
@@ -254,86 +243,82 @@ const VacanciesList = withSwal(({ swal }: VacanciesListProps) => {
                               />
                             </div>
                             <span className="text-center">
-                              Loading applications...
+                              Loading vacancies...
                             </span>
                           </div>
                         </td>
-                      </tr>) : vacancies?.content.length ? (
-                    vacancies?.content.map((vacancy) => (
-                      <tr key={vacancy.id}>
-                        <td>
-                          <Link
-                            to={`/vacancies/${vacancy.id}`}
-                            className="fw-medium"
-                          >
-                            {vacancy.title}
-                          </Link>
-                        </td>
-                        <td>{vacancy.company.name}</td>
-                        <td>{`${vacancy.country}, ${vacancy.city}`}</td>
-                        <td>{vacancy.type}</td>
-                        <td>
-                          {new Date(vacancy.createdAt).toLocaleDateString()}
-                        </td>
-                        <td>
-                          <span
-                            className={`badge badge-soft-${
-                              vacancy.status === "CLOSED"
-                                ? "danger"
-                                : vacancy.status === "PENDING"
+                      </tr>
+                    ) : vacancies?.content?.length ? (
+                      vacancies.content.map((vacancy) => (
+                        <tr key={vacancy.id}>
+                          <td>
+                            <Link
+                              to={`/vacancies/${vacancy.id}`}
+                              className="fw-medium"
+                            >
+                              {vacancy.title}
+                            </Link>
+                          </td>
+                          <td>{vacancy.company.name}</td>
+                          <td>{`${vacancy.city}, ${vacancy.country}`}</td>
+                          <td>
+                            {vacancy.type === 'FULL_TIME' ? 'Full-time' : 
+                             vacancy.type === 'PART_TIME' ? 'Part-time' :
+                             vacancy.type === 'CONTRACT' ? 'Contract' : 'Internship'}
+                          </td>
+                          <td>
+                            {new Date(vacancy.createdAt).toLocaleDateString()}
+                          </td>
+                          <td>
+                            <Badge
+                              bg={
+                                vacancy.status === "CLOSED"
+                                  ? "danger"
+                                  : vacancy.status === "PENDING"
                                   ? "warning"
                                   : "success"
-                            }`}
-                          >
-                            {vacancy.status}
-                          </span>
-                        </td>
-                        <td>
-                          <div className="d-flex align-items-center">
-                            <Badge bg="primary" className="me-2 p-2">
-                              {vacancy.applicationCount}
-                            </Badge>
-                            <Button
-                              variant="soft-secondary"
-                              size="sm"
-                              className="me-2"
-                              onClick={() =>
-                                navigate(
-                                  `/vacancies/${vacancy.id}/applications`
-                                )
                               }
                             >
-                              <IconifyIcon icon="bx:show" className="fs-16" />
+                              {vacancy.status}
+                            </Badge>
+                          </td>
+                          <td>
+                            <div className="d-flex align-items-center">
+                              <Badge bg="primary" className="me-2 p-2">
+                                {vacancy.applicationCount}
+                              </Badge>
+                              <Button
+                                variant="soft-secondary" size="sm" className="me-2"
+                                onClick={() =>
+                                  navigate(`/vacancies/${vacancy.id}/applications`)
+                                }
+                              >
+                                <IconifyIcon icon="bx:show" className="fs-16" />
+                              </Button>
+                            </div>
+                          </td>
+                          <td>
+                            <Button
+                              variant="soft-secondary" size="sm" className="me-2" 
+                              onClick={() =>
+                                navigate(`/vacancies/edit/${vacancy.id}`)
+                              }
+                            >
+                              <IconifyIcon icon="bx:edit" className="fs-16" />
                             </Button>
-                          </div>
-                        </td>
-                        <td>
-                          <Button
-                            variant="soft-secondary"
-                            size="sm"
-                            className="me-2"
-                            onClick={() =>
-                              navigate(`/vacancies/edit/${vacancy.id}`)
-                            }
-                          >
-                            <IconifyIcon icon="bx:edit" className="fs-16" />
-                          </Button>
-                          <Button
-                            variant="soft-danger"
-                            size="sm"
-                            onClick={() => handleDelete(vacancy.id)}
-                            disabled={deleteMutation.isLoading}
-                          >
-                            <IconifyIcon icon="bx:trash" className="fs-16" />
-                          </Button>
-                        </td>
-                      </tr>
-                    ))) : (
+                            <Button
+                              variant="soft-danger" size="sm"
+                              onClick={() => handleDelete(vacancy.id)}
+                              disabled={deleteMutation.isLoading}
+                            >
+                              <IconifyIcon icon="bx:trash" className="fs-16" />
+                            </Button>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
                       <tr>
-                        <td
-                          colSpan={8}
-                          className="text-center py-4"
-                        >
+                        <td colSpan={8} className="text-center py-4">
                           <Alert variant="info" className="text-center">
                             No vacancies found.
                           </Alert>
@@ -389,7 +374,7 @@ const VacanciesList = withSwal(({ swal }: VacanciesListProps) => {
                       >
                         <button
                           className="page-link"
-                          onClick={() => handlePageChange(pagination.page - 1)}
+                          onClick={() => handlePageChange((pagination.page || 0) - 1)}
                           disabled={vacancies.first}
                         >
                           Prev
@@ -403,7 +388,7 @@ const VacanciesList = withSwal(({ swal }: VacanciesListProps) => {
                       >
                         <button
                           className="page-link"
-                          onClick={() => handlePageChange(pagination.page + 1)}
+                          onClick={() => handlePageChange((pagination.page || 0) + 1)}
                           disabled={vacancies.last}
                         >
                           Next

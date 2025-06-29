@@ -8,6 +8,10 @@ export interface BlogSummaryDTO {
   updatedAt: string;
 }
 
+export interface BlogTagDTO {
+  id: number;
+}
+
 export interface BlogResponseDTO {
   id: string;
   title: string;

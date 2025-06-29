@@ -1,8 +1,8 @@
 import {
-    BlogCommentaryApiResponse,
-    BlogCommentaryCreationDTO,
-    BlogCommentaryResponseDTO,
-    BlogCommentaryUpdateDTO
+  BlogCommentaryCreationDTO,
+  BlogCommentaryPaginatedResponse,
+  BlogCommentaryResponseDTO,
+  BlogCommentaryUpdateDTO
 } from '@/types/blogCommentary';
 import { API_ENDPOINTS } from '../config/api';
 
@@ -11,14 +11,17 @@ export const getBlogCommentaries = async (
   blogId: string,
   page: number = 0,
   size: number = 10
-): Promise<BlogCommentaryApiResponse> => {
-  const response = await fetch(
-    `${API_ENDPOINTS.BLOG_COMMENTARIES}?blogId=${blogId}&page=${page}&size=${size}`
-  );
+): Promise<BlogCommentaryPaginatedResponse> => {
+  const url = new URL(API_ENDPOINTS.BLOG_COMMENTARIES);
+  url.searchParams.append('blogId', blogId);
+  url.searchParams.append('page', page.toString());
+  url.searchParams.append('size', size.toString());
+
+  const response = await fetch(url.toString());
 
   if (!response.ok) {
-    const errorBody = await response.json();
-    throw new Error(errorBody.message || 'Erro ao buscar comentários');
+    const error = await response.json().catch(() => null);
+    throw new Error(error?.message || 'Erro ao buscar comentários');
   }
 
   return response.json();
@@ -26,24 +29,19 @@ export const getBlogCommentaries = async (
 
 // POST: Criar novo comentário
 export const createBlogCommentary = async (
-  data: Omit<BlogCommentaryCreationDTO, 'userId'> // Não precisa enviar userId pelo front
+  data: BlogCommentaryCreationDTO
 ): Promise<BlogCommentaryResponseDTO> => {
-  const payload = {
-    ...data,
-    userId: "31949db0-acae-4758-93a9-08d247cfb133" // ID fixo temporário
-  };
-
   const response = await fetch(API_ENDPOINTS.BLOG_COMMENTARIES, {
     method: 'POST',
     headers: { 
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(data),
   });
 
   if (!response.ok) {
-    const errorBody = await response.text();
-    throw new Error(errorBody || 'Failed to create commentary');
+    const error = await response.json().catch(() => null);
+    throw new Error(error?.message || 'Erro ao criar comentário');
   }
 
   return response.json();
@@ -57,15 +55,14 @@ export const updateBlogCommentary = async (
   const response = await fetch(`${API_ENDPOINTS.BLOG_COMMENTARIES}/${id}`, {
     method: 'PUT',
     headers: { 
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${localStorage.getItem('token')}`
+      'Content-Type': 'application/json'
     },
     body: JSON.stringify(data),
   });
 
   if (!response.ok) {
-    const errorBody = await response.json();
-    throw new Error(errorBody.message || `Erro ao atualizar comentário com ID: ${id}`);
+    const error = await response.json().catch(() => null);
+    throw new Error(error?.message || `Erro ao atualizar comentário`);
   }
 
   return response.json();
@@ -74,14 +71,11 @@ export const updateBlogCommentary = async (
 // DELETE: Remover comentário
 export const deleteBlogCommentary = async (id: string): Promise<void> => {
   const response = await fetch(`${API_ENDPOINTS.BLOG_COMMENTARIES}/${id}`, {
-    method: 'DELETE',
-    headers: { 
-      'Authorization': `Bearer ${localStorage.getItem('token')}`
-    },
+    method: 'DELETE'
   });
 
   if (!response.ok) {
-    const errorBody = await response.json();
-    throw new Error(errorBody.message || `Erro ao apagar comentário com ID: ${id}`);
+    const error = await response.json().catch(() => null);
+    throw new Error(error?.message || `Erro ao remover comentário`);
   }
 };

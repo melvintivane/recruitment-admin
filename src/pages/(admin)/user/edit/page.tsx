@@ -3,13 +3,7 @@ import PageMetaData from "@/components/PageTitle";
 import { getUserById, updateUser } from "@/services/userService";
 import { User, UserUpdateDTO } from "@/types/user";
 import { useState } from "react";
-import {
-  Spinner as BootstrapSpinner,
-  Button,
-  Col,
-  Form,
-  Row,
-} from "react-bootstrap";
+import { Button, Col, Form, Row, Spinner } from "react-bootstrap";
 import { useMutation, useQuery } from "react-query";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -27,7 +21,6 @@ const UserEdit = () => {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
 
-  // Form state with TypeScript interface
   const [formData, setFormData] = useState<UserFormData>({
     firstName: "",
     lastName: "",
@@ -37,7 +30,6 @@ const UserEdit = () => {
     picture: "",
   });
 
-  // Fetch user data
   const {
     data: userData,
     isLoading: isFetching,
@@ -67,57 +59,47 @@ const UserEdit = () => {
     }
   );
 
-  // Update user mutation
   const mutation = useMutation(updateUser, {
     onSuccess: () => {
       toast.success("User updated successfully!");
       navigate("/users");
     },
     onError: (error: any) => {
-      toast.error(error.message);
+      toast.error(error.message || "Failed to update user");
     },
   });
 
-  // Handle form field changes
   const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
-
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
   };
 
-  // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
     const updatedData: UserUpdateDTO = {
       firstName: formData.firstName,
       lastName: formData.lastName,
       email: formData.email,
-      userType: formData.userType as any, // Cast to any if your enum isn't matching
+      userType: formData.userType as any,
       gender: formData.gender as any,
       picture: formData.picture,
     };
-
     mutation.mutate({ userId: userId!, data: updatedData });
   };
 
-  // Loading state
   if (isFetching) {
     return (
       <div className="d-flex justify-content-center py-5">
-        <BootstrapSpinner animation="border" variant="primary" />
+        <Spinner animation="border" variant="primary" />
       </div>
     );
   }
 
-  // Error state
   if (fetchError || !userData) {
     return (
       <div className="alert alert-danger mx-3 my-5">
@@ -138,17 +120,18 @@ const UserEdit = () => {
             description="Update the user information below"
           >
             <Form onSubmit={handleSubmit}>
-              {/* Basic Information Section */}
+              {/* Basic Information */}
               <div className="mb-4">
                 <h5 className="mb-3">Basic Information</h5>
 
                 <Row className="mb-3">
                   <Col md={6}>
-                    <Form.Group controlId="firstName" className="mb-3">
+                    <Form.Group controlId="firstName">
                       <Form.Label>First Name *</Form.Label>
                       <Form.Control
                         type="text"
                         name="firstName"
+                        placeholder="e.g. John"
                         value={formData.firstName}
                         onChange={handleChange}
                         required
@@ -156,11 +139,12 @@ const UserEdit = () => {
                     </Form.Group>
                   </Col>
                   <Col md={6}>
-                    <Form.Group controlId="lastName" className="mb-3">
+                    <Form.Group controlId="lastName">
                       <Form.Label>Last Name *</Form.Label>
                       <Form.Control
                         type="text"
                         name="lastName"
+                        placeholder="e.g. Doe"
                         value={formData.lastName}
                         onChange={handleChange}
                         required
@@ -171,11 +155,12 @@ const UserEdit = () => {
 
                 <Row className="mb-3">
                   <Col md={6}>
-                    <Form.Group controlId="email" className="mb-3">
+                    <Form.Group controlId="email">
                       <Form.Label>Email *</Form.Label>
                       <Form.Control
                         type="email"
                         name="email"
+                        placeholder="user@example.com"
                         value={formData.email}
                         onChange={handleChange}
                         required
@@ -183,7 +168,7 @@ const UserEdit = () => {
                     </Form.Group>
                   </Col>
                   <Col md={6}>
-                    <Form.Group controlId="userType" className="mb-3">
+                    <Form.Group controlId="userType">
                       <Form.Label>User Type *</Form.Label>
                       <Form.Select
                         name="userType"
@@ -193,7 +178,7 @@ const UserEdit = () => {
                       >
                         <option value="">Select user type</option>
                         <option value="ADMIN">Admin</option>
-                         <option value="BLOGGER">Blogger</option>
+                        <option value="BLOGGER">Blogger</option>
                         <option value="CANDIDATE">Candidate</option>
                         <option value="EMPLOYER">Employer</option>
                       </Form.Select>
@@ -203,7 +188,7 @@ const UserEdit = () => {
 
                 <Row className="mb-3">
                   <Col md={6}>
-                    <Form.Group controlId="gender" className="mb-3">
+                    <Form.Group controlId="gender">
                       <Form.Label>Gender</Form.Label>
                       <Form.Select
                         name="gender"
@@ -218,48 +203,32 @@ const UserEdit = () => {
                     </Form.Group>
                   </Col>
                   <Col md={6}>
-                    <Form.Group controlId="picture" className="mb-3">
+                    <Form.Group controlId="picture">
                       <Form.Label>Profile Picture URL</Form.Label>
                       <Form.Control
                         type="url"
                         name="picture"
+                        placeholder="https://example.com/profile.jpg"
                         value={formData.picture || ""}
                         onChange={handleChange}
-                        placeholder="https://example.com/profile.jpg"
                       />
                     </Form.Group>
                   </Col>
                 </Row>
               </div>
 
-              {/* Form Actions */}
               <div className="mt-4">
                 <Button
                   variant="primary"
                   type="submit"
                   disabled={mutation.isLoading}
-                  className="me-2"
+                  className="me-1"
                 >
-                  {mutation.isLoading ? (
-                    <>
-                      <BootstrapSpinner
-                        as="span"
-                        animation="border"
-                        size="sm"
-                        role="status"
-                        aria-hidden="true"
-                        className="me-1"
-                      />
-                      Updating...
-                    </>
-                  ) : (
-                    "Update User"
-                  )}
+                  {mutation.isLoading ? "Updating..." : "Update User"}
                 </Button>
                 <Button
                   variant="secondary"
                   onClick={() => navigate("/users")}
-                  disabled={mutation.isLoading}
                 >
                   Cancel
                 </Button>

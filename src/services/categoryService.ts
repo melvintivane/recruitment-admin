@@ -1,5 +1,5 @@
-import { CategoryType, CategoryCreateDto, CategoryApiResponse } from "../types/category";
 import { API_ENDPOINTS } from "../config/api";
+import { CategoryApiResponse, CategoryCreateDto, CategoryType, CategoryUpdateDTO } from "../types/category";
 
 
 export const createCategory = async (categoryData: CategoryCreateDto): Promise<CategoryType> => {
@@ -19,11 +19,16 @@ export const createCategory = async (categoryData: CategoryCreateDto): Promise<C
 
 
 
-export const getAllCategories = async (page: number = 0, size: number = 10): Promise<CategoryApiResponse> => {
-
+export const getAllCategories = async (): Promise<CategoryApiResponse> => {
   const response = await fetch(
-    `${API_ENDPOINTS.CATEGORIES}?page=${page}&size=${size}&sort=createdAt,desc`
+    `${API_ENDPOINTS.CATEGORIES}`
   );
+
+  if (!response.ok) {
+    const errorBody = await response.json();
+    throw new Error(errorBody.message || "Failed to fetch categories");
+  }
+
 
   return response.json();
 };
@@ -42,8 +47,7 @@ export const getCategoryById = async (categoryId: string): Promise<CategoryType>
 };
 
 
-export const updateCategory = async ({ id, data }: { id: string; data: CategoryType;}): Promise<CategoryType> => {
-
+export const updateCategory = async ({ id, data }: { id: string; data: CategoryUpdateDTO }): Promise<CategoryType> => {
   const response = await fetch(`${API_ENDPOINTS.CATEGORIES}/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
@@ -52,7 +56,7 @@ export const updateCategory = async ({ id, data }: { id: string; data: CategoryT
 
   if (!response.ok) {
     const errorBody = await response.json();
-    throw new Error(errorBody.message || "Erro ao atualizar categoria");
+    throw new Error(errorBody.message || "Failed to update category");
   }
 
   return response.json();

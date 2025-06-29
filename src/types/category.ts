@@ -1,9 +1,10 @@
 
 
 export type CategoryType = {
-  id: string;
+  id: number;
   code: string;
   name: string;
+  description?: string;
   createdAt: string;
   updatedAt: string;
   // createdBy?: {
@@ -18,6 +19,12 @@ export interface CategoryCreateDto {
   code: string;
   name: string;
 }
+
+export interface CategoryUpdateDTO {
+  name: string;
+  description?: string;
+}
+
 
 export interface CategoryApiResponse {
   content: CategoryType[];

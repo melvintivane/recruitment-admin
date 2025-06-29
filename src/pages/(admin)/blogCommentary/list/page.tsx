@@ -36,19 +36,20 @@ const BlogCommentaryList = withSwal(({ swal }: BlogCommentaryListProps) => {
 
   const queryClient = useQueryClient();
 
-  const {
-    data: commentaries,
-    isLoading,
-    error,
-  } = useQuery<BlogCommentaryApiResponse, Error>(
-    ["blogCommentaries", blogId, pagination],
-    () => getBlogCommentaries(blogId, pagination.page, pagination.size),
-    {
-      keepPreviousData: true,
-      staleTime: 5000,
-      enabled: !!blogId, // Only fetch when blogId is available
-    }
-  );
+  // Atualize a chamada useQuery para:
+const {
+  data: commentaries,
+  isLoading,
+  error,
+} = useQuery<BlogCommentaryApiResponse, Error>(
+  ["blogCommentaries", blogId, pagination],
+  () => getBlogCommentaries(blogId, pagination.page, pagination.size),
+  {
+    keepPreviousData: true,
+    staleTime: 5000,
+    enabled: !!blogId, // Só busca quando blogId existe
+  }
+);
 
   const deleteMutation = useMutation(deleteBlogCommentary, {
     onSuccess: () => {

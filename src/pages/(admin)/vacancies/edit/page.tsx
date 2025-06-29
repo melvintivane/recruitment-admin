@@ -35,7 +35,9 @@ interface VacancyFormData {
   minSalary: number;
   maxSalary: number;
   applicationDeadline: string;
-  requiredSkills: string;
+  skills: string;
+  responsibilities: string;
+  qualifications: string;
 }
 
 const VacancyEdit = () => {
@@ -117,7 +119,9 @@ const VacancyEdit = () => {
     minSalary: 0,
     maxSalary: 0,
     applicationDeadline: "",
-    requiredSkills: "",
+    skills: "",
+    responsibilities: "",
+    qualifications: "",
   });
 
   const modules = {
@@ -157,9 +161,13 @@ const VacancyEdit = () => {
           minSalary: data.minSalary,
           maxSalary: data.maxSalary,
           applicationDeadline: data.applicationDeadline,
-          requiredSkills: data.requiredSkills
-            .map((s: { name: any }) => s.name)
-            .join(", "),
+          skills: data.skills.map((s: { name: string }) => s.name).join("; "),
+          responsibilities: data.responsibilities
+            .map((s: { name: string }) => s.name)
+            .join("; "),
+          qualifications: data.qualifications
+            .map((s: { name: string }) => s.name)
+            .join("; "),
         });
       },
       onError: (error: any) => {
@@ -199,7 +207,21 @@ const VacancyEdit = () => {
   const handleSkillChange = (value: string) => {
     setFormData((prev) => ({
       ...prev,
-      requiredSkills: value,
+      skills: value,
+    }));
+  };
+
+  const handleResponsibilityChange = (value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      responsibilities: value,
+    }));
+  };
+
+  const handleQualificationChange = (value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      qualifications: value,
     }));
   };
 
@@ -236,21 +258,19 @@ const VacancyEdit = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const skillsArray = formData.requiredSkills
-      ? formData.requiredSkills
-          .replace(/<[^>]*>/g, "") // Remove HTML tags
-          .split(/[\n,]+/) // Divide por vírgulas ou quebras de linha
-          .map((skill) => skill.trim())
-          .filter((skill) => skill.length > 0)
-      : [];
+    const processHtmlFieldToArray = (fieldValue?: string) => {
+      if (!fieldValue) return [];
 
-    const descriptionText = formData.description
-      ? formData.description.replace(/<[^>]*>/g, "").trim()
-      : "";
+      return fieldValue
+        .replace(/<[^>]*>/g, "") // Remove HTML tags
+        .split(/[;\n]/) // Divide por ponto-vírgula ou quebras de linha
+        .map((item) => item.trim())
+        .filter((item) => item.length > 0);
+    };
 
     const vacancyData = {
       title: formData.title,
-      description: descriptionText,
+      description: formData.description, // Mantém o HTML se necessário
       companyId: formData.companyId,
       jobCategoryId: formData.jobCategoryId,
       type: formData.type,
@@ -265,12 +285,13 @@ const VacancyEdit = () => {
       maxSalary: formData.maxSalary,
       applicationDeadline: formData.applicationDeadline,
       genderPreference: formData.genderPreference,
-      requiredSkills: skillsArray,
+      skills: processHtmlFieldToArray(formData.skills),
+      responsibilities: processHtmlFieldToArray(formData.responsibilities),
+      qualifications: processHtmlFieldToArray(formData.qualifications),
     };
 
     mutation.mutate({ id: id!, data: vacancyData });
   };
-
   if (isVacancyLoading) {
     return <div className="text-center py-4">Loading vacancy data...</div>;
   }
@@ -478,12 +499,56 @@ const VacancyEdit = () => {
 
                 <Row className="mb-3">
                   <Col>
-                    <Form.Group controlId="requiredSkills">
-                      <Form.Label>Skills *</Form.Label>
+                    <Form.Group controlId="skills">
+                      <Form.Label>
+                        Skills * {"("}
+                        <small className="text-danger">
+                          Separate each skill with a semicolon
+                        </small>
+                        {")"}
+                      </Form.Label>
                       <ReactQuill
                         theme="snow"
-                        value={formData.requiredSkills}
+                        value={formData.skills}
                         onChange={handleSkillChange}
+                        modules={modules}
+                      />
+                    </Form.Group>
+                  </Col>
+                </Row>
+                <Row className="mb-3">
+                  <Col>
+                    <Form.Group controlId="responsibilities">
+                      <Form.Label>
+                        Responsibilities * {"("}
+                        <small className="text-danger">
+                          Separate each responsibility with a semicolon
+                        </small>
+                        {")"}
+                      </Form.Label>
+                      <ReactQuill
+                        theme="snow"
+                        value={formData.responsibilities}
+                        onChange={handleResponsibilityChange}
+                        modules={modules}
+                      />
+                    </Form.Group>
+                  </Col>
+                </Row>
+                <Row className="mb-3">
+                  <Col>
+                    <Form.Group controlId="qualifications">
+                      <Form.Label>
+                        Qualifications * {"("}
+                        <small className="text-danger">
+                          Separate each qualification with a semicolon
+                        </small>
+                        {")"}
+                      </Form.Label>
+                      <ReactQuill
+                        theme="snow"
+                        value={formData.qualifications}
+                        onChange={handleQualificationChange}
                         modules={modules}
                       />
                     </Form.Group>
@@ -543,7 +608,7 @@ const VacancyEdit = () => {
                 <h5 className="mb-3">Dates</h5>
 
                 <Row className="mb-3">
-                  <Col md={6}>
+                  <Col md={3}>
                     <Form.Group controlId="applicationDeadline">
                       <Form.Label>Application Deadline *</Form.Label>
                       <Form.Control

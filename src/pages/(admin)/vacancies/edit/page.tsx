@@ -1,20 +1,21 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Button, Col, Form, Row } from "react-bootstrap";
-import { useNavigate, useParams } from "react-router-dom";
-import { useMutation, useQuery } from "react-query";
-import { getVacancyById, updateVacancy } from "@/services/vacancyService";
-import { useEffect, useState } from "react";
-import { toast } from "react-toastify";
-import { getAllCompanies } from "@/services/companyService";
-import { getAllCategories } from "@/services/categoryService";
-import { CompanyApiResponse } from "@/types/company";
-import { CategoryApiResponse } from "@/types/category";
 import ComponentContainerCard from "@/components/ComponentContainerCard";
+import TextAreaFormInput from "@/components/form/TextAreaFormInput";
 import PageMetaData from "@/components/PageTitle";
+import { getAllCategories } from "@/services/categoryService";
+import { getAllCompanies } from "@/services/companyService";
+import { getVacancyById, updateVacancy } from "@/services/vacancyService";
+import { CategoryApiResponse } from "@/types/category";
+import { CompanyApiResponse } from "@/types/company";
+import { useEffect, useState } from "react";
+import { Button, Col, Form, Row } from "react-bootstrap";
+import { useMutation, useQuery } from "react-query";
 import ReactQuill from "react-quill";
+import { useNavigate, useParams } from "react-router-dom";
+import { toast } from "react-toastify";
 
-import "react-quill/dist/quill.snow.css";
 import LocationSelector from "@/components/LocationSelector";
+import "react-quill/dist/quill.snow.css";
 
 interface VacancyFormData {
   id: string;
@@ -268,6 +269,7 @@ const VacancyEdit = () => {
         .filter((item) => item.length > 0);
     };
 
+    
     const vacancyData = {
       title: formData.title,
       description: formData.description, // Mantém o HTML se necessário
@@ -283,7 +285,7 @@ const VacancyEdit = () => {
       degreeRequired: formData.degreeRequired,
       minSalary: formData.minSalary,
       maxSalary: formData.maxSalary,
-      applicationDeadline: formData.applicationDeadline,
+      deadline: formData.applicationDeadline,
       genderPreference: formData.genderPreference,
       skills: processHtmlFieldToArray(formData.skills),
       responsibilities: processHtmlFieldToArray(formData.responsibilities),
@@ -507,11 +509,12 @@ const VacancyEdit = () => {
                         </small>
                         {")"}
                       </Form.Label>
-                      <ReactQuill
-                        theme="snow"
+                      <TextAreaFormInput
+                        name="skills"
+                        label="Skills"
                         value={formData.skills}
                         onChange={handleSkillChange}
-                        modules={modules}
+                        rows={4}
                       />
                     </Form.Group>
                   </Col>
@@ -526,11 +529,12 @@ const VacancyEdit = () => {
                         </small>
                         {")"}
                       </Form.Label>
-                      <ReactQuill
-                        theme="snow"
+                       <TextAreaFormInput
+                        name="responsibilities"
+                        label="Responsibilities"
                         value={formData.responsibilities}
                         onChange={handleResponsibilityChange}
-                        modules={modules}
+                        rows={4}
                       />
                     </Form.Group>
                   </Col>
@@ -545,11 +549,12 @@ const VacancyEdit = () => {
                         </small>
                         {")"}
                       </Form.Label>
-                      <ReactQuill
-                        theme="snow"
+                      <TextAreaFormInput
+                        name="qualifications"
+                        label="Qualifications"
                         value={formData.qualifications}
                         onChange={handleQualificationChange}
-                        modules={modules}
+                        rows={4}
                       />
                     </Form.Group>
                   </Col>

@@ -1,6 +1,6 @@
-// services/vacancyService.ts
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { API_ENDPOINTS } from "../config/api";
-import { GetAllVacanciesParams, UpdateVacancyParams, VacancyApiResponse, VacancyType } from "../types/vacancy";
+import { GetAllVacanciesParams, VacancyApiResponse, VacancyType } from "../types/vacancy";
 
 export interface VacancyCreateDto {
   title: string;
@@ -73,7 +73,7 @@ export const getVacancyById = async (id: string): Promise<VacancyType> => {
 };
 
 export const updateVacancy = async (
-  { id, data }: UpdateVacancyParams
+  { id, data }: any
 ): Promise<VacancyType> => {
   const response = await fetch(`${API_ENDPOINTS.VACANCIES}/${id}`, {
     method: "PUT",

@@ -54,22 +54,22 @@ interface Company {
   updatedAt: string;
 }
 
-interface CompanyUpdate {
-  name?: string;
-  picture?: string;
-  mobileNumber?: string;
-  email?: string;
-  website?: string | null;
-  linkedin?: string | null;
-  country?: string;
-  state?: string;
-  city?: string;
-  industry?: string;
-  foundedYear?: number;
-  numberOfEmployees?: number;
-  businessType?: string;
-  description?: string;
-}
+// interface CompanyUpdate {
+//   name?: string;
+//   picture?: string;
+//   mobileNumber?: string;
+//   email?: string;
+//   website?: string | null;
+//   linkedin?: string | null;
+//   country?: string;
+//   state?: string;
+//   city?: string;
+//   industry?: string;
+//   foundedYear?: number;
+//   numberOfEmployees?: number;
+//   businessType?: string;
+//   description?: string;
+// }
 
 // Main Vacancy type
 export type VacancyType = {
@@ -102,6 +102,7 @@ export type VacancyType = {
 
 export type VacancyUpdate = {
   title?: string;
+  companyId?: string;
   description?: string;
   type?: 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERNSHIP';
   status?: 'PENDING' | 'CLOSED' | 'ACTIVE';

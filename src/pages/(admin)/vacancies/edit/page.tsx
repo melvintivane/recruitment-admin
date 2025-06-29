@@ -1,37 +1,66 @@
-import ComponentContainerCard from "@/components/ComponentContainerCard";
-import SwitchCheckBox from "@/components/form/SwitchCheckBox";
-import TextAreaFormInput from "@/components/form/TextAreaFormInput";
-import LocationSelector from "@/components/LocationSelector";
-import PageMetaData from "@/components/PageTitle";
-import { getAllCategories } from "@/services/categoryService";
-import { getAllCompanies } from "@/services/companyService";
-import { getVacancyById, updateVacancy } from "@/services/vacancyService";
-import { CategoryApiResponse } from "@/types/category";
-import { CompanyApiResponse } from "@/types/company";
-import { VacancyUpdateDto } from "@/types/vacancy";
-import { useEffect, useState } from "react";
-import { Alert, Button, Card, CardBody, Col, Form, Row, Spinner } from "react-bootstrap";
-import { useForm } from 'react-hook-form';
-import { useMutation, useQuery } from "react-query";
-import ReactQuill from "react-quill";
-import "react-quill/dist/quill.snow.css";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { Button, Col, Form, Row } from "react-bootstrap";
 import { useNavigate, useParams } from "react-router-dom";
+import { useMutation, useQuery } from "react-query";
+import { getVacancyById, updateVacancy } from "@/services/vacancyService";
+import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import { getAllCompanies } from "@/services/companyService";
+import { getAllCategories } from "@/services/categoryService";
+import { CompanyApiResponse } from "@/types/company";
+import { CategoryApiResponse } from "@/types/category";
+import ComponentContainerCard from "@/components/ComponentContainerCard";
+import PageMetaData from "@/components/PageTitle";
+import ReactQuill from "react-quill";
+
+import "react-quill/dist/quill.snow.css";
+import LocationSelector from "@/components/LocationSelector";
+
+interface VacancyFormData {
+  id: string;
+  title: string;
+  description: string;
+  companyId: string;
+  jobCategoryId: string;
+  remoteAllowed: boolean;
+  type: string;
+  status: string;
+  country: string; // Changed from cityId
+  state: string;
+  city: string;
+  yearsOfExperience: number;
+  careerLevel: string;
+  degreeRequired: string;
+  genderPreference: string;
+  minSalary: number;
+  maxSalary: number;
+  applicationDeadline: string;
+  skills: string;
+  responsibilities: string;
+  qualifications: string;
+}
 
 const VacancyEdit = () => {
-  const { control } = useForm();
   const { id } = useParams();
   const navigate = useNavigate();
-  
   const [companies, setCompanies] = useState<CompanyApiResponse>({
     content: [],
     pageable: {
       pageNumber: 0,
       pageSize: 0,
-      sort: { sorted: false, empty: true, unsorted: true },
+      sort: {
+        sorted: true,
+        empty: true,
+        unsorted: true,
+      },
       offset: 0,
-      paged: false,
-      unpaged: false,
+      paged: true,
+      unpaged: true,
+    },
+    sort: {
+      sorted: true,
+      empty: true,
+      unsorted: true,
     },
     last: true,
     totalElements: 0,
@@ -39,20 +68,27 @@ const VacancyEdit = () => {
     first: true,
     size: 0,
     number: 0,
-    sort: { sorted: false, empty: true, unsorted: true },
     numberOfElements: 0,
     empty: true,
   });
-
   const [categories, setCategories] = useState<CategoryApiResponse>({
     content: [],
     pageable: {
       pageNumber: 0,
       pageSize: 0,
-      sort: { sorted: false, empty: true, unsorted: true },
+      sort: {
+        sorted: true,
+        empty: true,
+        unsorted: true,
+      },
       offset: 0,
-      paged: false,
-      unpaged: false,
+      paged: true,
+      unpaged: true,
+    },
+    sort: {
+      sorted: true,
+      empty: true,
+      unsorted: true,
     },
     last: true,
     totalElements: 0,
@@ -60,163 +96,34 @@ const VacancyEdit = () => {
     first: true,
     size: 0,
     number: 0,
-    sort: { sorted: false, empty: true, unsorted: true },
     numberOfElements: 0,
     empty: true,
   });
 
-  const [formData, setFormData] = useState<Omit<VacancyUpdateDto, 'skills' | 'qualifications' | 'responsibilities'> & {
-    skills: string[];
-    qualifications: string[];
-    responsibilities: string[];
-    jobCategoryId: string;
-  }>({
+  const [formData, setFormData] = useState<VacancyFormData>({
+    id: "",
     title: "",
     description: "",
     companyId: "",
+    jobCategoryId: "",
+    remoteAllowed: false,
     type: "FULL_TIME",
     status: "ACTIVE",
     country: "",
     state: "",
-    jobCategoryId: "",
     city: "",
     yearsOfExperience: 0,
     careerLevel: "JUNIOR",
     degreeRequired: "",
+    genderPreference: "UNSPECIFIED",
     minSalary: 0,
     maxSalary: 0,
-    deadline: "",
-    genderPreference: "UNSPECIFIED",
-    remoteAllowed: false,
-    skills: [],
-    qualifications: [],
-    responsibilities: [],
+    applicationDeadline: "",
+    skills: "",
+    responsibilities: "",
+    qualifications: "",
   });
 
-  // Fetch initial data
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [companiesData, categoriesData] = await Promise.all([
-          getAllCompanies(),
-          getAllCategories()
-        ]);
-        setCompanies(companiesData);
-        setCategories(categoriesData);
-      } catch (error) {
-        toast.error("Error loading initial data");
-      }
-    };
-    fetchData();
-  }, []);
-
-  // Fetch vacancy data
- // Fetch vacancy data
-const { isLoading: isVacancyLoading, error: fetchError } = useQuery(
-  ["vacancy", id],
-  () => getVacancyById(id!),
-  {
-    enabled: !!id,
-    onSuccess: (data: any) => {
-      console.log("Dados recebidos da API:", data); // Adicione este log para depuração
-      
-      // Mapeamento seguro dos arrays
-      const mapArrayItems = (items: any[] | undefined) => {
-        if (!items) return [];
-        return items.map(item => item?.name || "").filter(name => name);
-      };
-
-      setFormData({
-        title: data.title,
-        description: data.description,
-        companyId: data.company.id,
-        type: data.type,
-        status: data.status,
-        jobCategoryId: data.jobCategory.id,
-        country: data.country || "",
-        state: data.state || "",
-        city: data.city || "",
-        yearsOfExperience: data.yearsOfExperience,
-        careerLevel: data.careerLevel,
-        degreeRequired: data.degreeRequired,
-        minSalary: data.minSalary,
-        maxSalary: data.maxSalary,
-        deadline: data.applicationDeadline,
-        genderPreference: data.genderPreference,
-        remoteAllowed: data.remoteAllowed || false,
-        skills: mapArrayItems(data.skills),
-        qualifications: mapArrayItems(data.qualifications),
-        responsibilities: mapArrayItems(data.responsibilities),
-      });
-    },
-    onError: (error: any) => {
-      toast.error(error.message || "Failed to load vacancy");
-      navigate("/vacancies");
-    },
-  }
-);
-
-  const mutation = useMutation(updateVacancy, {
-    onSuccess: () => {
-      toast.success("Vacancy updated successfully!");
-      navigate("/vacancies");
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || "Failed to update vacancy");
-    },
-  });
-
-  const handleTextChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleArrayChange = (field: string, value: string) => {
-    const items = value
-      .split(';')
-      .map(item => item.trim())
-      .filter(item => item.length > 0);
-    setFormData(prev => ({ ...prev, [field]: items }));
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleLocationChange = (newLocation: { country: string; state: string; city: string }) => {
-    setFormData(prev => ({ ...prev, ...newLocation }));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const vacancyData: VacancyUpdateDto = {
-      title: formData.title,
-      description: formData.description,
-      companyId: formData.companyId,
-      type: formData.type,
-      jobCategoryId: formData.jobCategoryId,
-      status: formData.status,
-      country: formData.country,
-      state: formData.state,
-      city: formData.city,
-      yearsOfExperience: Number(formData.yearsOfExperience),
-      careerLevel: formData.careerLevel,
-      degreeRequired: formData.degreeRequired,
-      minSalary: formData.minSalary,
-      maxSalary: formData.maxSalary,
-      deadline: formData.deadline,
-      genderPreference: formData.genderPreference,
-      remoteAllowed: formData.remoteAllowed,
-      skills: formData.skills.map(name => ({ name })),
-      qualifications: formData.qualifications.map(name => ({ name })),
-      responsibilities: formData.responsibilities.map(name => ({ name })),
-    };
-
-    mutation.mutate({ id: id!, data: vacancyData });
-  };
-
-  // Quill editor modules
   const modules = {
     toolbar: [
       [{ header: [1, 2, 3, 4, 5, 6, false] }],
@@ -228,31 +135,165 @@ const { isLoading: isVacancyLoading, error: fetchError } = useQuery(
     ],
   };
 
-  if (isVacancyLoading) {
-    return (
-      <Row>
-        <Col xs={12}>
-          <Card>
-            <CardBody className="text-center py-4">
-              <Spinner animation="border" variant="primary" />
-              <p className="mt-2 mb-0">Loading vacancy details...</p>
-            </CardBody>
-          </Card>
-        </Col>
-      </Row>
-    );
-  }
+  // Fetch vacancy data
+  const { isLoading: isVacancyLoading } = useQuery(
+    ["vacancy", id],
+    () => getVacancyById(id!),
+    {
+      enabled: !!id,
+      onSuccess: (data: any) => {
+        setFormData({
+          id: data.id,
+          title: data.title,
+          description: data.description,
+          companyId: data.company.id,
+          jobCategoryId: data.jobCategory.id,
+          remoteAllowed: data.remoteAllowed || false,
+          type: data.type,
+          status: data.status,
+          country: data.country || "",
+          state: data.state || "",
+          city: data.city || "",
+          yearsOfExperience: data.yearsOfExperience,
+          careerLevel: data.careerLevel,
+          degreeRequired: data.degreeRequired,
+          genderPreference: data.genderPreference,
+          minSalary: data.minSalary,
+          maxSalary: data.maxSalary,
+          applicationDeadline: data.applicationDeadline,
+          skills: data.skills.map((s: { name: string }) => s.name).join("; "),
+          responsibilities: data.responsibilities
+            .map((s: { name: string }) => s.name)
+            .join("; "),
+          qualifications: data.qualifications
+            .map((s: { name: string }) => s.name)
+            .join("; "),
+        });
+      },
+      onError: (error: any) => {
+        toast.error(error.message);
+        navigate("/vacancies");
+      },
+    }
+  );
 
-  if (fetchError) {
-    return (
-      <Row>
-        <Col xs={12}>
-          <Alert variant="danger" className="my-3">
-            {fetchError.message || "Vacancy not found"}
-          </Alert>
-        </Col>
-      </Row>
-    );
+  // Fetch companies and categories
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [companiesData, categoriesData] = await Promise.all([
+          getAllCompanies(),
+          getAllCategories(),
+        ]);
+        setCompanies(companiesData);
+        setCategories(categoriesData);
+      } catch (error) {
+        toast.error("Failed to load required data");
+      }
+    };
+    fetchData();
+  }, []);
+
+  const mutation = useMutation(updateVacancy, {
+    onSuccess: () => {
+      toast.success("Vacancy updated successfully!");
+      navigate("/vacancies");
+    },
+    onError: (error: any) => {
+      toast.error(error.message);
+    },
+  });
+
+  const handleSkillChange = (value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      skills: value,
+    }));
+  };
+
+  const handleResponsibilityChange = (value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      responsibilities: value,
+    }));
+  };
+
+  const handleQualificationChange = (value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      qualifications: value,
+    }));
+  };
+
+  const handleDescriptionChange = (value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      description: value,
+    }));
+  };
+
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleLocationChange = (newLocation: {
+    country: string;
+    state: string;
+    city: string;
+  }) => {
+    setFormData((prev) => ({
+      ...prev,
+      ...newLocation,
+    }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const processHtmlFieldToArray = (fieldValue?: string) => {
+      if (!fieldValue) return [];
+
+      return fieldValue
+        .replace(/<[^>]*>/g, "") // Remove HTML tags
+        .split(/[;\n]/) // Divide por ponto-vírgula ou quebras de linha
+        .map((item) => item.trim())
+        .filter((item) => item.length > 0);
+    };
+
+    const vacancyData = {
+      title: formData.title,
+      description: formData.description, // Mantém o HTML se necessário
+      companyId: formData.companyId,
+      jobCategoryId: formData.jobCategoryId,
+      type: formData.type,
+      status: formData.status,
+      country: formData.country,
+      state: formData.state,
+      city: formData.city,
+      yearsOfExperience: formData.yearsOfExperience,
+      careerLevel: formData.careerLevel,
+      degreeRequired: formData.degreeRequired,
+      minSalary: formData.minSalary,
+      maxSalary: formData.maxSalary,
+      applicationDeadline: formData.applicationDeadline,
+      genderPreference: formData.genderPreference,
+      skills: processHtmlFieldToArray(formData.skills),
+      responsibilities: processHtmlFieldToArray(formData.responsibilities),
+      qualifications: processHtmlFieldToArray(formData.qualifications),
+    };
+
+    mutation.mutate({ id: id!, data: vacancyData });
+  };
+  if (isVacancyLoading) {
+    return <div className="text-center py-4">Loading vacancy data...</div>;
   }
 
   return (
@@ -262,6 +303,7 @@ const { isLoading: isVacancyLoading, error: fetchError } = useQuery(
       <Row>
         <Col>
           <ComponentContainerCard
+            id="vacancy-edit-form"
             title="Edit Job Vacancy"
             description="Update the vacancy details below"
           >
@@ -294,7 +336,7 @@ const { isLoading: isVacancyLoading, error: fetchError } = useQuery(
                         required
                       >
                         <option value="">Select company</option>
-                        {companies.content?.map((company) => (
+                        {companies.content.map((company) => (
                           <option key={company.id} value={company.id}>
                             {company.name}
                           </option>
@@ -305,8 +347,8 @@ const { isLoading: isVacancyLoading, error: fetchError } = useQuery(
                 </Row>
 
                 <Row className="mb-3">
-                  <Col md={6}>
-                    <Form.Group controlId="type">
+                  <Col md={4}>
+                    <Form.Group controlId="jobType">
                       <Form.Label>Job Type *</Form.Label>
                       <Form.Select
                         name="type"
@@ -316,12 +358,13 @@ const { isLoading: isVacancyLoading, error: fetchError } = useQuery(
                       >
                         <option value="FULL_TIME">Full Time</option>
                         <option value="PART_TIME">Part Time</option>
-                        <option value="CONTRACT">Contract</option>
+                        <option value="FIXED_TERM">Contract</option>
+                        <option value="FREELANCE">Freelance</option>
                         <option value="INTERNSHIP">Internship</option>
                       </Form.Select>
                     </Form.Group>
                   </Col>
-                  <Col md={6}>
+                  <Col md={4}>
                     <Form.Group controlId="status">
                       <Form.Label>Status *</Form.Label>
                       <Form.Select
@@ -331,15 +374,12 @@ const { isLoading: isVacancyLoading, error: fetchError } = useQuery(
                         required
                       >
                         <option value="ACTIVE">Active</option>
-                        <option value="PENDING">Pending</option>
                         <option value="CLOSED">Closed</option>
+                        <option value="PENDING">Pending</option>
                       </Form.Select>
                     </Form.Group>
                   </Col>
-                </Row>
-
-                <Row>
-                  <Col md={6}>
+                  <Col md={4}>
                     <Form.Group controlId="jobCategoryId">
                       <Form.Label>Category *</Form.Label>
                       <Form.Select
@@ -349,7 +389,7 @@ const { isLoading: isVacancyLoading, error: fetchError } = useQuery(
                         required
                       >
                         <option value="">Select category</option>
-                        {categories.content?.map((category) => (
+                        {categories.content.map((category) => (
                           <option key={category.id} value={category.id}>
                             {category.name}
                           </option>
@@ -359,14 +399,34 @@ const { isLoading: isVacancyLoading, error: fetchError } = useQuery(
                   </Col>
                 </Row>
 
-                <LocationSelector
-                  onLocationChange={handleLocationChange}
-                  initialValues={{
-                    country: formData.country,
-                    state: formData.state,
-                    city: formData.city
-                  }}
-                />
+                <Row className="mb-3">
+                  <LocationSelector
+                    onLocationChange={handleLocationChange}
+                    initialValues={{
+                      country: formData.country,
+                      state: formData.state,
+                      city: formData.city,
+                    }}
+                    key={`${formData.country}-${formData.state}-${formData.city}`}
+                  />
+                  <Col md={6}>
+                    <Form.Group controlId="remoteAllowed">
+                      <Form.Label>Remote Work</Form.Label>
+                      <Form.Check
+                        type="switch"
+                        id="remoteSwitch"
+                        label="Allow remote work"
+                        checked={formData.remoteAllowed}
+                        onChange={() =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            remoteAllowed: !prev.remoteAllowed,
+                          }))
+                        }
+                      />
+                    </Form.Group>
+                  </Col>
+                </Row>
               </div>
 
               {/* Requirements */}
@@ -397,11 +457,11 @@ const { isLoading: isVacancyLoading, error: fetchError } = useQuery(
                         onChange={handleChange}
                         required
                       >
-                        <option value="TRAINEE">Trainee</option>
-                        <option value="JUNIOR">Junior</option>
+                        <option value="TRAINEE">Trainee Level</option>
+                        <option value="JUNIOR">Junior Level</option>
                         <option value="MID">Mid Level</option>
-                        <option value="SENIOR">Senior</option>
-                        <option value="LEAD">Lead</option>
+                        <option value="SENIOR">Senior Level</option>
+                        <option value="HEAD">Head Level</option>
                       </Form.Select>
                     </Form.Group>
                   </Col>
@@ -413,7 +473,7 @@ const { isLoading: isVacancyLoading, error: fetchError } = useQuery(
                         value={formData.genderPreference}
                         onChange={handleChange}
                       >
-                        <option value="UNSPECIFIED">Unspecified</option>
+                        <option value="UNSPECIFIED">No Preference</option>
                         <option value="MALE">Male</option>
                         <option value="FEMALE">Female</option>
                       </Form.Select>
@@ -422,9 +482,9 @@ const { isLoading: isVacancyLoading, error: fetchError } = useQuery(
                 </Row>
 
                 <Row className="mb-3">
-                  <Col>
+                  <Col md={6}>
                     <Form.Group controlId="degreeRequired">
-                      <Form.Label>Education Requirement *</Form.Label>
+                      <Form.Label>Degree Requirement *</Form.Label>
                       <Form.Control
                         type="text"
                         placeholder="e.g. Bachelor's degree in Computer Science"
@@ -439,47 +499,57 @@ const { isLoading: isVacancyLoading, error: fetchError } = useQuery(
 
                 <Row className="mb-3">
                   <Col>
-                    <Form.Group controlId="qualifications">
-                      <Form.Label>Qualifications * <small className="text-danger">(Separate each qualification with a semicolon)</small></Form.Label>
-                      <TextAreaFormInput
-                        name="qualifications"
-                        rows={3}
-                        control={control}
-                        onChange={(e) => handleArrayChange('qualifications', e.target.value)}
-                        value={formData.qualifications.join('; ')}
-                        required
+                    <Form.Group controlId="skills">
+                      <Form.Label>
+                        Skills * {"("}
+                        <small className="text-danger">
+                          Separate each skill with a semicolon
+                        </small>
+                        {")"}
+                      </Form.Label>
+                      <ReactQuill
+                        theme="snow"
+                        value={formData.skills}
+                        onChange={handleSkillChange}
+                        modules={modules}
                       />
                     </Form.Group>
                   </Col>
                 </Row>
-
                 <Row className="mb-3">
                   <Col>
                     <Form.Group controlId="responsibilities">
-                      <Form.Label>Responsibilities * <small className="text-danger">(Separate each responsibility with a semicolon)</small></Form.Label>
-                      <TextAreaFormInput
-                        name="responsibilities"
-                        rows={3}
-                        control={control}
-                        onChange={(e) => handleArrayChange('responsibilities', e.target.value)}
-                        value={formData.responsibilities.join('; ')}
-                        required
+                      <Form.Label>
+                        Responsibilities * {"("}
+                        <small className="text-danger">
+                          Separate each responsibility with a semicolon
+                        </small>
+                        {")"}
+                      </Form.Label>
+                      <ReactQuill
+                        theme="snow"
+                        value={formData.responsibilities}
+                        onChange={handleResponsibilityChange}
+                        modules={modules}
                       />
                     </Form.Group>
                   </Col>
                 </Row>
-
                 <Row className="mb-3">
                   <Col>
-                    <Form.Group controlId="skills">
-                      <Form.Label>Skills * <small className="text-danger">(Separate each skill with a semicolon)</small></Form.Label>
-                      <TextAreaFormInput
-                        name="skills"
-                        rows={3}
-                        control={control}
-                        onChange={(e) => handleArrayChange('skills', e.target.value)}
-                        value={formData.skills.join('; ')}
-                        required
+                    <Form.Group controlId="qualifications">
+                      <Form.Label>
+                        Qualifications * {"("}
+                        <small className="text-danger">
+                          Separate each qualification with a semicolon
+                        </small>
+                        {")"}
+                      </Form.Label>
+                      <ReactQuill
+                        theme="snow"
+                        value={formData.qualifications}
+                        onChange={handleQualificationChange}
+                        modules={modules}
                       />
                     </Form.Group>
                   </Col>
@@ -491,7 +561,7 @@ const { isLoading: isVacancyLoading, error: fetchError } = useQuery(
                 <h5 className="mb-3">Compensation</h5>
 
                 <Row className="mb-3">
-                  <Col md={6}>
+                  <Col md={3}>
                     <Form.Group controlId="minSalary">
                       <Form.Label>Minimum Salary *</Form.Label>
                       <Form.Control
@@ -505,7 +575,7 @@ const { isLoading: isVacancyLoading, error: fetchError } = useQuery(
                       />
                     </Form.Group>
                   </Col>
-                  <Col md={6}>
+                  <Col md={3}>
                     <Form.Group controlId="maxSalary">
                       <Form.Label>Maximum Salary *</Form.Label>
                       <Form.Control
@@ -528,38 +598,25 @@ const { isLoading: isVacancyLoading, error: fetchError } = useQuery(
                 <ReactQuill
                   theme="snow"
                   value={formData.description}
-                  onChange={(value) => handleTextChange('description', value)}
+                  onChange={handleDescriptionChange}
                   modules={modules}
                 />
               </div>
 
-              {/* Dates & Settings */}
+              {/* Dates */}
               <div className="mb-4">
-                <h5 className="mb-3">Dates & Settings</h5>
+                <h5 className="mb-3">Dates</h5>
 
                 <Row className="mb-3">
-                  <Col md={6}>
-                    <Form.Group controlId="deadline">
+                  <Col md={3}>
+                    <Form.Group controlId="applicationDeadline">
                       <Form.Label>Application Deadline *</Form.Label>
                       <Form.Control
                         type="datetime-local"
-                        name="deadline"
-                        value={formData.deadline}
+                        name="applicationDeadline"
+                        value={formData.applicationDeadline}
                         onChange={handleChange}
                         required
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col md={6}>
-                    <Form.Group controlId="remoteAllowed">
-                      <Form.Label>Remote Work</Form.Label>
-                      <SwitchCheckBox
-                        name="remoteAllowed"
-                        label="Allowed"
-                        initialValue={formData.remoteAllowed}
-                        onChange={(checked) =>
-                          setFormData(prev => ({ ...prev, remoteAllowed: checked }))
-                        }
                       />
                     </Form.Group>
                   </Col>
@@ -571,13 +628,13 @@ const { isLoading: isVacancyLoading, error: fetchError } = useQuery(
                   variant="primary"
                   type="submit"
                   disabled={mutation.isLoading}
+                  className="me-1"
                 >
                   {mutation.isLoading ? "Updating..." : "Update Vacancy"}
                 </Button>
                 <Button
                   variant="secondary"
                   onClick={() => navigate("/vacancies")}
-                  className="ms-2"
                 >
                   Cancel
                 </Button>

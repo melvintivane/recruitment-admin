@@ -1,5 +1,5 @@
 import { API_ENDPOINTS } from "@/config/api";
-import { Application, ApplicationApiResponse } from "@/types/application";
+import { Application, ApplicationApiResponse, StatusType } from "@/types/application";
 
 
 export const getApplications = async (page: number = 0, size: number = 10): Promise<ApplicationApiResponse> => {
@@ -52,4 +52,20 @@ export const deleteApplication = async (id: string): Promise<void> => {
   }
 
   return;
+};
+
+export const updateApplicationStatus = async (
+  id: string,
+  status: StatusType
+): Promise<void> => {
+  const response = await fetch(`${API_ENDPOINTS.JOB_APPLICATIONS}/${id}/status`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status }),
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.json();
+    throw new Error(errorBody.message || "Failed to update application status");
+  }
 };

@@ -7,7 +7,7 @@ export interface Application {
     company: {
       id: string;
       name: string;
-    }
+    };
   };
   candidate: {
     id: string;
@@ -19,16 +19,24 @@ export interface Application {
       email: string;
       phone: string;
       avatarUrl?: string;
-    }
+    };
   };
   applicationSource?: string;
-  status: "APPLIED" | "SHORTLISTED" | "INTERVIEW" | "REJECTED" | "HIRED";
+  status: StatusType;
   priority: "UNDEFINED" | "LOW" | "MEDIUM" | "HIGH";
   feedback?: string;
   notes: string;
+  cvPath: string;
   createdAt: string;
   updatedAt: string;
 }
+
+export type StatusType =
+  | "APPLIED" // Candidatura enviada
+  | "SHORTLISTED" // Candidato selecionado
+  | "REJECTED" // Candidatura rejeitada
+  | "INTERVIEWED" // Candidato entrevistado
+  | "HIRED";
 
 export interface ApplicationApiResponse {
   content: Application[];

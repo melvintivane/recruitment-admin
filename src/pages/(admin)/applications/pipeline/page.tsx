@@ -19,6 +19,7 @@ import { useMutation, useQuery } from "react-query";
 import {
   getApplicationsByJob,
   updateApplication,
+  updateApplicationStatus,
 } from "@/services/applicationService";
 import { ApplicationApiResponse, Application } from "@/types/application";
 import IconifyIcon from "@/components/wrappers/IconifyIcon";
@@ -81,7 +82,7 @@ interface VacanciesListProps {
   };
 }
 
-type StatusType = typeof STATUS_OPTIONS[number];
+type StatusType = (typeof STATUS_OPTIONS)[number];
 
 // Custom hooks for better separation of concerns
 const useApplicationFilters = (applications: Application[]) => {
@@ -123,7 +124,9 @@ const useStatusCounts = (applications: Application[]) => {
   return useMemo(() => {
     return STATUS_OPTIONS.reduce(
       (acc, status) => {
-        acc[status] = applications.filter((app) => app.status === status).length;
+        acc[status] = applications.filter(
+          (app) => app.status === status
+        ).length;
         return acc;
       },
       {} as Record<string, number>
@@ -132,22 +135,22 @@ const useStatusCounts = (applications: Application[]) => {
 };
 
 // Utility functions
-const getStatusVariant = (status: string): string => 
+const getStatusVariant = (status: string): string =>
   STATUS_VARIANTS[status] || "secondary";
 
-const getPriorityVariant = (priority: string): string => 
+const getPriorityVariant = (priority: string): string =>
   PRIORITY_VARIANTS[priority] || "secondary";
 
 // Main component
 const JobApplicationPipeline = withSwal(({ swal }: VacanciesListProps) => {
   const { id } = useParams<{ id: string }>();
-  
+
   // State management
   const [showModal, setShowModal] = useState(false);
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [viewMode, setViewMode] = useState<'table' | 'kanban'>('table');
-  
+  const [viewMode, setViewMode] = useState<"table" | "kanban">("table");
+
   const [pagination, setPagination] = useState<PaginationState>({
     page: 0,
     size: 10,
@@ -171,7 +174,7 @@ const JobApplicationPipeline = withSwal(({ swal }: VacanciesListProps) => {
   );
 
   const applications = useMemo(() => apiResponse?.content || [], [apiResponse]);
-  
+
   // Custom hooks usage
   const {
     globalFilter,
@@ -180,7 +183,7 @@ const JobApplicationPipeline = withSwal(({ swal }: VacanciesListProps) => {
     setStatusFilter,
     filteredApplications,
   } = useApplicationFilters(applications);
-  
+
   const statusCounts = useStatusCounts(applications);
 
   // Mutations
@@ -212,105 +215,89 @@ const JobApplicationPipeline = withSwal(({ swal }: VacanciesListProps) => {
     setSelectedApp(null);
   }, []);
 
-  const handleStatusChange = useCallback(async (
-    application: Application,
-    newStatus: StatusType
-  ) => {
-    if (newStatus === "REJECTED") {
-      const confirmation = await swal.fire({
-        title: "Confirm Rejection",
-        html: `Are you sure you want to reject <b>${application.candidate.user.firstName} ${application.candidate.user.lastName}</b>?`,
-        icon: "warning",
-        input: "textarea",
-        inputLabel: "Rejection reason (optional)",
-        inputPlaceholder: "Enter the reason for rejection...",
-        showCancelButton: true,
-        confirmButtonText: "Confirm Rejection",
-        cancelButtonText: "Cancel",
-        customClass: {
-          confirmButton: "btn btn-danger me-2",
-          cancelButton: "btn btn-secondary",
-        },
-        buttonsStyling: false,
-        reverseButtons: true,
-      });
-
-      if (!confirmation.isConfirmed) return;
-
-      const rejectionReason = confirmation.value || "";
-      const updatedData = {
-        ...application,
-        status: newStatus,
-        notes: rejectionReason
-          ? application.notes
-            ? `${application.notes}\nRejection reason: ${rejectionReason}`
-            : `Rejection reason: ${rejectionReason}`
-          : application.notes,
-      };
-
+  const handleStatusChange = useCallback(
+    async (application: Application, newStatus: StatusType) => {
       try {
-        await mutation.mutateAsync(updatedData);
-        toast.success("Candidate rejected successfully");
+        if (newStatus === "REJECTED") {
+          const confirmation = await swal.fire({
+            title: "Confirm Rejection",
+            html: `Are you sure you want to reject <b>${application.candidate.user.firstName} ${application.candidate.user.lastName}</b>?`,
+            icon: "warning",
+            input: "textarea",
+            inputLabel: "Rejection reason (optional)",
+            inputPlaceholder: "Enter the reason for rejection...",
+            showCancelButton: true,
+            confirmButtonText: "Confirm Rejection",
+            cancelButtonText: "Cancel",
+            customClass: {
+              confirmButton: "btn btn-danger me-2",
+              cancelButton: "btn btn-secondary",
+            },
+            buttonsStyling: false,
+            reverseButtons: true,
+          });
+
+          if (!confirmation.isConfirmed) return;
+        }
+
+        await updateApplicationStatus(application.id, newStatus);
+        toast.success(`Status updated to ${STATUS_LABELS[newStatus]}`);
+        await refetch();
+      } catch (error: any) {
+        toast.error(`Failed to update status: ${error.message}`);
+      }
+    },
+    [refetch, swal]
+  );
+
+  const handleSave = useCallback(
+    async (formData: any) => {
+      try {
+        if (selectedApp) {
+          await mutation.mutateAsync({ data: formData });
+          toast.success("Application updated successfully");
+        } else {
+          // For new applications - implement creation logic
+          toast.success("New application added successfully");
+        }
+        handleCloseModal();
         await refetch();
       } catch (error) {
-        toast.error("Failed to reject candidate");
+        toast.error("Failed to save application");
       }
-      return;
-    }
+    },
+    [selectedApp, mutation, refetch, handleCloseModal]
+  );
 
-    // For other statuses
-    try {
-      const updatedData = {
-        ...application,
-        status: newStatus,
-      };
+  const onDragEnd = useCallback(
+    (result: any) => {
+      const { source, destination } = result;
 
-      await mutation.mutateAsync(updatedData);
-      toast.success(`Status updated to ${STATUS_LABELS[newStatus]}`);
-      await refetch();
-    } catch (error) {
-      toast.error("Failed to update status");
-    }
-  }, [mutation, refetch, swal]);
-
-  const handleSave = useCallback(async (formData: any) => {
-    try {
-      if (selectedApp) {
-        await mutation.mutateAsync({ data: formData });
-        toast.success("Application updated successfully");
-      } else {
-        // For new applications - implement creation logic
-        toast.success("New application added successfully");
+      if (
+        !destination ||
+        (source.droppableId === destination.droppableId &&
+          source.index === destination.index)
+      ) {
+        return;
       }
-      handleCloseModal();
-      await refetch();
-    } catch (error) {
-      toast.error("Failed to save application");
-    }
-  }, [selectedApp, mutation, refetch, handleCloseModal]);
 
-  const onDragEnd = useCallback((result: any) => {
-    const { source, destination } = result;
+      const draggedApp = applications.find(
+        (app) => app.id === result.draggableId
+      );
+      if (!draggedApp) return;
 
-    if (!destination || 
-        (source.droppableId === destination.droppableId && 
-         source.index === destination.index)) {
-      return;
-    }
+      const newStatus = destination.droppableId as StatusType;
+      if (draggedApp.status !== newStatus) {
+        handleStatusChange(draggedApp, newStatus);
+      }
+    },
+    [applications, handleStatusChange]
+  );
 
-    const draggedApp = applications.find(app => app.id === result.draggableId);
-    if (!draggedApp) return;
-
-    const newStatus = destination.droppableId as StatusType;
-    if (draggedApp.status !== newStatus) {
-      handleStatusChange(draggedApp, newStatus);
-    }
-  }, [applications, handleStatusChange]);
-
-  const handlePaginationChange = useCallback((direction: 'prev' | 'next') => {
+  const handlePaginationChange = useCallback((direction: "prev" | "next") => {
     setPagination((prev) => ({
       ...prev,
-      page: direction === 'prev' ? prev.page - 1 : prev.page + 1,
+      page: direction === "prev" ? prev.page - 1 : prev.page + 1,
     }));
   }, []);
 
@@ -336,17 +323,17 @@ const JobApplicationPipeline = withSwal(({ swal }: VacanciesListProps) => {
         </div>
         <div className="d-flex gap-2">
           <Button
-            variant={viewMode === 'table' ? 'primary' : 'outline-primary'}
+            variant={viewMode === "table" ? "primary" : "outline-primary"}
             size="sm"
-            onClick={() => setViewMode('table')}
+            onClick={() => setViewMode("table")}
           >
             <IconifyIcon icon="bx:table" className="me-1" />
             Table View
           </Button>
           <Button
-            variant={viewMode === 'kanban' ? 'primary' : 'outline-primary'}
+            variant={viewMode === "kanban" ? "primary" : "outline-primary"}
             size="sm"
-            onClick={() => setViewMode('kanban')}
+            onClick={() => setViewMode("kanban")}
           >
             <IconifyIcon icon="bx:columns" className="me-1" />
             Kanban View
@@ -412,7 +399,9 @@ const JobApplicationPipeline = withSwal(({ swal }: VacanciesListProps) => {
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
                 >
-                  <option value="All">All Statuses ({applications.length})</option>
+                  <option value="All">
+                    All Statuses ({applications.length})
+                  </option>
                   {STATUS_OPTIONS.map((status) => (
                     <option key={status} value={status}>
                       {STATUS_LABELS[status]} ({statusCounts[status] || 0})
@@ -422,12 +411,13 @@ const JobApplicationPipeline = withSwal(({ swal }: VacanciesListProps) => {
               </Form.Group>
             </Col>
           </Row>
-          
+
           {(globalFilter || statusFilter !== "All") && (
             <div className="mt-3 pt-3 border-top">
               <div className="d-flex justify-content-between align-items-center">
                 <span className="text-muted">
-                  Showing {filteredApplications.length} of {applications.length} applications
+                  Showing {filteredApplications.length} of {applications.length}{" "}
+                  applications
                 </span>
                 <Button
                   variant="outline-secondary"
@@ -446,7 +436,7 @@ const JobApplicationPipeline = withSwal(({ swal }: VacanciesListProps) => {
       </Card>
 
       {/* Content based on view mode */}
-      {viewMode === 'table' ? (
+      {viewMode === "table" ? (
         <TableView
           applications={filteredApplications}
           isLoading={isLoading}
@@ -454,6 +444,7 @@ const JobApplicationPipeline = withSwal(({ swal }: VacanciesListProps) => {
           onStatusChange={handleStatusChange}
           apiResponse={apiResponse}
           onPaginationChange={handlePaginationChange}
+          onDownloadCV={handleDownloadCV}
         />
       ) : (
         <KanbanView
@@ -482,8 +473,17 @@ const TableView: React.FC<{
   onViewEdit: (app: Application) => void;
   onStatusChange: (app: Application, status: StatusType) => void;
   apiResponse?: ApplicationApiResponse;
-  onPaginationChange: (direction: 'prev' | 'next') => void;
-}> = ({ applications, isLoading, onViewEdit, onStatusChange, apiResponse, onPaginationChange }) => (
+  onPaginationChange: (direction: "prev" | "next") => void;
+  onDownloadCV: (cvPath: string, candidateName: string) => void;
+}> = ({
+  applications,
+  isLoading,
+  onViewEdit,
+  onStatusChange,
+  apiResponse,
+  onPaginationChange,
+  onDownloadCV,
+}) => (
   <Card className="border-0 shadow-sm">
     <Card.Body className="p-0">
       <div className="table-responsive">
@@ -512,12 +512,18 @@ const TableView: React.FC<{
                 <tr key={application.id} className="align-middle">
                   <td>
                     <div>
-                      <strong className="d-block">{application.job.title}</strong>
-                      <small className="text-muted">{application.job.country}</small>
+                      <strong className="d-block">
+                        {application.job.title}
+                      </strong>
+                      <small className="text-muted">
+                        {application.job.country}
+                      </small>
                     </div>
                   </td>
                   <td>
-                    <span className="fw-medium">{application.job.company.name}</span>
+                    <span className="fw-medium">
+                      {application.job.company.name}
+                    </span>
                   </td>
                   <td>
                     <div>
@@ -533,39 +539,62 @@ const TableView: React.FC<{
                     </span>
                   </td>
                   <td>
-                    <Badge bg={getStatusVariant(application.status)} className="px-3 py-2">
+                    <Badge
+                      bg={getStatusVariant(application.status)}
+                      className="px-3 py-2"
+                    >
                       {STATUS_LABELS[application.status]}
                     </Badge>
                   </td>
                   <td>
-                    <Badge bg={getPriorityVariant(application.priority)} className="px-3 py-2">
+                    <Badge
+                      bg={getPriorityVariant(application.priority)}
+                      className="px-3 py-2"
+                    >
                       {PRIORITY_LABELS[application.priority]}
                     </Badge>
                   </td>
                   <td>
                     <Dropdown>
-                      <Dropdown.Toggle variant="outline-secondary" size="sm">
-                        <IconifyIcon icon="bx:dots-horizontal-rounded" />
+                      <Dropdown.Toggle variant="outline-info" size="sm">
+                        Actions
                       </Dropdown.Toggle>
                       <Dropdown.Menu>
                         <Dropdown.Item onClick={() => onViewEdit(application)}>
                           <IconifyIcon icon="bx:edit" className="me-2" />
                           View/Edit
                         </Dropdown.Item>
+
+                        {application.cvPath && (
+                          <Dropdown.Item
+                            onClick={() =>
+                              onDownloadCV(
+                                application.cvPath,
+                                `${application.candidate.user.firstName} ${application.candidate.user.lastName}`
+                              )
+                            }
+                          >
+                            <IconifyIcon icon="bx:download" className="me-2" />
+                            Download CV
+                          </Dropdown.Item>
+                        )}
                         <Dropdown.Divider />
                         <Dropdown.Header>Move to Status</Dropdown.Header>
-                        {STATUS_OPTIONS
-                          .filter((status) => status !== application.status)
-                          .map((status) => (
-                            <Dropdown.Item
-                              key={status}
-                              onClick={() => onStatusChange(application, status)}
+                        {STATUS_OPTIONS.filter(
+                          (status) => status !== application.status
+                        ).map((status) => (
+                          <Dropdown.Item
+                            key={status}
+                            onClick={() => onStatusChange(application, status)}
+                          >
+                            <Badge
+                              bg={getStatusVariant(status)}
+                              className="me-2"
                             >
-                              <Badge bg={getStatusVariant(status)} className="me-2">
-                                {STATUS_LABELS[status]}
-                              </Badge>
-                            </Dropdown.Item>
-                          ))}
+                              {STATUS_LABELS[status]}
+                            </Badge>
+                          </Dropdown.Item>
+                        ))}
                       </Dropdown.Menu>
                     </Dropdown>
                   </td>
@@ -590,14 +619,15 @@ const TableView: React.FC<{
       {apiResponse && apiResponse.totalElements > 0 && (
         <div className="d-flex justify-content-between align-items-center p-3 border-top">
           <div className="text-muted">
-            Showing {apiResponse.numberOfElements} of {apiResponse.totalElements} applications
+            Showing {apiResponse.numberOfElements} of{" "}
+            {apiResponse.totalElements} applications
           </div>
           <div>
             <Button
               variant="outline-primary"
               size="sm"
               disabled={apiResponse.first}
-              onClick={() => onPaginationChange('prev')}
+              onClick={() => onPaginationChange("prev")}
               className="me-2"
             >
               <IconifyIcon icon="bx:chevron-left" className="me-1" />
@@ -607,7 +637,7 @@ const TableView: React.FC<{
               variant="outline-primary"
               size="sm"
               disabled={apiResponse.last}
-              onClick={() => onPaginationChange('next')}
+              onClick={() => onPaginationChange("next")}
             >
               Next
               <IconifyIcon icon="bx:chevron-right" className="ms-1" />
@@ -643,13 +673,17 @@ const KanbanView: React.FC<{
                   <div
                     ref={provided.innerRef}
                     {...provided.droppableProps}
-                    className={`kanban-column ${snapshot.isDraggingOver ? 'dragging-over' : ''}`}
+                    className={`kanban-column ${snapshot.isDraggingOver ? "dragging-over" : ""}`}
                     style={{ minHeight: "200px" }}
                   >
                     {applications
                       .filter((app) => app.status === status)
                       .map((app, index) => (
-                        <Draggable key={app.id} draggableId={app.id} index={index}>
+                        <Draggable
+                          key={app.id}
+                          draggableId={app.id}
+                          index={index}
+                        >
                           {(provided, snapshot) => (
                             <div
                               ref={provided.innerRef}
@@ -657,50 +691,90 @@ const KanbanView: React.FC<{
                               {...provided.dragHandleProps}
                               className="mb-3"
                             >
-                              <Card 
-                                className={`border-0 shadow-sm ${snapshot.isDragging ? 'shadow' : ''}`}
-                                style={{ cursor: 'grab' }}
+                              <Card
+                                className={`border-0 shadow-sm ${snapshot.isDragging ? "shadow" : ""}`}
+                                style={{ cursor: "grab" }}
                               >
                                 <Card.Body className="p-3">
                                   <div className="d-flex justify-content-between align-items-start mb-2">
                                     <div className="flex-grow-1">
-                                      <h6 className="mb-1 fw-semibold">{app.job.title}</h6>
+                                      <h6 className="mb-1 fw-semibold">
+                                        {app.job.title}
+                                      </h6>
                                       <small className="text-muted d-block">
                                         {app.job.company.name}
                                       </small>
                                     </div>
-                                    <Badge bg={getPriorityVariant(app.priority)} className="ms-2">
+                                    <Badge
+                                      bg={getPriorityVariant(app.priority)}
+                                      className="ms-2"
+                                    >
                                       {PRIORITY_LABELS[app.priority]}
                                     </Badge>
                                   </div>
-                                  
+
                                   <div className="mb-3">
                                     <small className="text-muted d-block">
-                                      <IconifyIcon icon="bx:user" className="me-1" />
-                                      {app.candidate.user.firstName} {app.candidate.user.lastName}
+                                      <IconifyIcon
+                                        icon="bx:user"
+                                        className="me-1"
+                                      />
+                                      {app.candidate.user.firstName}{" "}
+                                      {app.candidate.user.lastName}
                                     </small>
                                     <small className="text-muted d-block">
-                                      <IconifyIcon icon="bx:calendar" className="me-1" />
-                                      {dayjs(app.createdAt).format("MMM DD, YYYY")}
+                                      <IconifyIcon
+                                        icon="bx:calendar"
+                                        className="me-1"
+                                      />
+                                      {dayjs(app.createdAt).format(
+                                        "MMM DD, YYYY"
+                                      )}
                                     </small>
                                     <small className="text-muted">
-                                      <IconifyIcon icon="bx:map" className="me-1" />
+                                      <IconifyIcon
+                                        icon="bx:map"
+                                        className="me-1"
+                                      />
                                       {app.job.country}
                                     </small>
                                   </div>
-                                  
+
                                   <Button
                                     variant="outline-primary"
                                     size="sm"
-                                    className="w-100"
+                                    className="w-100 mb-2"
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       onViewEdit(app);
                                     }}
                                   >
-                                    <IconifyIcon icon="bx:show" className="me-1" />
+                                    <IconifyIcon
+                                      icon="bx:show"
+                                      className="me-1"
+                                    />
                                     View Details
                                   </Button>
+                                  {app.cvPath && (
+                                    <Button
+                                      variant="outline-success"
+                                      size="sm"
+                                      className="w-100"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDownloadCV(
+                                          app.cvPath,
+                                          `${app.candidate.user.firstName} ${app.candidate.user.lastName}`
+                                        );
+                                      }}
+                                    >
+                                      <IconifyIcon
+                                        icon="bx:download"
+                                        className="me-1"
+                                      />
+                                      Download CV
+                                    </Button>
+                                  )}
                                 </Card.Body>
                               </Card>
                             </div>
@@ -708,10 +782,14 @@ const KanbanView: React.FC<{
                         </Draggable>
                       ))}
                     {provided.placeholder}
-                    
-                    {applications.filter((app) => app.status === status).length === 0 && (
+
+                    {applications.filter((app) => app.status === status)
+                      .length === 0 && (
                       <div className="text-center text-muted py-4">
-                        <IconifyIcon icon="bx:folder-open" className="d-block mb-2" />
+                        <IconifyIcon
+                          icon="bx:folder-open"
+                          className="d-block mb-2"
+                        />
                         <small>No applications</small>
                       </div>
                     )}
@@ -773,7 +851,7 @@ const ApplicationForm: React.FC<{
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
+
     try {
       await onSave(formData);
     } finally {
@@ -782,7 +860,9 @@ const ApplicationForm: React.FC<{
   };
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -900,12 +980,16 @@ const ApplicationForm: React.FC<{
       </Form.Group>
 
       <div className="d-flex justify-content-end gap-2 pt-3 border-top">
-        <Button variant="outline-secondary" onClick={onCancel} disabled={isSubmitting}>
+        <Button
+          variant="outline-secondary"
+          onClick={onCancel}
+          disabled={isSubmitting}
+        >
           Cancel
         </Button>
-        <Button 
-          variant="primary" 
-          type="submit" 
+        <Button
+          variant="primary"
+          type="submit"
           disabled={isSubmitting}
           className="d-flex align-items-center"
         >
@@ -919,3 +1003,29 @@ const ApplicationForm: React.FC<{
 };
 
 export default JobApplicationPipeline;
+
+// Utility function for downloading CV
+const handleDownloadCV = async (cvPath: string, candidateName: string) => {
+  try {
+    // Extrai apenas o nome do arquivo do caminho completo
+    const filename =
+      cvPath.split("/").pop() || `CV_${candidateName.replace(/\s+/g, "_")}.pdf`;
+
+    // Cria um link temporário para o download
+    const downloadUrl = `/cv/download?filename=${encodeURIComponent(filename)}`;
+
+    // Cria um link invisível e dispara o click
+    const link = document.createElement("a");
+    link.href = downloadUrl;
+    link.download = filename;
+    link.target = "_blank";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast.success(`Download do CV iniciado`);
+  } catch (error) {
+    toast.error("Erro ao baixar o CV");
+    console.error("Download error:", error);
+  }
+};

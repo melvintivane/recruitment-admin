@@ -448,7 +448,7 @@ const JobApplicationPipeline = withSwal(({ swal }: VacanciesListProps) => {
         />
       ) : (
         <KanbanView
-          applications={applications}
+          applications={filteredApplications}
           onDragEnd={onDragEnd}
           onViewEdit={handleViewEdit}
         />

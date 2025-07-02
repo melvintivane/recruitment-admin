@@ -1,5 +1,4 @@
 import ComponentContainerCard from "@/components/ComponentContainerCard";
-import TextAreaFormInput from "@/components/form/TextAreaFormInput";
 import PageMetaData from "@/components/PageTitle";
 import { getAllCategories } from "@/services/categoryService";
 import { getAllCompanies } from "@/services/companyService";
@@ -33,7 +32,7 @@ interface VacancyFormData {
   genderPreference: string;
   minSalary: number;
   maxSalary: number;
-  applicationDeadline: string;
+  deadline: string;
   skills: string;
   responsibilities: string;
   qualifications: string;
@@ -115,7 +114,7 @@ const VacancyCreate = () => {
     genderPreference: "UNSPECIFIED",
     minSalary: 0,
     maxSalary: 0,
-    applicationDeadline: "",
+    deadline: "",
     skills: "",
     responsibilities: "",
     qualifications: "",
@@ -154,31 +153,10 @@ const VacancyCreate = () => {
       toast.success("Vacancy created successfully!");
       navigate("/vacancies");
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(error.message);
     },
   });
-
-  const handleSkillChange = (value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      skills: value,
-    }));
-  };
-
-  const handleResponsibilityChange = (value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      responsibilities: value,
-    }));
-  };
-
-  const handleQualificationChange = (value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      qualifications: value,
-    }));
-  };
 
   const handleDescriptionChange = (value: string) => {
     setFormData((prev) => ({
@@ -204,9 +182,9 @@ const VacancyCreate = () => {
     state: string;
     city: string;
   }) => {
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
-      ...newLocation,
+      ...newLocation
     }));
   };
 
@@ -238,7 +216,7 @@ const VacancyCreate = () => {
       degreeRequired: formData.degreeRequired,
       minSalary: formData.minSalary,
       maxSalary: formData.maxSalary,
-      deadline: formData.applicationDeadline,
+      deadline: formData.deadline,
       genderPreference: formData.genderPreference,
       remoteAllowed: formData.remoteAllowed,
       skills: processHtmlFieldToArray(formData.skills),
@@ -262,7 +240,7 @@ const VacancyCreate = () => {
           >
             <Form onSubmit={handleSubmit}>
               {/* Basic Information */}
-              <div className="mb-4">
+              <div className="mb-5">
                 <h5 className="mb-3">Basic Information</h5>
 
                 <Row className="mb-3">
@@ -351,43 +329,36 @@ const VacancyCreate = () => {
                     </Form.Group>
                   </Col>
                 </Row>
-
-                <Row className="mb-3">
-                  <LocationSelector
-                    onLocationChange={handleLocationChange}
-                    initialValues={{
-                      country: formData.country,
-                      state: formData.state,
-                      city: formData.city,
-                    }}
-                    key={`${formData.country}-${formData.state}-${formData.city}`}
-                  />
-                  <Col md={6}>
-                    <Form.Group controlId="remoteAllowed">
-                      <Form.Label>Remote Work</Form.Label>
-                      <Form.Check
-                        type="switch"
-                        id="remoteSwitch"
-                        label="Allow remote work"
-                        checked={formData.remoteAllowed}
-                        onChange={() =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            remoteAllowed: !prev.remoteAllowed,
-                          }))
-                        }
-                      />
-                    </Form.Group>
-                  </Col>
-                </Row>
               </div>
 
+              <LocationSelector
+                onLocationChange={handleLocationChange}
+                initialValues={{
+                  country: formData.country,
+                  state: formData.state,
+                  city: formData.city,
+                }}
+              />
+
               {/* Requirements */}
-              <div className="mb-4">
+              <div className="mb-5">
                 <h5 className="mb-3">Requirements</h5>
 
                 <Row className="mb-3">
-                  <Col md={4}>
+                  <Col>
+                    <Form.Group controlId="degreeRequired">
+                      <Form.Label>Degree Required *</Form.Label>
+                      <Form.Control
+                        type="text"
+                        placeholder="e.g. Bachelor's degree in Computer Science"
+                        name="degreeRequired"
+                        value={formData.degreeRequired}
+                        onChange={handleChange}
+                        required
+                      />
+                    </Form.Group>
+                  </Col>
+                  <Col md={3}>
                     <Form.Group controlId="yearsOfExperience">
                       <Form.Label>Years of Experience *</Form.Label>
                       <Form.Control
@@ -401,7 +372,7 @@ const VacancyCreate = () => {
                       />
                     </Form.Group>
                   </Col>
-                  <Col md={4}>
+                  <Col md={3}>
                     <Form.Group controlId="careerLevel">
                       <Form.Label>Career Level *</Form.Label>
                       <Form.Select
@@ -418,7 +389,7 @@ const VacancyCreate = () => {
                       </Form.Select>
                     </Form.Group>
                   </Col>
-                  <Col md={4}>
+                  <Col md={3}>
                     <Form.Group controlId="genderPreference">
                       <Form.Label>Gender Preference</Form.Label>
                       <Form.Select
@@ -433,79 +404,63 @@ const VacancyCreate = () => {
                     </Form.Group>
                   </Col>
                 </Row>
-
                 <Row className="mb-3">
-                  <Col md={6}>
-                    <Form.Group controlId="degreeRequired">
-                      <Form.Label>Degree Requirement *</Form.Label>
+                  <Col>
+                    <Form.Group controlId="responsibilities">
+                      <Form.Label>
+                        Responsibilities *
+                        <small className="text-muted">
+                          (Separate each responsibility with a semicolon or new
+                          line)
+                        </small>
+                      </Form.Label>
                       <Form.Control
-                        type="text"
-                        placeholder="e.g. Bachelor's degree in Computer Science"
-                        name="degreeRequired"
-                        value={formData.degreeRequired}
+                        as="textarea"
+                        placeholder="e.g. Develop user interfaces; Collaborate with backend team"
+                        rows={4}
+                        name="responsibilities"
+                        value={formData.responsibilities}
                         onChange={handleChange}
                         required
                       />
                     </Form.Group>
                   </Col>
-                </Row>
-
-                <Row className="mb-3">
                   <Col>
                     <Form.Group controlId="skills">
                       <Form.Label>
-                        Skills * {"("}
-                        <small className="text-danger">
-                          Separate each skill with a semicolon
+                        Skills *
+                        <small className="text-muted">
+                          (Separate each skill with a semicolon or new line)
                         </small>
-                        {")"}
                       </Form.Label>
-                      <TextAreaFormInput
+                      <Form.Control
+                        as="textarea"
+                        placeholder="e.g. Strong communication skills; Team player"
+                        rows={4}
                         name="skills"
-                        label="Skills"
                         value={formData.skills}
-                        onChange={handleSkillChange}
-                        rows={4}
+                        onChange={handleChange}
+                        required
                       />
                     </Form.Group>
                   </Col>
-                </Row>
-                <Row className="mb-3">
-                  <Col>
-                    <Form.Group controlId="responsibilities">
-                      <Form.Label>
-                        Responsibilities * {"("}
-                        <small className="text-danger">
-                          Separate each responsibility with a semicolon
-                        </small>
-                        {")"}
-                      </Form.Label>
-                      <TextAreaFormInput
-                        name="responsibilities"
-                        label="Responsibilities"
-                        value={formData.responsibilities}
-                        onChange={handleResponsibilityChange}
-                        rows={4}
-                      />
-                    </Form.Group>
-                  </Col>
-                </Row>
-                <Row className="mb-3">
                   <Col>
                     <Form.Group controlId="qualifications">
                       <Form.Label>
-                        Qualifications * {"("}
-                        <small className="text-danger">
-                          Separate each qualification with a semicolon
+                        Qualifications *{" "}
+                        <small className="text-muted">
+                          (Separate each qualification with a semicolon or new
+                          line)
                         </small>
-                        {")"}
                       </Form.Label>
-                      <TextAreaFormInput
-                        name="qualifications"
-                        label="Qualifications"
-                        value={formData.qualifications}
-                        onChange={handleQualificationChange}
+                      <Form.Control
+                        as="textarea"
+                        placeholder="e.g. Experience with React; Knowledge of REST APIs"
                         rows={4}
+                        name="qualifications"
+                        value={formData.qualifications}
+                        onChange={handleChange}
+                        required
                       />
                     </Form.Group>
                   </Col>
@@ -513,7 +468,7 @@ const VacancyCreate = () => {
               </div>
 
               {/* Compensation */}
-              <div className="mb-4">
+              <div className="mb-5">
                 <h5 className="mb-3">Compensation</h5>
 
                 <Row className="mb-3">
@@ -549,7 +504,7 @@ const VacancyCreate = () => {
               </div>
 
               {/* Description */}
-              <div className="mb-4">
+              <div className="mb-5">
                 <h5 className="mb-3">Job Description *</h5>
                 <ReactQuill
                   theme="snow"
@@ -565,14 +520,31 @@ const VacancyCreate = () => {
 
                 <Row className="mb-3">
                   <Col md={3}>
-                    <Form.Group controlId="applicationDeadline">
+                    <Form.Group controlId="deadline">
                       <Form.Label>Application Deadline *</Form.Label>
                       <Form.Control
                         type="datetime-local"
-                        name="applicationDeadline"
-                        value={formData.applicationDeadline}
+                        name="deadline"
+                        value={formData.deadline}
                         onChange={handleChange}
                         required
+                      />
+                    </Form.Group>
+                  </Col>
+                  <Col>
+                    <Form.Group controlId="remoteAllowed">
+                      <Form.Label>Remote Work</Form.Label>
+                      <Form.Check
+                        type="switch"
+                        id="remoteSwitch"
+                        label="Allow remote work"
+                        checked={formData.remoteAllowed}
+                        onChange={() =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            remoteAllowed: !prev.remoteAllowed,
+                          }))
+                        }
                       />
                     </Form.Group>
                   </Col>

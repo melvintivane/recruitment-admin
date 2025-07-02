@@ -27,8 +27,10 @@ import Spinner from "@/components/Spinner";
 import { useParams } from "react-router-dom";
 import { withSwal } from "react-sweetalert2";
 import { SweetAlertResult } from "sweetalert2";
+import PageMetaData from "@/components/PageTitle";
+import '@/assets/scss/pages/_kanban.css';
 
-// Constants moved to top level for better organization
+
 const STATUS_OPTIONS = [
   "APPLIED",
   "SHORTLISTED",
@@ -204,12 +206,6 @@ const JobApplicationPipeline = withSwal(({ swal }: VacanciesListProps) => {
     setShowModal(true);
   }, []);
 
-  const handleAddNew = useCallback(() => {
-    setSelectedApp(null);
-    setIsEditing(false);
-    setShowModal(true);
-  }, []);
-
   const handleCloseModal = useCallback(() => {
     setShowModal(false);
     setSelectedApp(null);
@@ -313,6 +309,7 @@ const JobApplicationPipeline = withSwal(({ swal }: VacanciesListProps) => {
 
   return (
     <div className="p-4">
+      <PageMetaData title="Job Applications" />
       {/* Header */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
@@ -338,17 +335,17 @@ const JobApplicationPipeline = withSwal(({ swal }: VacanciesListProps) => {
             <IconifyIcon icon="bx:columns" className="me-1" />
             Kanban View
           </Button>
-          <Button variant="primary" onClick={handleAddNew}>
-            <IconifyIcon icon="bx:plus" className="me-1" />
-            Add Application
-          </Button>
         </div>
       </div>
 
       {/* Status Overview Cards */}
-      <Row className="mb-4">
+      <Row className="mb-4 g-2 overflow-auto">
         {STATUS_OPTIONS.map((status) => (
-          <Col lg={2} md={4} sm={6} key={status} className="mb-3">
+          <Col
+            key={status}
+            className="flex-grow-1"
+            style={{ minWidth: "200px" }}
+          >
             <Card className="h-100 border-0 shadow-sm">
               <Card.Body className="text-center p-3">
                 <div className="display-6 fw-bold mb-2 text-primary">
@@ -655,47 +652,47 @@ const KanbanView: React.FC<{
   onViewEdit: (app: Application) => void;
 }> = ({ applications, onDragEnd, onViewEdit }) => (
   <DragDropContext onDragEnd={onDragEnd}>
-    <Row>
-      {STATUS_OPTIONS.map((status) => (
-        <Col lg={2} md={4} key={status} className="mb-4">
-          <Card className="h-100 border-0 shadow-sm">
-            <Card.Header className="bg-transparent border-0 pb-0">
-              <div className="d-flex justify-content-between align-items-center">
-                <h6 className="mb-0 fw-semibold">{STATUS_LABELS[status]}</h6>
-                <Badge bg={getStatusVariant(status)} pill>
-                  {applications.filter((app) => app.status === status).length}
-                </Badge>
-              </div>
-            </Card.Header>
-            <Card.Body className="pt-3">
-              <Droppable droppableId={status}>
-                {(provided, snapshot) => (
-                  <div
-                    ref={provided.innerRef}
-                    {...provided.droppableProps}
-                    className={`kanban-column ${snapshot.isDraggingOver ? "dragging-over" : ""}`}
-                    style={{ minHeight: "200px" }}
-                  >
-                    {applications
-                      .filter((app) => app.status === status)
-                      .map((app, index) => (
-                        <Draggable
-                          key={app.id}
-                          draggableId={app.id}
-                          index={index}
-                        >
-                          {(provided, snapshot) => (
-                            <div
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                              {...provided.dragHandleProps}
-                              className="mb-3"
-                            >
-                              <Card
-                                className={`border-0 shadow-sm ${snapshot.isDragging ? "shadow" : ""}`}
-                                style={{ cursor: "grab" }}
+    <div className="kanban-container">
+      <div className="kanban-scroll-container">
+        {STATUS_OPTIONS.map((status) => (
+          <div key={status} className="kanban-column-wrapper">
+            <Card className="h-100 border-0 shadow-sm kanban-column-card">
+              <Card.Header className="bg-transparent border-0 pb-0">
+                <div className="d-flex justify-content-between align-items-center">
+                  <h6 className="mb-0 fw-semibold">{STATUS_LABELS[status]}</h6>
+                  <Badge bg={getStatusVariant(status)} pill>
+                    {applications.filter((app) => app.status === status).length}
+                  </Badge>
+                </div>
+              </Card.Header>
+              <Card.Body className="pt-3">
+                <Droppable droppableId={status}>
+                  {(provided, snapshot) => (
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.droppableProps}
+                      className={`kanban-column ${snapshot.isDraggingOver ? "dragging-over" : ""}`}
+                    >
+                      {applications
+                        .filter((app) => app.status === status)
+                        .map((app, index) => (
+                          <Draggable
+                            key={app.id}
+                            draggableId={app.id}
+                            index={index}
+                          >
+                            {(provided, snapshot) => (
+                              <div
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                {...provided.dragHandleProps}
+                                className="mb-3"
                               >
-                                <Card.Body className="p-3">
+                                <Card
+                                  className={`border-0 shadow-sm ${snapshot.isDragging ? "shadow-lg" : ""}`}
+                                  style={{ cursor: "grab" }}
+                                >
+                                  <Card.Body className="p-3">
                                   <div className="d-flex justify-content-between align-items-start mb-2">
                                     <div className="flex-grow-1">
                                       <h6 className="mb-1 fw-semibold">
@@ -776,31 +773,28 @@ const KanbanView: React.FC<{
                                     </Button>
                                   )}
                                 </Card.Body>
-                              </Card>
-                            </div>
-                          )}
-                        </Draggable>
-                      ))}
-                    {provided.placeholder}
+                                </Card>
+                              </div>
+                            )}
+                          </Draggable>
+                        ))}
+                      {provided.placeholder}
 
-                    {applications.filter((app) => app.status === status)
-                      .length === 0 && (
-                      <div className="text-center text-muted py-4">
-                        <IconifyIcon
-                          icon="bx:folder-open"
-                          className="d-block mb-2"
-                        />
-                        <small>No applications</small>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </Droppable>
-            </Card.Body>
-          </Card>
-        </Col>
-      ))}
-    </Row>
+                      {applications.filter((app) => app.status === status).length === 0 && (
+                        <div className="text-center text-muted py-4">
+                          <IconifyIcon icon="bx:folder-open" className="d-block mb-2" />
+                          <small>No applications</small>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </Droppable>
+              </Card.Body>
+            </Card>
+          </div>
+        ))}
+      </div>
+    </div>
   </DragDropContext>
 );
 

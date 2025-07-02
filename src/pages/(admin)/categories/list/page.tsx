@@ -38,7 +38,7 @@ const CategoriesList = withSwal(({ swal }: CategoriesListProps) => {
     error,
   } = useQuery<CategoryApiResponse, Error>(
     ["categories", pagination],
-    () => getAllCategories(pagination.page, pagination.size),
+    () => getAllCategories(),
     {
       keepPreviousData: true,
       staleTime: 5000,

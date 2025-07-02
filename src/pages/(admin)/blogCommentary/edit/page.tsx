@@ -2,6 +2,7 @@ import ComponentContainerCard from "@/components/ComponentContainerCard";
 import PageMetaData from "@/components/PageTitle";
 import { getBlogCommentaryById, updateBlogCommentary } from "@/services/blogCommentaryService";
 import { BlogCommentaryResponseDTO, BlogCommentaryUpdateDTO } from "@/types/blogCommentary";
+import { ErrorType } from "@/types/common";
 import { useState } from "react";
 import { Alert, Button, Col, Form, Row, Spinner } from "react-bootstrap";
 import { useMutation, useQuery } from "react-query";
@@ -17,10 +18,10 @@ const BlogCommentaryEdit = () => {
   });
 
   // Fetch commentary data
-  const { 
-    data: commentaryData, 
-    isLoading: isFetching, 
-    error: fetchError 
+  const {
+    data: commentaryData,
+    isLoading: isFetching,
+    error: fetchError,
   } = useQuery<BlogCommentaryResponseDTO>(
     ["blogCommentary", commentaryId],
     () => {
@@ -34,7 +35,8 @@ const BlogCommentaryEdit = () => {
           commentary: data.commentary,
         });
       },
-      onError: (error: Error) => {
+      onError: (err: unknown) => {
+        const error = err as ErrorType;
         toast.error(error.message || "Failed to load commentary");
         navigate("/blogs/commentaries");
       },
@@ -60,7 +62,7 @@ const BlogCommentaryEdit = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
@@ -80,9 +82,11 @@ const BlogCommentaryEdit = () => {
   }
 
   if (fetchError || !commentaryData) {
+    const errorMessage = fetchError instanceof Error ? fetchError.message : "Commentary not found";
+
     return (
       <Alert variant="danger" className="mx-3 my-5">
-        {fetchError?.message || "Commentary not found"}
+        {errorMessage}
       </Alert>
     );
   }
@@ -94,6 +98,7 @@ const BlogCommentaryEdit = () => {
       <Row>
         <Col>
           <ComponentContainerCard
+            id="blog-commentary-edit"
             title="Edit Commentary"
             description="Update the content of your commentary"
           >
@@ -138,7 +143,9 @@ const BlogCommentaryEdit = () => {
                 </Button>
                 <Button
                   variant="outline-secondary"
-                  onClick={() => navigate(`/blogs/commentaries/${commentaryId}`)}
+                  onClick={() =>
+                    navigate(`/blogs/commentaries/${commentaryId}`)
+                  }
                   disabled={mutation.isLoading}
                 >
                   Cancel

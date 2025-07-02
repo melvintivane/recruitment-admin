@@ -1,29 +1,24 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import ComponentContainerCard from "@/components/ComponentContainerCard";
 import ChoicesFormInput from "@/components/form/ChoicesFormInput";
 import PageMetaData from "@/components/PageTitle";
 import { getAllBlogCategories } from "@/services/blogCategoryService";
 import { getBlogById, updateBlog } from "@/services/blogService";
 import { getAllBlogTags } from "@/services/blogTagService"; // Added for tags
-import { BlogResponseDTO } from "@/types/blog";
+import { BlogResponseDTO, BlogUpdateDTO } from "@/types/blog";
 import { useState } from "react";
-import { Spinner as BootstrapSpinner, Button, Col, Form, Row } from "react-bootstrap";
+import {
+  Spinner as BootstrapSpinner,
+  Button,
+  Col,
+  Form,
+  Row,
+} from "react-bootstrap";
 import { useMutation, useQuery } from "react-query";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
-
-interface BlogFormData {
-  title: string;
-  subtitle: string;
-  body: string;
-  quote?: string;
-  imageFile?: File | null; // Changed to handle file upload
-  currentImage?: string; // To show existing image
-  author?: string;
-  categoryId: string;
-  tagIds: number[];
-}
 
 const BlogEdit = () => {
   const { blogId } = useParams<{ blogId: string }>();
@@ -40,12 +35,10 @@ const BlogEdit = () => {
     ],
   };
 
-  const [formData, setFormData] = useState<BlogFormData>({
+  const [formData, setFormData] = useState<BlogUpdateDTO>({
     title: "",
-    subtitle: "",
     body: "",
-    quote: "",
-    currentImage: "",
+    image: "",
     author: "",
     categoryId: "",
     tagIds: [] as number[],
@@ -55,7 +48,7 @@ const BlogEdit = () => {
   const {
     data: blogData,
     isLoading: isFetching,
-    error: fetchError
+    error: fetchError,
   } = useQuery<BlogResponseDTO, Error>(
     ["blog", blogId],
     () => {
@@ -66,14 +59,12 @@ const BlogEdit = () => {
       enabled: !!blogId,
       onSuccess: (data) => {
         const categoryId = data.blogCategory?.id?.toString() || "";
-        const tagIds = data.blogTags?.map(tag => tag.id) || [];
+        const tagIds = data.blogTags?.map((tag) => tag.id) || [];
 
         setFormData({
           title: data.title,
-          subtitle: data.subtitle,
           body: data.body,
-          quote: data.quote || "",
-          currentImage: data.image || "",
+          image: data.image || "",
           author: data.author || "",
           categoryId,
           tagIds,
@@ -91,7 +82,7 @@ const BlogEdit = () => {
   const { data: tags } = useQuery("blogTags", getAllBlogTags);
 
   const mutation = useMutation(
-    (data: { blogId: string; data: FormData }) => {
+    (data: { blogId: string; data: BlogUpdateDTO }) => {
       return updateBlog(data.blogId, data.data);
     },
     {
@@ -106,40 +97,35 @@ const BlogEdit = () => {
   );
 
   const handleBodyChange = (value: string) => {
-    setFormData(prev => ({ ...prev, body: value }));
+    setFormData((prev) => ({ ...prev, body: value }));
   };
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        imageFile: e.target.files![0]
+        imageFile: e.target.files![0],
       }));
     }
   };
 
   const handleTagSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selected = Number(e.target.value);
-    if (selected && !formData.tagIds.includes(selected)) {
-      setFormData(prev => ({
+    if (selected && !formData.tagIds?.includes(selected)) {
+      setFormData((prev) => ({
         ...prev,
-        tagIds: [...prev.tagIds, selected],
+        tagIds: [...(prev.tagIds || []), selected],
       }));
     }
-  };
-
-  const removeTag = (id: number) => {
-    setFormData(prev => ({
-      ...prev,
-      tagIds: prev.tagIds.filter(t => t !== id),
-    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -151,23 +137,33 @@ const BlogEdit = () => {
     }
 
     // Validate required fields
-    if (!formData.title || !formData.subtitle || !formData.body || !formData.categoryId) {
+    if (!formData.title || !formData.body || !formData.categoryId) {
       toast.error("Please fill all required fields");
       return;
     }
 
     const formDataToSend = new FormData();
     formDataToSend.append("title", formData.title);
-    formDataToSend.append("subtitle", formData.subtitle);
     formDataToSend.append("body", formData.body);
     formDataToSend.append("categoryId", formData.categoryId);
 
-    if (formData.quote) formDataToSend.append("quote", formData.quote);
     if (formData.author) formDataToSend.append("author", formData.author);
-    if (formData.imageFile) formDataToSend.append("image", formData.imageFile);
-    formData.tagIds.forEach(tagId => formDataToSend.append("tagIds", tagId.toString()));
+    if (formData.image) formDataToSend.append("image", formData.image);
+    formData.tagIds?.forEach((tagId) =>
+      formDataToSend.append("tagIds", tagId.toString())
+    );
 
-    mutation.mutate({ blogId, data: formDataToSend });
+    mutation.mutate({
+      blogId,
+      data: {
+        title: formData.title,
+        body: formData.body,
+        image: formData.image,
+        categoryId: formData.categoryId,
+        author: formData.author,
+        tagIds: formData.tagIds,
+      },
+    });
   };
 
   if (isFetching) {
@@ -193,6 +189,7 @@ const BlogEdit = () => {
       <Row>
         <Col>
           <ComponentContainerCard
+            id="blog-edit"
             title={`Edit ${formData.title || "Blog"}`}
             description="Update the blog post below"
           >
@@ -205,18 +202,6 @@ const BlogEdit = () => {
                       type="text"
                       name="title"
                       value={formData.title}
-                      onChange={handleChange}
-                      required
-                    />
-                  </Form.Group>
-                </Col>
-                <Col md={6}>
-                  <Form.Group controlId="subtitle">
-                    <Form.Label>Subtitle *</Form.Label>
-                    <Form.Control
-                      type="text"
-                      name="subtitle"
-                      value={formData.subtitle}
                       onChange={handleChange}
                       required
                     />
@@ -244,9 +229,9 @@ const BlogEdit = () => {
                       onChange={handleFileChange}
                       accept="image/*"
                     />
-                    {formData.currentImage && (
+                    {formData.image && (
                       <div className="mt-2 small text-muted">
-                        Current image: {formData.currentImage}
+                        Current image: {formData.image}
                       </div>
                     )}
                   </Form.Group>
@@ -264,7 +249,7 @@ const BlogEdit = () => {
                       required
                     >
                       <option value="">Select a category</option>
-                      {categories?.content?.map(category => (
+                      {categories?.content?.map((category) => (
                         <option key={category.id} value={category.id}>
                           {category.name}
                         </option>
@@ -278,36 +263,19 @@ const BlogEdit = () => {
                     <Form.Label>Tags</Form.Label>
                     <ChoicesFormInput
                       multiple
-                      onChange={handleTagSelect}
+                      onChange={handleTagSelect as any}
                       options={{
                         removeItemButton: true,
                         searchEnabled: true,
                         duplicateItemsAllowed: false,
                       }}
-                  
                     >
-                      {tags?.content?.map(tag => (
+                      {tags?.content?.map((tag) => (
                         <option key={tag.id} value={tag.id}>
                           {tag.name}
                         </option>
                       ))}
                     </ChoicesFormInput>
-                  </Form.Group>
-                </Col>
-                
-              </Row>
-
-              <Row className="mb-3">
-                <Col>
-                  <Form.Group controlId="quote">
-                    <Form.Label>Quote</Form.Label>
-                    <Form.Control
-                      as="textarea"
-                      rows={3}
-                      name="quote"
-                      value={formData.quote}
-                      onChange={handleChange}
-                    />
                   </Form.Group>
                 </Col>
               </Row>
@@ -345,10 +313,7 @@ const BlogEdit = () => {
                     "Update Blog"
                   )}
                 </Button>
-                <Button
-                  variant="secondary"
-                  onClick={() => navigate("/blogs")}
-                >
+                <Button variant="secondary" onClick={() => navigate("/blogs")}>
                   Cancel
                 </Button>
               </div>

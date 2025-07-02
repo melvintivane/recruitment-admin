@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import ComponentContainerCard from "@/components/ComponentContainerCard";
 import LocationSelector from "@/components/LocationSelector";
 import PageMetaData from "@/components/PageTitle";

@@ -41,7 +41,7 @@ const BlogTagList = withSwal(({ swal }: BlogTagListProps) => {
     error,
   } = useQuery<BlogTagApiResponse, Error>(
     ["blogTags", pagination],
-    () => getAllBlogTags(pagination.page, pagination.size),
+    () => getAllBlogTags(),
     {
       keepPreviousData: true,
       staleTime: 5000,

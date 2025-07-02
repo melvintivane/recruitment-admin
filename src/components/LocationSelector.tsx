@@ -112,7 +112,7 @@ const LocationSelector = ({ onLocationChange, initialValues }: LocationSelectorP
   };
 
   return (
-    <div className="mb-4">
+    <div className="mb-5">
       <h5 className="mb-3">Location Information</h5>
       
       <Row className="mb-3">

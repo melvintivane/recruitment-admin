@@ -83,6 +83,11 @@ export interface CandidateCreateDto {
 
 export interface CandidateUpdateDto {
   userId?: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  picture?: string;
+  gender: string;
   country?: string;
   phone?: string;
   birthDate?: string; // ISO date string

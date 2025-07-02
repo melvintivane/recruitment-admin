@@ -241,7 +241,7 @@ const VacancyDetails = () => {
               </Row>
 
               <div className="mt-5 mb-1">
-                <SubmissionButton vacancyId={vacancy.id} />
+                <SubmissionButton />
               </div>
             </CardBody>
           </Card>

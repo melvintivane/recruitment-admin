@@ -41,7 +41,7 @@ const BlogCategoryList = withSwal(({ swal }: BlogCategoryListProps) => {
     error,
   } = useQuery<BlogCategoryApiResponse, Error>(
     ["blogCategories", pagination],
-    () => getAllBlogCategories(pagination.page, pagination.size),
+    () => getAllBlogCategories(),
     {
       keepPreviousData: true,
       staleTime: 5000,
@@ -197,7 +197,7 @@ const BlogCategoryList = withSwal(({ swal }: BlogCategoryListProps) => {
                           <Button onClick={() => navigate(`/blogs/categories/edit/${category.id}`)} variant="soft-secondary" size="sm" className="me-2">
                             <IconifyIcon icon="bx:edit" className="fs-16" />
                           </Button>
-                          <Button onClick={() => handleDelete(category.id)} variant="soft-danger" size="sm" disabled={deleteMutation.isLoading}>
+                          <Button onClick={() => handleDelete(String(category.id))} variant="soft-danger" size="sm" disabled={deleteMutation.isLoading}>
                             <IconifyIcon icon="bx:trash" className="fs-16" />
                           </Button>
                         </td>

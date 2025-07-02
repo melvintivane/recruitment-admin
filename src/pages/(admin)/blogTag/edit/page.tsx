@@ -1,7 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import ComponentContainerCard from "@/components/ComponentContainerCard";
 import PageMetaData from "@/components/PageTitle";
 import { getBlogTagById, updateBlogTag } from "@/services/blogTagService";
-import { BlogTagType, BlogTagUpdateDto } from "@/types/blogTag";
 import { useState } from "react";
 import {
   Spinner as BootstrapSpinner,
@@ -45,7 +45,7 @@ const BlogTagEdit = () => {
     data: tagData,
     isLoading: isFetching,
     error: fetchError,
-  } = useQuery<BlogTagType, Error>(
+  } = useQuery<any, Error>(
     ["blogTag", tagId],
     () => {
       if (!tagId) throw new Error("Tag ID is required");
@@ -68,7 +68,7 @@ const BlogTagEdit = () => {
   );
 
   const mutation = useMutation(
-    (params: { tagId: string; data: BlogTagUpdateDto }) =>
+    (params: { tagId: string; data: any }) =>
       updateBlogTag(params.tagId, params.data),
     {
       onSuccess: () => {
@@ -89,7 +89,7 @@ const BlogTagEdit = () => {
   };
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
 
@@ -102,7 +102,7 @@ const BlogTagEdit = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const updatedData: BlogTagUpdateDto = {
+    const updatedData: any = {
       name: formData.name,
       code: formData.code,
       description: formData.description,

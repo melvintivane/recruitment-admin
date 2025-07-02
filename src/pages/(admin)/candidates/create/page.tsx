@@ -46,7 +46,7 @@ const CandidatesCreate = () => {
       toast.success("Candidate created successfully!");
       navigate("/candidates");
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       console.error("Error creating candidate:", error.message);
       toast.error(error.message || "Failed to create candidate");
     },

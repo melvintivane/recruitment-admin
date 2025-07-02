@@ -38,7 +38,7 @@ const BlogsList = withSwal(({ swal }: BlogsListProps) => {
     error,
   } = useQuery<BlogApiResponse, Error>(
     ["blogs", pagination],
-    () => getAllBlogs(pagination.page, pagination.size),
+    () => getAllBlogs(),
     {
       keepPreviousData: true,
       staleTime: 5000,

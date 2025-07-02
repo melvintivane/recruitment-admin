@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import PageMetaData from "@/components/PageTitle";
 import Spinner from "@/components/Spinner";
 import IconifyIcon from "@/components/wrappers/IconifyIcon";
@@ -5,7 +6,6 @@ import {
   deleteBlogCommentary,
   getBlogCommentaries,
 } from "@/services/blogCommentaryService";
-import { BlogCommentaryApiResponse } from "@/types/blogCommentary";
 import { useState } from "react";
 import { Button, Card, CardBody, Col, Row } from "react-bootstrap";
 import { useMutation, useQuery, useQueryClient } from "react-query";
@@ -41,7 +41,7 @@ const {
   data: commentaries,
   isLoading,
   error,
-} = useQuery<BlogCommentaryApiResponse, Error>(
+} = useQuery<any, Error>(
   ["blogCommentaries", blogId, pagination],
   () => getBlogCommentaries(blogId, pagination.page, pagination.size),
   {
@@ -195,7 +195,7 @@ const {
                       </td>
                     </tr>
                   ) : commentaries?.content?.length ? (
-                    commentaries.content.map((commentary) => (
+                    commentaries.content.map((commentary: any) => (
                       <tr key={commentary.id}>
                         <td>
                           {commentary.user.name}

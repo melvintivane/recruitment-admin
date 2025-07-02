@@ -40,7 +40,7 @@ const CompaniesList = withSwal(({ swal }: CompaniesListProps) => {
     error,
   } = useQuery<CompanyApiResponse, Error>(
     ["companies", pagination],
-    () => getAllCompanies(pagination.page, pagination.size),
+    () => getAllCompanies(),
     {
       keepPreviousData: true,
       staleTime: 5000,

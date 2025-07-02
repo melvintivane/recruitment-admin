@@ -1,0 +1,62 @@
+/* Kanban Board Styles */
+.kanban-container {
+  width: 100%;
+  overflow-x: auto;
+  padding-bottom: 1rem;
+}
+
+.kanban-scroll-container {
+  display: flex;
+  gap: 1rem;
+  min-width: max-content;
+  padding: 0 1rem 1rem;
+}
+
+.kanban-column-wrapper {
+  min-width: 300px;
+  width: 300px;
+  flex-shrink: 0;
+}
+
+.kanban-column {
+  min-height: 200px;
+  max-height: calc(100vh - 250px);
+  overflow-y: auto;
+  background-color: var(--bs-light-bg-subtle);
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+}
+
+.kanban-column-card {
+  height: 100%;
+  background-color: transparent;
+}
+
+.dragging-over {
+  background-color: rgba(var(--bs-primary-rgb), 0.05);
+}
+
+/* Card styles */
+.kanban-card {
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.kanban-card.dragging {
+  transform: rotate(3deg);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Empty state */
+.kanban-empty-state {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .kanban-column-wrapper {
+    min-width: 280px;
+  }
+}

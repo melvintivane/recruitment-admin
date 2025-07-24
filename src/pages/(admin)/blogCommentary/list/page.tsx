@@ -37,19 +37,19 @@ const BlogCommentaryList = withSwal(({ swal }: BlogCommentaryListProps) => {
   const queryClient = useQueryClient();
 
   // Atualize a chamada useQuery para:
-const {
-  data: commentaries,
-  isLoading,
-  error,
-} = useQuery<any, Error>(
-  ["blogCommentaries", blogId, pagination],
-  () => getBlogCommentaries(blogId, pagination.page, pagination.size),
-  {
-    keepPreviousData: true,
-    staleTime: 5000,
-    enabled: !!blogId, // Só busca quando blogId existe
-  }
-);
+  const {
+    data: commentaries,
+    isLoading,
+    error,
+  } = useQuery<any, Error>(
+    ["blogCommentaries", blogId, pagination],
+    () => getBlogCommentaries(blogId, pagination.page, pagination.size),
+    {
+      keepPreviousData: true,
+      staleTime: 5000,
+      enabled: !!blogId, // Só busca quando blogId existe
+    }
+  );
 
   const deleteMutation = useMutation(deleteBlogCommentary, {
     onSuccess: () => {
@@ -162,10 +162,10 @@ const {
               <div className="d-flex flex-wrap justify-content-between gap-3">
                 <div className="search-bar">
                   <span><IconifyIcon icon="bx:search-alt" className="mb-1" /></span>
-                  <input 
-                    type="search" 
-                    className="form-control" 
-                    placeholder="Search blog commentaries..." 
+                  <input
+                    type="search"
+                    className="form-control"
+                    placeholder="Search blog commentaries..."
                     onChange={(e) => setBlogId(e.target.value)} // Simple search by blog ID
                   />
                 </div>
@@ -189,9 +189,34 @@ const {
                 <tbody>
                   {isLoading ? (
                     <tr>
-                      <td colSpan={5} className="text-center py-4">
-                        <Spinner type="bordered" className="m-2" color="primary" />
-                        <span>Loading commentaries...</span>
+                      <td colSpan={8} className="text-center py-4">
+                        <div className="flex flex-col items-center gap-4">
+                          <div className="flex gap-2">
+                            <Spinner
+                              type="bordered"
+                              className="m-2"
+                              color="primary"
+                            />
+                            <Spinner
+                              type="bordered"
+                              className="m-2"
+                              color="secondary"
+                            />
+                            <Spinner
+                              type="bordered"
+                              className="m-2"
+                              color="success"
+                            />
+                            <Spinner
+                              type="bordered"
+                              className="m-2"
+                              color="danger"
+                            />
+                          </div>
+                          <span className="text-center">
+                            Loading commentaries...
+                          </span>
+                        </div>
                       </td>
                     </tr>
                   ) : commentaries?.content?.length ? (
@@ -200,8 +225,8 @@ const {
                         <td>
                           {commentary.user.name}
                           {commentary.user.avatar && (
-                            <img 
-                              src={commentary.user.avatar} 
+                            <img
+                              src={commentary.user.avatar}
                               alt={commentary.user.name}
                               className="rounded-circle ms-2"
                               width="24"
@@ -213,18 +238,18 @@ const {
                         <td>{new Date(commentary.createdAt).toLocaleString()}</td>
                         <td>{new Date(commentary.updatedAt).toLocaleString()}</td>
                         <td>
-                          <Button 
-                            onClick={() => navigate(`/blogs/${blogId}/commentaries/edit/${commentary.id}`)} 
-                            variant="soft-secondary" 
-                            size="sm" 
+                          <Button
+                            onClick={() => navigate(`/blogs/${blogId}/commentaries/edit/${commentary.id}`)}
+                            variant="soft-secondary"
+                            size="sm"
                             className="me-2"
                           >
                             <IconifyIcon icon="bx:edit" className="fs-16" />
                           </Button>
-                          <Button 
-                            onClick={() => handleDelete(commentary.id)} 
-                            variant="soft-danger" 
-                            size="sm" 
+                          <Button
+                            onClick={() => handleDelete(commentary.id)}
+                            variant="soft-danger"
+                            size="sm"
                             disabled={deleteMutation.isLoading}
                           >
                             <IconifyIcon icon="bx:trash" className="fs-16" />
@@ -245,9 +270,9 @@ const {
                 <div className="row g-0 p-3 border-top justify-content-between align-items-center">
                   <div className="col-sm-auto text-muted">
                     Showing {commentaries.numberOfElements} of {commentaries.totalElements} commentaries
-                    <select 
-                      className="form-select form-select-sm ms-2 d-inline-block w-auto" 
-                      value={pagination.size} 
+                    <select
+                      className="form-select form-select-sm ms-2 d-inline-block w-auto"
+                      value={pagination.size}
                       onChange={(e) => handlePageSizeChange(Number(e.target.value))}
                     >
                       {[5, 10, 20, 50].map((size) => (

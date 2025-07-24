@@ -1,11 +1,8 @@
 import PageMetaData from "@/components/PageTitle";
 import Spinner from "@/components/Spinner";
 import IconifyIcon from "@/components/wrappers/IconifyIcon";
-import {
-  deleteBlogCategory,
-  getAllBlogCategories,
-} from "@/services/blogCategoryService";
-import { BlogCategoryApiResponse } from "@/types/blogCategory";
+import { deleteBlog, getAllBloggers } from "@/services/bloggerService";
+import { BloggerApiResponse } from "@/types/blogger";
 import { useState } from "react";
 import { Button, Card, CardBody, Col, Row } from "react-bootstrap";
 import { useMutation, useQuery, useQueryClient } from "react-query";
@@ -13,7 +10,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { withSwal } from "react-sweetalert2";
 import { SweetAlertResult } from "sweetalert2";
 
-interface BlogCategoryListProps {
+interface bloggersListProps {
   swal: {
     fire: (options: object) => Promise<SweetAlertResult>;
   };
@@ -25,7 +22,7 @@ interface PaginationState {
   sort: string;
 }
 
-const BlogCategoryList = withSwal(({ swal }: BlogCategoryListProps) => {
+const BloggersList = withSwal(({ swal }: bloggersListProps) => {
   const navigate = useNavigate();
   const [pagination, setPagination] = useState<PaginationState>({
     page: 0,
@@ -36,24 +33,24 @@ const BlogCategoryList = withSwal(({ swal }: BlogCategoryListProps) => {
   const queryClient = useQueryClient();
 
   const {
-    data: blogCategories,
+    data: bloggers,
     isLoading,
     error,
-  } = useQuery<BlogCategoryApiResponse, Error>(
-    ["blogCategories", pagination],
-    () => getAllBlogCategories(),
+  } = useQuery<BloggerApiResponse, Error>(
+    ["bloggers", pagination],
+    () => getAllBloggers(),
     {
       keepPreviousData: true,
       staleTime: 5000,
     }
   );
 
-  const deleteMutation = useMutation(deleteBlogCategory, {
+  const deleteMutation = useMutation(deleteBlog, {
     onSuccess: () => {
-      queryClient.invalidateQueries(["blogCategories"]);
+      queryClient.invalidateQueries(["bloggers"]);
       swal.fire({
         title: "Deleted!",
-        text: "The category has been deleted.",
+        text: "The blogger has been deleted.",
         icon: "success",
         customClass: { confirmButton: "btn btn-success" },
       });
@@ -61,14 +58,14 @@ const BlogCategoryList = withSwal(({ swal }: BlogCategoryListProps) => {
     onError: () => {
       swal.fire({
         title: "Error!",
-        text: "An error occurred while deleting the category.",
+        text: "An error occurred while deleting the blogger.",
         icon: "error",
         customClass: { confirmButton: "btn btn-danger" },
       });
     },
   });
 
-  const handleDelete = async (categoryId: string) => {
+  const handleDelete = async (blogId: string) => {
     const result = await swal.fire({
       title: "Are you sure?",
       text: "You won't be able to revert this!",
@@ -85,7 +82,7 @@ const BlogCategoryList = withSwal(({ swal }: BlogCategoryListProps) => {
     });
 
     if (result.isConfirmed) {
-      deleteMutation.mutate(categoryId);
+      deleteMutation.mutate(blogId);
     }
   };
 
@@ -98,8 +95,8 @@ const BlogCategoryList = withSwal(({ swal }: BlogCategoryListProps) => {
   };
 
   const renderPaginationButtons = () => {
-    if (!blogCategories?.totalPages) return null;
-    const totalPages = blogCategories.totalPages;
+    if (!bloggers?.totalPages) return null;
+    const totalPages = bloggers.totalPages;
     const currentPage = pagination.page;
     const buttons = [];
 
@@ -143,14 +140,14 @@ const BlogCategoryList = withSwal(({ swal }: BlogCategoryListProps) => {
   if (error) {
     return (
       <div className="alert alert-danger" role="alert">
-        Error loading blog categories: {error.message}
+        Error loading blogger: {error.message}
       </div>
     );
   }
 
   return (
     <>
-      <PageMetaData title="Blog Categories" />
+      <PageMetaData title="bloggers" />
 
       <Row>
         <Col>
@@ -159,11 +156,11 @@ const BlogCategoryList = withSwal(({ swal }: BlogCategoryListProps) => {
               <div className="d-flex flex-wrap justify-content-between gap-3">
                 <div className="search-bar">
                   <span><IconifyIcon icon="bx:search-alt" className="mb-1" /></span>
-                  <input type="search" className="form-control" placeholder="Search blog categories..." />
+                  <input type="search" className="form-control" placeholder="Search bloggers..." />
                 </div>
-                <Link to="/blogs/categories/create" className="btn btn-success ms-2">
+                <Link to="/blogger/create" className="btn btn-success ms-2">
                   <IconifyIcon icon="bx:plus" className="me-1" />
-                  Add New Category
+                  Add New Blogger
                 </Link>
               </div>
             </CardBody>
@@ -171,9 +168,9 @@ const BlogCategoryList = withSwal(({ swal }: BlogCategoryListProps) => {
               <table className="table text-nowrap mb-0">
                 <thead className="bg-light bg-opacity-50">
                   <tr>
-                    <th>Name</th>
-                    <th>Code</th>
-                    <th>Description</th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Email</th>
                     <th>Created At</th>
                     <th>Actions</th>
                   </tr>
@@ -206,23 +203,24 @@ const BlogCategoryList = withSwal(({ swal }: BlogCategoryListProps) => {
                             />
                           </div>
                           <span className="text-center">
-                            Loading blog-categories...
+                            Loading bloggers...
                           </span>
                         </div>
                       </td>
                     </tr>
-                  ) : blogCategories?.content?.length ? (
-                    blogCategories.content.map((category) => (
-                      <tr key={category.id}>
-                        <td>{category.name}</td>
-                        <td>{category.code}</td>
-                        <td>{category.description}</td>
-                        <td>{new Date(category.createdAt).toLocaleDateString()}</td>
+                  ) : bloggers?.content?.length ? (
+                    bloggers.content.map((blogger, index) => (
+                      <tr key={index}>
+                        <td><Link to={`/bloggers/${blogger.id}`} className="fw-medium">{blogger.user.firstName}</Link></td>
+                        <td>{blogger.user.lastName}</td>
+                        <td>{blogger.user.email}</td>
+                        <td>{blogger.user.createdAt &&
+                          new Date(blogger.user.createdAt).toLocaleDateString()}</td>
                         <td>
-                          <Button onClick={() => navigate(`/blogs/categories/edit/${category.id}`)} variant="soft-secondary" size="sm" className="me-2">
+                          <Button onClick={() => navigate(`/bloggers/edit/${blogger.id}`)} variant="soft-secondary" size="sm" className="me-2">
                             <IconifyIcon icon="bx:edit" className="fs-16" />
                           </Button>
-                          <Button onClick={() => handleDelete(String(category.id))} variant="soft-danger" size="sm" disabled={deleteMutation.isLoading}>
+                          <Button onClick={() => handleDelete(blogger.id)} variant="soft-danger" size="sm" disabled={deleteMutation.isLoading}>
                             <IconifyIcon icon="bx:trash" className="fs-16" />
                           </Button>
                         </td>
@@ -230,15 +228,15 @@ const BlogCategoryList = withSwal(({ swal }: BlogCategoryListProps) => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={3} className="text-center py-4">No categories found</td>
+                      <td colSpan={5} className="text-center py-4">No bloggers found</td>
                     </tr>
                   )}
                 </tbody>
               </table>
-              {!isLoading && blogCategories && blogCategories.totalElements > 0 && (
+              {!isLoading && bloggers && bloggers.totalElements > 0 && (
                 <div className="row g-0 p-3 border-top justify-content-between align-items-center">
                   <div className="col-sm-auto text-muted">
-                    Showing {blogCategories.numberOfElements} of {blogCategories.totalElements} categories
+                    Showing {bloggers.numberOfElements} of {bloggers.totalElements} bloggers
                     <select className="form-select form-select-sm ms-2 d-inline-block w-auto" value={pagination.size} onChange={(e) => handlePageSizeChange(Number(e.target.value))}>
                       {[5, 10, 20, 50].map((size) => (
                         <option key={size} value={size}>{size} per page</option>
@@ -247,20 +245,20 @@ const BlogCategoryList = withSwal(({ swal }: BlogCategoryListProps) => {
                   </div>
                   <Col sm="auto" className="mt-3 mt-sm-0">
                     <ul className="pagination pagination-rounded m-0">
-                      <li className={`page-item ${blogCategories.first ? "disabled" : ""}`}>
-                        <button className="page-link" onClick={() => handlePageChange(0)} disabled={blogCategories.first}>
+                      <li className={`page-item ${bloggers.first ? "disabled" : ""}`}>
+                        <button className="page-link" onClick={() => handlePageChange(0)} disabled={bloggers.first}>
                           <IconifyIcon icon="bx:left-arrow-alt" />
                         </button>
                       </li>
-                      <li className={`page-item ${blogCategories.first ? "disabled" : ""}`}>
-                        <button className="page-link" onClick={() => handlePageChange(pagination.page - 1)} disabled={blogCategories.first}>Prev</button>
+                      <li className={`page-item ${bloggers.first ? "disabled" : ""}`}>
+                        <button className="page-link" onClick={() => handlePageChange(pagination.page - 1)} disabled={bloggers.first}>Prev</button>
                       </li>
                       {renderPaginationButtons()}
-                      <li className={`page-item ${blogCategories.last ? "disabled" : ""}`}>
-                        <button className="page-link" onClick={() => handlePageChange(pagination.page + 1)} disabled={blogCategories.last}>Next</button>
+                      <li className={`page-item ${bloggers.last ? "disabled" : ""}`}>
+                        <button className="page-link" onClick={() => handlePageChange(pagination.page + 1)} disabled={bloggers.last}>Next</button>
                       </li>
-                      <li className={`page-item ${blogCategories.last ? "disabled" : ""}`}>
-                        <button className="page-link" onClick={() => handlePageChange(blogCategories.totalPages - 1)} disabled={blogCategories.last}>
+                      <li className={`page-item ${bloggers.last ? "disabled" : ""}`}>
+                        <button className="page-link" onClick={() => handlePageChange(bloggers.totalPages - 1)} disabled={bloggers.last}>
                           <IconifyIcon icon="bx:right-arrow-alt" />
                         </button>
                       </li>
@@ -276,4 +274,4 @@ const BlogCategoryList = withSwal(({ swal }: BlogCategoryListProps) => {
   );
 });
 
-export default BlogCategoryList;
+export default BloggersList;

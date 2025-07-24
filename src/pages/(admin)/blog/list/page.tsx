@@ -178,9 +178,34 @@ const BlogsList = withSwal(({ swal }: BlogsListProps) => {
                 <tbody>
                   {isLoading ? (
                     <tr>
-                      <td colSpan={5} className="text-center py-4">
-                        <Spinner type="bordered" className="m-2" color="primary" />
-                        <span>Loading blogs...</span>
+                      <td colSpan={8} className="text-center py-4">
+                        <div className="flex flex-col items-center gap-4">
+                          <div className="flex gap-2">
+                            <Spinner
+                              type="bordered"
+                              className="m-2"
+                              color="primary"
+                            />
+                            <Spinner
+                              type="bordered"
+                              className="m-2"
+                              color="secondary"
+                            />
+                            <Spinner
+                              type="bordered"
+                              className="m-2"
+                              color="success"
+                            />
+                            <Spinner
+                              type="bordered"
+                              className="m-2"
+                              color="danger"
+                            />
+                          </div>
+                          <span className="text-center">
+                            Loading blogs...
+                          </span>
+                        </div>
                       </td>
                     </tr>
                   ) : blogs?.content?.length ? (

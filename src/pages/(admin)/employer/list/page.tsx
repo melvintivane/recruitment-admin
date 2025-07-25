@@ -4,7 +4,7 @@ import IconifyIcon from "@/components/wrappers/IconifyIcon";
 import { deleteCompany, getAllCompanies } from "@/services/companyService";
 import { CompanyApiResponse } from "@/types/company";
 import { useState } from "react";
-import { Button, Card, CardBody, Col, Row } from "react-bootstrap";
+import { Alert, Button, Card, CardBody, Col, Row } from "react-bootstrap";
 import { useMutation, useQuery, useQueryClient } from "react-query";
 import { Link, useNavigate } from "react-router-dom";
 import { withSwal } from "react-sweetalert2";
@@ -277,8 +277,13 @@ const CompaniesList = withSwal(({ swal }: CompaniesListProps) => {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan={7} className="text-center py-4">
-                          No companies found
+                        <td
+                          colSpan={6}
+                          className="text-center py-4"
+                        >
+                          <Alert variant="info" className="text-center">
+                            No companies found.
+                          </Alert>
                         </td>
                       </tr>
                     )}

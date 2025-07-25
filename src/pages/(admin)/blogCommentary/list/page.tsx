@@ -7,7 +7,7 @@ import {
   getBlogCommentaries,
 } from "@/services/blogCommentaryService";
 import { useState } from "react";
-import { Button, Card, CardBody, Col, Row } from "react-bootstrap";
+import { Alert, Button, Card, CardBody, Col, Row } from "react-bootstrap";
 import { useMutation, useQuery, useQueryClient } from "react-query";
 import { Link, useNavigate } from "react-router-dom";
 import { withSwal } from "react-sweetalert2";
@@ -259,8 +259,13 @@ const BlogCommentaryList = withSwal(({ swal }: BlogCommentaryListProps) => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={5} className="text-center py-4">
-                        {blogId ? "No commentaries found for this blog" : "Enter a blog ID to search"}
+                      <td
+                        colSpan={6}
+                        className="text-center py-4"
+                      >
+                        <Alert variant="info" className="text-center">
+                          No blog commentaries found.
+                        </Alert>
                       </td>
                     </tr>
                   )}

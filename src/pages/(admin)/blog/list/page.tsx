@@ -4,7 +4,7 @@ import IconifyIcon from "@/components/wrappers/IconifyIcon";
 import { deleteBlog, getAllBlogs } from "@/services/blogService";
 import { BlogApiResponse } from "@/types/blog";
 import { useState } from "react";
-import { Button, Card, CardBody, Col, Row } from "react-bootstrap";
+import { Button, Card, CardBody, Col, Row, Alert } from "react-bootstrap";
 import { useMutation, useQuery, useQueryClient } from "react-query";
 import { Link, useNavigate } from "react-router-dom";
 import { withSwal } from "react-sweetalert2";
@@ -227,7 +227,14 @@ const BlogsList = withSwal(({ swal }: BlogsListProps) => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={5} className="text-center py-4">No blogs found</td>
+                      <td
+                        colSpan={6}
+                        className="text-center py-4"
+                      >
+                        <Alert variant="info" className="text-center">
+                          No blogs found.
+                        </Alert>
+                      </td>
                     </tr>
                   )}
                 </tbody>

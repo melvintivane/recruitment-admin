@@ -7,7 +7,7 @@ import {
 } from "@/services/blogTagService";
 import { BlogTagApiResponse } from "@/types/blogTag";
 import { useState } from "react";
-import { Button, Card, CardBody, Col, Row } from "react-bootstrap";
+import { Alert, Button, Card, CardBody, Col, Row } from "react-bootstrap";
 import { useMutation, useQuery, useQueryClient } from "react-query";
 import { Link, useNavigate } from "react-router-dom";
 import { withSwal } from "react-sweetalert2";
@@ -230,7 +230,14 @@ const BlogTagList = withSwal(({ swal }: BlogTagListProps) => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={5} className="text-center py-4">No tags found</td>
+                      <td
+                        colSpan={6}
+                        className="text-center py-4"
+                      >
+                        <Alert variant="info" className="text-center">
+                          No tags found.
+                        </Alert>
+                      </td>
                     </tr>
                   )}
                 </tbody>

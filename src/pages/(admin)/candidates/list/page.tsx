@@ -4,7 +4,7 @@ import IconifyIcon from "@/components/wrappers/IconifyIcon";
 import { deleteCandidate, getAllCandidates } from "@/services/candidateService";
 import { CandidateApiResponse, CandidateStatus } from "@/types/candidate";
 import { useState } from "react";
-import { Badge, Button, Card, CardBody, Col, Row } from "react-bootstrap";
+import { Alert, Badge, Button, Card, CardBody, Col, Row } from "react-bootstrap";
 import { useMutation, useQuery, useQueryClient } from "react-query";
 import { Link, useNavigate } from "react-router-dom";
 import { withSwal } from "react-sweetalert2";
@@ -292,8 +292,13 @@ const CandidatesList = withSwal(({ swal }: CandidatesListProps) => {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan={7} className="text-center py-4">
-                          No candidates found
+                        <td
+                          colSpan={6}
+                          className="text-center py-4"
+                        >
+                          <Alert variant="info" className="text-center">
+                            No candidates found.
+                          </Alert>
                         </td>
                       </tr>
                     )}

@@ -47,6 +47,19 @@ export const createBlogCommentary = async (
   return response.json();
 };
 
+export const getBlogCommentaryById = async (
+  id: string
+): Promise<BlogCommentaryResponseDTO> => {
+  const response = await fetch(`${API_ENDPOINTS.BLOG_COMMENTARIES}/${id}`);
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => null);
+    throw new Error(error?.message || 'Erro ao buscar comentário');
+  }
+
+  return response.json();
+};
+
 // PUT: Atualizar comentário existente
 export const updateBlogCommentary = async (
   id: string,

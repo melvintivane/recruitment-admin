@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button, Card, CardBody, Col, Row } from "react-bootstrap";
+import { Button, Card, CardBody, Col, Row, Alert } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "react-query";
 import { withSwal } from "react-sweetalert2";
@@ -38,7 +38,7 @@ const CategoriesList = withSwal(({ swal }: CategoriesListProps) => {
     error,
   } = useQuery<CategoryApiResponse, Error>(
     ["categories", pagination],
-    () => getAllCategories(pagination.page, pagination.size),
+    () => getAllCategories(),
     {
       keepPreviousData: true,
       staleTime: 5000,
@@ -167,9 +167,16 @@ const CategoriesList = withSwal(({ swal }: CategoriesListProps) => {
 
   if (error) {
     return (
-      <div className="alert alert-danger" role="alert">
-        Error loading categories: {error.message}
-      </div>
+      <tr>
+        <td
+          colSpan={6}
+          className="text-center py-4"
+        >
+          <Alert variant="info" className="text-center">
+            No categories found.
+          </Alert>
+        </td>
+      </tr>
     );
   }
 

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 // vacancyService.ts
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+const API_BASE_URL = 'http://localhost:8082/api';
 
 export const API_ENDPOINTS = {
   COMPANIES: `${API_BASE_URL}/employers`,
@@ -14,5 +14,6 @@ export const API_ENDPOINTS = {
   BLOG_CATEGORIES: `${API_BASE_URL}/blog-categories`,
   BLOG_TAGS: `${API_BASE_URL}/blog-tags`,
   BLOG_COMMENTARIES: `${API_BASE_URL}/blog-commentaries`,
+  BLOGGERS : `${API_BASE_URL}/bloggers`,
 };
 

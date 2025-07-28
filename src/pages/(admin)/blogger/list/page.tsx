@@ -1,11 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import PageMetaData from "@/components/PageTitle";
 import Spinner from "@/components/Spinner";
 import IconifyIcon from "@/components/wrappers/IconifyIcon";
-import {
-  deleteBlogCommentary,
-  getBlogCommentaries,
-} from "@/services/blogCommentaryService";
+import { deleteBlog, getAllBloggers } from "@/services/bloggerService";
+import { BloggerApiResponse } from "@/types/blogger";
 import { useState } from "react";
 import { Alert, Button, Card, CardBody, Col, Row } from "react-bootstrap";
 import { useMutation, useQuery, useQueryClient } from "react-query";
@@ -13,7 +10,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { withSwal } from "react-sweetalert2";
 import { SweetAlertResult } from "sweetalert2";
 
-interface BlogCommentaryListProps {
+interface bloggersListProps {
   swal: {
     fire: (options: object) => Promise<SweetAlertResult>;
   };
@@ -25,9 +22,8 @@ interface PaginationState {
   sort: string;
 }
 
-const BlogCommentaryList = withSwal(({ swal }: BlogCommentaryListProps) => {
+const BloggersList = withSwal(({ swal }: bloggersListProps) => {
   const navigate = useNavigate();
-  const [blogId, setBlogId] = useState(""); // You might want to get this from URL params
   const [pagination, setPagination] = useState<PaginationState>({
     page: 0,
     size: 10,
@@ -36,27 +32,25 @@ const BlogCommentaryList = withSwal(({ swal }: BlogCommentaryListProps) => {
 
   const queryClient = useQueryClient();
 
-  // Atualize a chamada useQuery para:
   const {
-    data: commentaries,
+    data: bloggers,
     isLoading,
     error,
-  } = useQuery<any, Error>(
-    ["blogCommentaries", blogId, pagination],
-    () => getBlogCommentaries(blogId, pagination.page, pagination.size),
+  } = useQuery<BloggerApiResponse, Error>(
+    ["bloggers", pagination],
+    () => getAllBloggers(),
     {
       keepPreviousData: true,
       staleTime: 5000,
-      enabled: !!blogId, // Só busca quando blogId existe
     }
   );
 
-  const deleteMutation = useMutation(deleteBlogCommentary, {
+  const deleteMutation = useMutation(deleteBlog, {
     onSuccess: () => {
-      queryClient.invalidateQueries(["blogCommentaries"]);
+      queryClient.invalidateQueries(["bloggers"]);
       swal.fire({
         title: "Deleted!",
-        text: "The commentary has been deleted.",
+        text: "The blogger has been deleted.",
         icon: "success",
         customClass: { confirmButton: "btn btn-success" },
       });
@@ -64,14 +58,14 @@ const BlogCommentaryList = withSwal(({ swal }: BlogCommentaryListProps) => {
     onError: () => {
       swal.fire({
         title: "Error!",
-        text: "An error occurred while deleting the commentary.",
+        text: "An error occurred while deleting the blogger.",
         icon: "error",
         customClass: { confirmButton: "btn btn-danger" },
       });
     },
   });
 
-  const handleDelete = async (commentaryId: string) => {
+  const handleDelete = async (blogId: string) => {
     const result = await swal.fire({
       title: "Are you sure?",
       text: "You won't be able to revert this!",
@@ -88,7 +82,7 @@ const BlogCommentaryList = withSwal(({ swal }: BlogCommentaryListProps) => {
     });
 
     if (result.isConfirmed) {
-      deleteMutation.mutate(commentaryId);
+      deleteMutation.mutate(blogId);
     }
   };
 
@@ -101,8 +95,8 @@ const BlogCommentaryList = withSwal(({ swal }: BlogCommentaryListProps) => {
   };
 
   const renderPaginationButtons = () => {
-    if (!commentaries?.totalPages) return null;
-    const totalPages = commentaries.totalPages;
+    if (!bloggers?.totalPages) return null;
+    const totalPages = bloggers.totalPages;
     const currentPage = pagination.page;
     const buttons = [];
 
@@ -146,14 +140,14 @@ const BlogCommentaryList = withSwal(({ swal }: BlogCommentaryListProps) => {
   if (error) {
     return (
       <div className="alert alert-danger" role="alert">
-        Error loading blog commentaries: {error.message}
+        Error loading blogger: {error.message}
       </div>
     );
   }
 
   return (
     <>
-      <PageMetaData title="Blog Commentaries" />
+      <PageMetaData title="bloggers" />
 
       <Row>
         <Col>
@@ -162,16 +156,11 @@ const BlogCommentaryList = withSwal(({ swal }: BlogCommentaryListProps) => {
               <div className="d-flex flex-wrap justify-content-between gap-3">
                 <div className="search-bar">
                   <span><IconifyIcon icon="bx:search-alt" className="mb-1" /></span>
-                  <input
-                    type="search"
-                    className="form-control"
-                    placeholder="Search blog commentaries..."
-                    onChange={(e) => setBlogId(e.target.value)} // Simple search by blog ID
-                  />
+                  <input type="search" className="form-control" placeholder="Search bloggers..." />
                 </div>
-                <Link to={`/blogs/commentaries/create`} className="btn btn-success ms-2">
+                <Link to="/blogger/create" className="btn btn-success ms-2">
                   <IconifyIcon icon="bx:plus" className="me-1" />
-                  Add New Commentary
+                  Add New Blogger
                 </Link>
               </div>
             </CardBody>
@@ -179,10 +168,10 @@ const BlogCommentaryList = withSwal(({ swal }: BlogCommentaryListProps) => {
               <table className="table text-nowrap mb-0">
                 <thead className="bg-light bg-opacity-50">
                   <tr>
-                    <th>User</th>
-                    <th>Commentary</th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Email</th>
                     <th>Created At</th>
-                    <th>Updated At</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -214,44 +203,24 @@ const BlogCommentaryList = withSwal(({ swal }: BlogCommentaryListProps) => {
                             />
                           </div>
                           <span className="text-center">
-                            Loading commentaries...
+                            Loading bloggers...
                           </span>
                         </div>
                       </td>
                     </tr>
-                  ) : commentaries?.content?.length ? (
-                    commentaries.content.map((commentary: any) => (
-                      <tr key={commentary.id}>
+                  ) : bloggers?.content?.length ? (
+                    bloggers.content.map((blogger, index) => (
+                      <tr key={index}>
+                        <td><Link to={`/bloggers/${blogger.id}`} className="fw-medium">{blogger.user.firstName}</Link></td>
+                        <td>{blogger.user.lastName}</td>
+                        <td>{blogger.user.email}</td>
+                        <td>{blogger.user.createdAt &&
+                          new Date(blogger.user.createdAt).toLocaleDateString()}</td>
                         <td>
-                          {commentary.user.name}
-                          {commentary.user.avatar && (
-                            <img
-                              src={commentary.user.avatar}
-                              alt={commentary.user.name}
-                              className="rounded-circle ms-2"
-                              width="24"
-                              height="24"
-                            />
-                          )}
-                        </td>
-                        <td>{commentary.commentary}</td>
-                        <td>{new Date(commentary.createdAt).toLocaleString()}</td>
-                        <td>{new Date(commentary.updatedAt).toLocaleString()}</td>
-                        <td>
-                          <Button
-                            onClick={() => navigate(`/blogs/${blogId}/commentaries/edit/${commentary.id}`)}
-                            variant="soft-secondary"
-                            size="sm"
-                            className="me-2"
-                          >
+                          <Button onClick={() => navigate(`/bloggers/edit/${blogger.id}`)} variant="soft-secondary" size="sm" className="me-2">
                             <IconifyIcon icon="bx:edit" className="fs-16" />
                           </Button>
-                          <Button
-                            onClick={() => handleDelete(commentary.id)}
-                            variant="soft-danger"
-                            size="sm"
-                            disabled={deleteMutation.isLoading}
-                          >
+                          <Button onClick={() => handleDelete(blogger.id)} variant="soft-danger" size="sm" disabled={deleteMutation.isLoading}>
                             <IconifyIcon icon="bx:trash" className="fs-16" />
                           </Button>
                         </td>
@@ -264,22 +233,18 @@ const BlogCommentaryList = withSwal(({ swal }: BlogCommentaryListProps) => {
                         className="text-center py-4"
                       >
                         <Alert variant="info" className="text-center">
-                          No blog commentaries found.
+                          No bloggers found.
                         </Alert>
                       </td>
                     </tr>
                   )}
                 </tbody>
               </table>
-              {!isLoading && commentaries && commentaries.totalElements > 0 && (
+              {!isLoading && bloggers && bloggers.totalElements > 0 && (
                 <div className="row g-0 p-3 border-top justify-content-between align-items-center">
                   <div className="col-sm-auto text-muted">
-                    Showing {commentaries.numberOfElements} of {commentaries.totalElements} commentaries
-                    <select
-                      className="form-select form-select-sm ms-2 d-inline-block w-auto"
-                      value={pagination.size}
-                      onChange={(e) => handlePageSizeChange(Number(e.target.value))}
-                    >
+                    Showing {bloggers.numberOfElements} of {bloggers.totalElements} bloggers
+                    <select className="form-select form-select-sm ms-2 d-inline-block w-auto" value={pagination.size} onChange={(e) => handlePageSizeChange(Number(e.target.value))}>
                       {[5, 10, 20, 50].map((size) => (
                         <option key={size} value={size}>{size} per page</option>
                       ))}
@@ -287,20 +252,20 @@ const BlogCommentaryList = withSwal(({ swal }: BlogCommentaryListProps) => {
                   </div>
                   <Col sm="auto" className="mt-3 mt-sm-0">
                     <ul className="pagination pagination-rounded m-0">
-                      <li className={`page-item ${commentaries.first ? "disabled" : ""}`}>
-                        <button className="page-link" onClick={() => handlePageChange(0)} disabled={commentaries.first}>
+                      <li className={`page-item ${bloggers.first ? "disabled" : ""}`}>
+                        <button className="page-link" onClick={() => handlePageChange(0)} disabled={bloggers.first}>
                           <IconifyIcon icon="bx:left-arrow-alt" />
                         </button>
                       </li>
-                      <li className={`page-item ${commentaries.first ? "disabled" : ""}`}>
-                        <button className="page-link" onClick={() => handlePageChange(pagination.page - 1)} disabled={commentaries.first}>Prev</button>
+                      <li className={`page-item ${bloggers.first ? "disabled" : ""}`}>
+                        <button className="page-link" onClick={() => handlePageChange(pagination.page - 1)} disabled={bloggers.first}>Prev</button>
                       </li>
                       {renderPaginationButtons()}
-                      <li className={`page-item ${commentaries.last ? "disabled" : ""}`}>
-                        <button className="page-link" onClick={() => handlePageChange(pagination.page + 1)} disabled={commentaries.last}>Next</button>
+                      <li className={`page-item ${bloggers.last ? "disabled" : ""}`}>
+                        <button className="page-link" onClick={() => handlePageChange(pagination.page + 1)} disabled={bloggers.last}>Next</button>
                       </li>
-                      <li className={`page-item ${commentaries.last ? "disabled" : ""}`}>
-                        <button className="page-link" onClick={() => handlePageChange(commentaries.totalPages - 1)} disabled={commentaries.last}>
+                      <li className={`page-item ${bloggers.last ? "disabled" : ""}`}>
+                        <button className="page-link" onClick={() => handlePageChange(bloggers.totalPages - 1)} disabled={bloggers.last}>
                           <IconifyIcon icon="bx:right-arrow-alt" />
                         </button>
                       </li>
@@ -316,4 +281,4 @@ const BlogCommentaryList = withSwal(({ swal }: BlogCommentaryListProps) => {
   );
 });
 
-export default BlogCommentaryList;
+export default BloggersList;

@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { currency } from "@/context/constants";
-import type { JobSourceType, ApplicantType, JobType, StatType } from "./types";
+import type { JobSourceType, JobType, StatType } from "./types";
 
 
 export const topJobs = [
@@ -119,7 +120,7 @@ export const jobSources: JobSourceType[] = [
   },
 ];
 
-export const applicants: ApplicantType[] = [
+export const applicants: any[] = [
   {
     name: "Software Engineer",
     percentage: 32.5,
@@ -226,7 +227,7 @@ export const statData: StatType[] = [
   },
 ];
 
-export const recruitmentStages: ApplicantType[] = [
+export const recruitmentStages: any[] = [
   {
     name: "Application Review",
     percentage: "42.5%",

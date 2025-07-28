@@ -7,7 +7,7 @@ import {
 } from "@/services/blogTagService";
 import { BlogTagApiResponse } from "@/types/blogTag";
 import { useState } from "react";
-import { Button, Card, CardBody, Col, Row } from "react-bootstrap";
+import { Alert, Button, Card, CardBody, Col, Row } from "react-bootstrap";
 import { useMutation, useQuery, useQueryClient } from "react-query";
 import { Link, useNavigate } from "react-router-dom";
 import { withSwal } from "react-sweetalert2";
@@ -41,7 +41,7 @@ const BlogTagList = withSwal(({ swal }: BlogTagListProps) => {
     error,
   } = useQuery<BlogTagApiResponse, Error>(
     ["blogTags", pagination],
-    () => getAllBlogTags(pagination.page, pagination.size),
+    () => getAllBlogTags(),
     {
       keepPreviousData: true,
       staleTime: 5000,
@@ -181,9 +181,34 @@ const BlogTagList = withSwal(({ swal }: BlogTagListProps) => {
                 <tbody>
                   {isLoading ? (
                     <tr>
-                      <td colSpan={5} className="text-center py-4">
-                        <Spinner type="bordered" className="m-2" color="primary" />
-                        <span>Loading tags...</span>
+                      <td colSpan={8} className="text-center py-4">
+                        <div className="flex flex-col items-center gap-4">
+                          <div className="flex gap-2">
+                            <Spinner
+                              type="bordered"
+                              className="m-2"
+                              color="primary"
+                            />
+                            <Spinner
+                              type="bordered"
+                              className="m-2"
+                              color="secondary"
+                            />
+                            <Spinner
+                              type="bordered"
+                              className="m-2"
+                              color="success"
+                            />
+                            <Spinner
+                              type="bordered"
+                              className="m-2"
+                              color="danger"
+                            />
+                          </div>
+                          <span className="text-center">
+                            Loading blog-tags...
+                          </span>
+                        </div>
                       </td>
                     </tr>
                   ) : blogTags?.content?.length ? (
@@ -205,7 +230,14 @@ const BlogTagList = withSwal(({ swal }: BlogTagListProps) => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={5} className="text-center py-4">No tags found</td>
+                      <td
+                        colSpan={6}
+                        className="text-center py-4"
+                      >
+                        <Alert variant="info" className="text-center">
+                          No tags found.
+                        </Alert>
+                      </td>
                     </tr>
                   )}
                 </tbody>

@@ -80,6 +80,18 @@ export const MENU_ITEMS: MenuItemType[] = [
         url: "/blogs/create",
         parentKey: "page-blogs"
       },
+       {
+        key: "blogger-create",
+        label: "Create Blogger",
+        url: "/blogger/create",
+        parentKey: "page-blogs"
+      },
+       {
+        key: "blogger-create",
+        label: "Blogger List",
+        url: "/bloggers",
+        parentKey: "page-blogs"
+      },
       {
         key: "blog-categories",
         label: "Blog Categories",

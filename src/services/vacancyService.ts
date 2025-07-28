@@ -21,10 +21,10 @@ export interface VacancyCreateDto {
   city: string;
   skills: Array<{ name: string }>;
   qualifications: Array<{ name: string }>;
-  responsabilities: Array<{ name: string }>;
+  responsibilities: Array<{ name: string }>;
 }
 
-export const createVacancy = async (vacancyData: VacancyCreateDto): Promise<VacancyType> => {
+export const createVacancy = async (vacancyData: any): Promise<VacancyType> => {
   const response = await fetch(API_ENDPOINTS.VACANCIES, {
     method: "POST",
     headers: { 

@@ -19,13 +19,10 @@ const EmployerList = lazy(() => import("@/pages/(admin)/employer/list/page"));
 const EmployerCreate = lazy(() => import("@/pages/(admin)/employer/create/page"));
 const EmployerDetails = lazy(() => import("@/pages/(admin)/employer/details/page"));
 const EmployerEdit = lazy(() => import("@/pages/(admin)/employer/edit/page"));
-const CandidateList = lazy(() => import("@/pages/(admin)/candidate/list/page"));
-const CandidateCreate = lazy(() => import("@/pages/(admin)/candidate/create/page"));
-const CandidateDetails = lazy(() => import("@/pages/(admin)/candidate/details/page"));
-const CandidateEdit = lazy(() => import("@/pages/(admin)/candidate/edit/page"));
-const UserList = lazy(() => import("@/pages/(admin)/user/list/page"));
-const UserEdit = lazy(() => import("@/pages/(admin)/user/edit/page"));
-const UserCreate = lazy(() => import("@/pages/(admin)/user/create/page"));
+const CandidateList = lazy(() => import("@/pages/(admin)/candidates/list/page"));
+const CandidateCreate = lazy(() => import("@/pages/(admin)/candidates/create/page"));
+const CandidateDetails = lazy(() => import("@/pages/(admin)/candidates/details/page"));
+const CandidateEdit = lazy(() => import("@/pages/(admin)/candidates/edit/page"));
 const BlogCreate = lazy(() => import("@/pages/(admin)/blog/create/page"));
 const BlogList = lazy(() => import("@/pages/(admin)/blog/list/page"));
 const BlogEdit = lazy(() => import("@/pages/(admin)/blog/edit/page"));
@@ -37,7 +34,8 @@ const BlogTagList = lazy(() => import("@/pages/(admin)/blogTag/list/page"));
 const BlogTagCreate = lazy(() => import("@/pages/(admin)/blogTag/create/page"));
 const BlogTagEdit = lazy(() => import("@/pages/(admin)/blogTag/edit/page"));
 const BlogCommentaryList = lazy(() => import("@/pages/(admin)/blogCommentary/list/page"));
-const BlogCommentaryCreate = lazy(() => import("@/pages/(admin)/blogCommentary/create/page"));
+const BloggerCreate = lazy(() => import("@/pages/(admin)/blogger/create/page"));
+const BloggerList = lazy(() => import("@/pages/(admin)/blogger/list/page"));
 
 // Dashboard Routes
 const Analytics = lazy(() => import("@/pages/(admin)/dashboard/analytics/page"));
@@ -91,6 +89,16 @@ const appsRoutes: RoutesProps[] = [
     element: <BlogCreate />,
   },
   {
+    name: "Blogger Create",
+    path: "/blogger/create",
+    element: <BloggerCreate />,
+  },
+  {
+    name: "Blogger List",
+    path: "/bloggers",
+    element: <BloggerList />,
+  },
+  {
     name: "Blog List",
     path: "/blogs",
     element: <BlogList />,
@@ -139,11 +147,6 @@ const appsRoutes: RoutesProps[] = [
     name: "Blog Commentaries",
     path: "/blogs/commentaries",
     element: <BlogCommentaryList />,
-  },
-  {
-    name: "Blog Commentary Create",
-    path: "/blogs/commentaries/create",
-    element: <BlogCommentaryCreate />,
   },
   {
     name: "Vacancies List",
@@ -230,21 +233,6 @@ const appsRoutes: RoutesProps[] = [
     path: "/categories/edit/:categoryId",
     element: <CategoriesEdit />,
   },
-  {
-    name: "User List",
-    path: "/users",
-    element: <UserList />,
-  },
-  {
-    name: "User Edit",
-    path: "/users/edit/:userId",
-    element: <UserEdit />,
-  },
-  {
-    name: "User Create",
-    path: "/users/create",
-    element: <UserCreate />,
-  }
 ];
 
 const customRoutes: RoutesProps[] = [

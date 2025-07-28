@@ -1,8 +1,8 @@
 export interface BlogSummaryDTO {
   id: string;
   title: string;
+  category?: string;
   author?: string;
-  subtitle: string;
   image?: string;
   createdAt: string;
   updatedAt: string;
@@ -15,9 +15,8 @@ export interface BlogTagDTO {
 export interface BlogResponseDTO {
   id: string;
   title: string;
-  subtitle: string;
+  category?: string;
   body: string;
-  quote?: string;
   image?: string;
   author?: string;
   commentsCount: number;
@@ -29,9 +28,7 @@ export interface BlogResponseDTO {
 
 export interface BlogCreationDTO {
   title: string;
-  subtitle: string;
   body: string;
-  quote?: string;
   image?: string;
   author?: string;
   categoryId: string; // UUID

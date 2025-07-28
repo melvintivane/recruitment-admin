@@ -33,7 +33,7 @@ const ChoicesFormInput = ({ children, multiple, className, onChange, allowInput,
         }
       })
     }
-  }, [choicesRef])
+  }, [choicesRef, options, onChange])
 
   return allowInput ? (
     <input ref={choicesRef} multiple={multiple} className={className} {...props} />

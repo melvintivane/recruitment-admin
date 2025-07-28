@@ -1,7 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import ComponentContainerCard from "@/components/ComponentContainerCard";
 import PageMetaData from "@/components/PageTitle";
 import { getBlogCategoryById, updateBlogCategory } from "@/services/blogCategoryService";
-import { BlogCategoryType, BlogCategoryUpdateDto } from "@/types/blogCategory";
 import { useState } from "react";
 import {
   Spinner as BootstrapSpinner,
@@ -45,7 +45,7 @@ const BlogCategoryEdit = () => {
     data: categoryData,
     isLoading: isFetching,
     error: fetchError,
-  } = useQuery<BlogCategoryType, Error>(
+  } = useQuery<any, Error>(
     ["blogCategory", categoryId],
     () => {
       if (!categoryId) throw new Error("Category ID is required");
@@ -68,7 +68,7 @@ const BlogCategoryEdit = () => {
   );
 
  const mutation = useMutation(
-  (params: { categoryId: string; data: BlogCategoryUpdateDto }) => 
+  (params: { categoryId: string; data: any }) => 
     updateBlogCategory(params.categoryId, params.data),
   {
     onSuccess: () => {
@@ -89,7 +89,7 @@ const BlogCategoryEdit = () => {
   };
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
 
@@ -102,7 +102,7 @@ const BlogCategoryEdit = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const updatedData: BlogCategoryUpdateDto = {
+    const updatedData: any = {
       name: formData.name,
       code: formData.code,
       description: formData.description,

@@ -2,10 +2,9 @@ import {
   BlogApiResponse,
   BlogCreationDTO,
   BlogResponseDTO,
-  BlogSummaryDTO,
-  BlogUpdateDTO
-} from '@/types/blog';
-import { API_ENDPOINTS } from '../config/api';
+  BlogUpdateDTO,
+} from "@/types/blog";
+import { API_ENDPOINTS } from "../config/api";
 
 // Tipo para parâmetros de paginação
 interface PaginationParams {
@@ -16,19 +15,19 @@ interface PaginationParams {
 
 // Função auxiliar para construir query string de paginação
 const buildPaginationQuery = (params?: PaginationParams): string => {
-  if (!params) return '';
-  
+  if (!params) return "";
+
   const queryParams = new URLSearchParams();
-  if (params.page) queryParams.append('page', params.page.toString());
-  if (params.size) queryParams.append('size', params.size.toString());
-  if (params.sort) queryParams.append('sort', params.sort);
-  
-  return queryParams.toString() ? `?${queryParams.toString()}` : '';
+  if (params.page) queryParams.append("page", params.page.toString());
+  if (params.size) queryParams.append("size", params.size.toString());
+  if (params.sort) queryParams.append("sort", params.sort);
+
+  return queryParams.toString() ? `?${queryParams.toString()}` : "";
 };
 
 // GET: Todos os blogs (paginado)
-export const getAllBlogs = async (pagination?: PaginationParams): Promise<BlogApiResponse<BlogSummaryDTO>> => {
-  const queryString = buildPaginationQuery(pagination);
+export const getAllBlogs = async (): Promise<BlogApiResponse> => {
+  const queryString = buildPaginationQuery();
   const response = await fetch(`${API_ENDPOINTS.BLOGS}${queryString}`);
 
   if (!response.ok) {
@@ -40,7 +39,9 @@ export const getAllBlogs = async (pagination?: PaginationParams): Promise<BlogAp
 };
 
 // GET: Últimos blogs (ordenados por data desc)
-export const getLatestBlogs = async (pagination?: PaginationParams): Promise<BlogApiResponse<BlogSummaryDTO>> => {
+export const getLatestBlogs = async (
+  pagination?: PaginationParams
+): Promise<BlogApiResponse> => {
   const queryString = buildPaginationQuery(pagination);
   const response = await fetch(`${API_ENDPOINTS.BLOGS}/latest${queryString}`);
 
@@ -65,23 +66,28 @@ export const getBlogById = async (blogId: string): Promise<BlogResponseDTO> => {
 };
 
 // POST: Criar novo blog
-export const createBlog = async (blogData: BlogCreationDTO): Promise<BlogResponseDTO> => {
+export const createBlog = async (
+  blogData: BlogCreationDTO
+): Promise<BlogResponseDTO> => {
   const response = await fetch(`${API_ENDPOINTS.BLOGS}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(blogData),
   });
 
   if (!response.ok) {
     const errorBody = await response.json();
-    throw new Error(errorBody.message || 'Failed to create blog');
+    throw new Error(errorBody.message || "Failed to create blog");
   }
 
   return response.json();
 };
 
 // PUT: Atualizar blog existente
-export const updateBlog = async (blogId: string, data: BlogUpdateDTO): Promise<BlogResponseDTO> => {
+export const updateBlog = async (
+  blogId: string,
+  data: BlogUpdateDTO
+): Promise<BlogResponseDTO> => {
   const response = await fetch(`${API_ENDPOINTS.BLOGS}/${blogId}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
@@ -99,50 +105,74 @@ export const updateBlog = async (blogId: string, data: BlogUpdateDTO): Promise<B
 // DELETE: Remover blog
 export const deleteBlog = async (blogId: string): Promise<void> => {
   const response = await fetch(`${API_ENDPOINTS.BLOGS}/${blogId}`, {
-    method: 'DELETE',
+    method: "DELETE",
   });
 
   if (!response.ok) {
     const errorBody = await response.json();
-    throw new Error(errorBody.message || `Failed to delete blog with ID: ${blogId}`);
+    throw new Error(
+      errorBody.message || `Failed to delete blog with ID: ${blogId}`
+    );
   }
 };
 
 // GET: Buscar por categoria
-export const getBlogsByCategory = async (categoryId: string, pagination?: PaginationParams): Promise<BlogApiResponse<BlogSummaryDTO>> => {
+export const getBlogsByCategory = async (
+  categoryId: string,
+  pagination?: PaginationParams
+): Promise<BlogApiResponse> => {
   const queryString = buildPaginationQuery(pagination);
-  const response = await fetch(`${API_ENDPOINTS.BLOGS}/category/${categoryId}${queryString}`);
+  const response = await fetch(
+    `${API_ENDPOINTS.BLOGS}/category/${categoryId}${queryString}`
+  );
 
   if (!response.ok) {
     const errorBody = await response.json();
-    throw new Error(errorBody.message || `Failed to fetch blogs for category ID: ${categoryId}`);
+    throw new Error(
+      errorBody.message ||
+        `Failed to fetch blogs for category ID: ${categoryId}`
+    );
   }
 
   return response.json();
 };
 
 // GET: Buscar por tag
-export const getBlogsByTag = async (tagId: number, pagination?: PaginationParams): Promise<BlogApiResponse<BlogSummaryDTO>> => {
+export const getBlogsByTag = async (
+  tagId: number,
+  pagination?: PaginationParams
+): Promise<BlogApiResponse> => {
   const queryString = buildPaginationQuery(pagination);
-  const response = await fetch(`${API_ENDPOINTS.BLOGS}/tag/${tagId}${queryString}`);
+  const response = await fetch(
+    `${API_ENDPOINTS.BLOGS}/tag/${tagId}${queryString}`
+  );
 
   if (!response.ok) {
     const errorBody = await response.json();
-    throw new Error(errorBody.message || `Failed to fetch blogs for tag ID: ${tagId}`);
+    throw new Error(
+      errorBody.message || `Failed to fetch blogs for tag ID: ${tagId}`
+    );
   }
 
   return response.json();
 };
 
 // GET: Busca por termo
-export const searchBlogs = async (query: string, pagination?: PaginationParams): Promise<BlogApiResponse<BlogSummaryDTO>> => {
+export const searchBlogs = async (
+  query: string,
+  pagination?: PaginationParams
+): Promise<BlogApiResponse> => {
   const queryString = buildPaginationQuery(pagination);
   const encodedQuery = encodeURIComponent(query);
-  const response = await fetch(`${API_ENDPOINTS.BLOGS}/search?query=${encodedQuery}${queryString ? `&${queryString}` : ''}`);
+  const response = await fetch(
+    `${API_ENDPOINTS.BLOGS}/search?query=${encodedQuery}${queryString ? `&${queryString}` : ""}`
+  );
 
   if (!response.ok) {
     const errorBody = await response.json();
-    throw new Error(errorBody.message || `Failed to search blogs for query: ${query}`);
+    throw new Error(
+      errorBody.message || `Failed to search blogs for query: ${query}`
+    );
   }
 
   return response.json();

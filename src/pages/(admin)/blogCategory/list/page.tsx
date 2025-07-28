@@ -7,7 +7,7 @@ import {
 } from "@/services/blogCategoryService";
 import { BlogCategoryApiResponse } from "@/types/blogCategory";
 import { useState } from "react";
-import { Button, Card, CardBody, Col, Row } from "react-bootstrap";
+import { Alert, Button, Card, CardBody, Col, Row } from "react-bootstrap";
 import { useMutation, useQuery, useQueryClient } from "react-query";
 import { Link, useNavigate } from "react-router-dom";
 import { withSwal } from "react-sweetalert2";
@@ -41,7 +41,7 @@ const BlogCategoryList = withSwal(({ swal }: BlogCategoryListProps) => {
     error,
   } = useQuery<BlogCategoryApiResponse, Error>(
     ["blogCategories", pagination],
-    () => getAllBlogCategories(pagination.page, pagination.size),
+    () => getAllBlogCategories(),
     {
       keepPreviousData: true,
       staleTime: 5000,
@@ -181,23 +181,48 @@ const BlogCategoryList = withSwal(({ swal }: BlogCategoryListProps) => {
                 <tbody>
                   {isLoading ? (
                     <tr>
-                      <td colSpan={3} className="text-center py-4">
-                        <Spinner type="bordered" className="m-2" color="primary" />
-                        <span>Loading categories...</span>
+                      <td colSpan={8} className="text-center py-4">
+                        <div className="flex flex-col items-center gap-4">
+                          <div className="flex gap-2">
+                            <Spinner
+                              type="bordered"
+                              className="m-2"
+                              color="primary"
+                            />
+                            <Spinner
+                              type="bordered"
+                              className="m-2"
+                              color="secondary"
+                            />
+                            <Spinner
+                              type="bordered"
+                              className="m-2"
+                              color="success"
+                            />
+                            <Spinner
+                              type="bordered"
+                              className="m-2"
+                              color="danger"
+                            />
+                          </div>
+                          <span className="text-center">
+                            Loading blog-categories...
+                          </span>
+                        </div>
                       </td>
                     </tr>
                   ) : blogCategories?.content?.length ? (
                     blogCategories.content.map((category) => (
                       <tr key={category.id}>
                         <td>{category.name}</td>
-                           <td>{category.code}</td>
-                              <td>{category.description}</td>
+                        <td>{category.code}</td>
+                        <td>{category.description}</td>
                         <td>{new Date(category.createdAt).toLocaleDateString()}</td>
                         <td>
                           <Button onClick={() => navigate(`/blogs/categories/edit/${category.id}`)} variant="soft-secondary" size="sm" className="me-2">
                             <IconifyIcon icon="bx:edit" className="fs-16" />
                           </Button>
-                          <Button onClick={() => handleDelete(category.id)} variant="soft-danger" size="sm" disabled={deleteMutation.isLoading}>
+                          <Button onClick={() => handleDelete(String(category.id))} variant="soft-danger" size="sm" disabled={deleteMutation.isLoading}>
                             <IconifyIcon icon="bx:trash" className="fs-16" />
                           </Button>
                         </td>
@@ -205,7 +230,14 @@ const BlogCategoryList = withSwal(({ swal }: BlogCategoryListProps) => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={3} className="text-center py-4">No categories found</td>
+                      <td
+                        colSpan={6}
+                        className="text-center py-4"
+                      >
+                        <Alert variant="info" className="text-center">
+                          No blog categories found.
+                        </Alert>
+                      </td>
                     </tr>
                   )}
                 </tbody>

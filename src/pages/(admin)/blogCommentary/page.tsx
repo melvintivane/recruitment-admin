@@ -11,8 +11,6 @@ import type { BlogCommentaryResponseDTO } from "@/types/blogCommentary";
 
 const BlogCommentariesList = () => {
   const navigate = useNavigate();
-  const [page, setPage] = useState(0);
-  const [size, setSize] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
 
   // Properly typed query using BlogCommentaryResponseDTO
@@ -24,8 +22,8 @@ const BlogCommentariesList = () => {
     content: BlogCommentaryResponseDTO[];
     totalElements: number;
   }>(
-    ['blogCommentaries', page, size],
-    () => getBlogCommentaries("", page, size),
+    ['blogCommentaries'],
+    () => getBlogCommentaries(""),
     {
       keepPreviousData: true,
       onError: () => {
@@ -41,10 +39,6 @@ const BlogCommentariesList = () => {
     commentary.commentary.toLowerCase().includes(searchTerm.toLowerCase()) ||
     commentary.user.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
-  const handlePageChange = (newPage: number) => {
-    setPage(newPage);
-  };
 
   return (
     <>
@@ -151,7 +145,7 @@ const BlogCommentariesList = () => {
                   <div>
                     Showing {commentaries.length} of {totalCommentaries} commentaries
                   </div>
-                  <div>
+                  {/* <div>
                     <Button
                       variant="outline-secondary"
                       disabled={page === 0}
@@ -167,7 +161,7 @@ const BlogCommentariesList = () => {
                     >
                       Next
                     </Button>
-                  </div>
+                  </div> */}
                 </div>
               </>
             )}

@@ -25,12 +25,11 @@ import {
 import { ApplicationApiResponse, Application } from "@/types/application";
 import IconifyIcon from "@/components/wrappers/IconifyIcon";
 import Spinner from "@/components/Spinner";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { withSwal } from "react-sweetalert2";
 import { SweetAlertResult } from "sweetalert2";
 import PageMetaData from "@/components/PageTitle";
-import '@/assets/scss/pages/_kanban.css';
-
+import "@/assets/scss/pages/_kanban.css";
 
 const STATUS_OPTIONS = [
   "APPLIED",
@@ -565,9 +564,7 @@ const TableView: React.FC<{
 
                         {application.cvPath && (
                           <Dropdown.Item
-                            onClick={() =>
-                              onDownloadCV(application.cvPath)
-                            }
+                            onClick={() => onDownloadCV(application.cvPath)}
                           >
                             <IconifyIcon icon="bx:download" className="me-2" />
                             Download CV
@@ -691,83 +688,92 @@ const KanbanView: React.FC<{
                                   style={{ cursor: "grab" }}
                                 >
                                   <Card.Body className="p-3">
-                                  <div className="d-flex justify-content-between align-items-start mb-2">
-                                    <div className="flex-grow-1">
-                                      <h6 className="mb-1 fw-semibold">
-                                        {app.job.title}
-                                      </h6>
+                                    <div className="d-flex justify-content-between align-items-start mb-2">
+                                      <div className="flex-grow-1">
+                                        <h6 className="mb-1 fw-semibold">
+                                          {app.job.title}
+                                        </h6>
+                                        <small className="text-muted d-block">
+                                          {app.job.company.name}
+                                        </small>
+                                      </div>
+                                      <Badge
+                                        bg={getPriorityVariant(app.priority)}
+                                        className="ms-2"
+                                      >
+                                        {PRIORITY_LABELS[app.priority]}
+                                      </Badge>
+                                    </div>
+
+                                    <div className="mb-3">
                                       <small className="text-muted d-block">
-                                        {app.job.company.name}
+                                        <IconifyIcon
+                                          icon="bx:user"
+                                          className="me-1"
+                                        />
+                                        {app.candidate.user.firstName}{" "}
+                                        {app.candidate.user.lastName}
+                                      </small>
+                                      <small className="text-muted d-block">
+                                        <IconifyIcon
+                                          icon="bx:calendar"
+                                          className="me-1"
+                                        />
+                                        {dayjs(app.createdAt).format(
+                                          "MMM DD, YYYY"
+                                        )}
+                                      </small>
+                                      <small className="text-muted">
+                                        <IconifyIcon
+                                          icon="bx:map"
+                                          className="me-1"
+                                        />
+                                        {app.job.country}
                                       </small>
                                     </div>
-                                    <Badge
-                                      bg={getPriorityVariant(app.priority)}
-                                      className="ms-2"
+                                    <Link
+                                      to={`/applications/${app.id}/details`}
+                                      className="btn btn-outline-primary btn-sm w-100 mb-2"
                                     >
-                                      {PRIORITY_LABELS[app.priority]}
-                                    </Badge>
-                                  </div>
-
-                                  <div className="mb-3">
-                                    <small className="text-muted d-block">
                                       <IconifyIcon
-                                        icon="bx:user"
+                                        icon="bx:show"
                                         className="me-1"
                                       />
-                                      {app.candidate.user.firstName}{" "}
-                                      {app.candidate.user.lastName}
-                                    </small>
-                                    <small className="text-muted d-block">
-                                      <IconifyIcon
-                                        icon="bx:calendar"
-                                        className="me-1"
-                                      />
-                                      {dayjs(app.createdAt).format(
-                                        "MMM DD, YYYY"
-                                      )}
-                                    </small>
-                                    <small className="text-muted">
-                                      <IconifyIcon
-                                        icon="bx:map"
-                                        className="me-1"
-                                      />
-                                      {app.job.country}
-                                    </small>
-                                  </div>
-
-                                  <Button
-                                    variant="outline-primary"
-                                    size="sm"
-                                    className="w-100 mb-2"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      onViewEdit(app);
-                                    }}
-                                  >
-                                    <IconifyIcon
-                                      icon="bx:show"
-                                      className="me-1"
-                                    />
-                                    View Details
-                                  </Button>
-                                  {app.cvPath && (
+                                      View Details
+                                    </Link>
                                     <Button
-                                      variant="outline-success"
+                                      variant="outline-warning"
                                       size="sm"
-                                      className="w-100"
+                                      className="w-100 mb-2"
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        handleDownloadCv(app.cvPath);
+                                        onViewEdit(app);
                                       }}
                                     >
                                       <IconifyIcon
-                                        icon="bx:download"
+                                        icon="bx:edit"
                                         className="me-1"
                                       />
-                                      Download CV
+                                      Options
                                     </Button>
-                                  )}
-                                </Card.Body>
+                                    {app.candidate.cvPath && (
+                                      <Button
+                                        variant="outline-success"
+                                        size="sm"
+                                        className="w-100"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleDownloadCv(app.cvPath);
+                                        }}
+                                      >
+                                        <IconifyIcon
+                                          icon="bx:download"
+                                          className="me-1"
+                                        />
+                                        Download CV
+                                      </Button>
+                                    )}
+                                  </Card.Body>
                                 </Card>
                               </div>
                             )}
@@ -775,9 +781,13 @@ const KanbanView: React.FC<{
                         ))}
                       {provided.placeholder}
 
-                      {applications.filter((app) => app.status === status).length === 0 && (
+                      {applications.filter((app) => app.status === status)
+                        .length === 0 && (
                         <div className="text-center text-muted py-4">
-                          <IconifyIcon icon="bx:folder-open" className="d-block mb-2" />
+                          <IconifyIcon
+                            icon="bx:folder-open"
+                            className="d-block mb-2"
+                          />
                           <small>No applications</small>
                         </div>
                       )}
@@ -802,7 +812,7 @@ const ApplicationModal: React.FC<{
 }> = ({ show, onHide, application, isEditing, onSave }) => (
   <Modal show={show} onHide={onHide} size="lg" centered>
     <Modal.Header closeButton className="border-0 pb-0">
-      <Modal.Title className="fw-semibold">
+      <Modal.Title className="fw-semibold mb-3">
         {isEditing ? "Edit Application" : "Add New Application"}
       </Modal.Title>
     </Modal.Header>
@@ -859,68 +869,6 @@ const ApplicationForm: React.FC<{
 
   return (
     <Form onSubmit={handleSubmit}>
-      <Row>
-        <Col md={6}>
-          <Form.Group className="mb-3">
-            <Form.Label className="fw-semibold">Job Title *</Form.Label>
-            <Form.Control
-              type="text"
-              name="jobTitle"
-              value={formData.jobTitle}
-              onChange={handleChange}
-              readOnly={!!application}
-              disabled={!!application}
-              className={application ? "bg-light" : ""}
-            />
-          </Form.Group>
-        </Col>
-        <Col md={6}>
-          <Form.Group className="mb-3">
-            <Form.Label className="fw-semibold">Company *</Form.Label>
-            <Form.Control
-              type="text"
-              name="company"
-              value={formData.company}
-              onChange={handleChange}
-              readOnly={!!application}
-              disabled={!!application}
-              className={application ? "bg-light" : ""}
-            />
-          </Form.Group>
-        </Col>
-      </Row>
-
-      <Row>
-        <Col md={6}>
-          <Form.Group className="mb-3">
-            <Form.Label className="fw-semibold">Candidate *</Form.Label>
-            <Form.Control
-              type="text"
-              name="candidateName"
-              value={formData.candidateName}
-              onChange={handleChange}
-              readOnly={!!application}
-              disabled={!!application}
-              className={application ? "bg-light" : ""}
-            />
-          </Form.Group>
-        </Col>
-        <Col md={6}>
-          <Form.Group className="mb-3">
-            <Form.Label className="fw-semibold">Location</Form.Label>
-            <Form.Control
-              type="text"
-              name="location"
-              value={formData.location}
-              onChange={handleChange}
-              readOnly={!!application}
-              disabled={!!application}
-              className={application ? "bg-light" : ""}
-            />
-          </Form.Group>
-        </Col>
-      </Row>
-
       <Row>
         <Col md={6}>
           <Form.Group className="mb-3">
@@ -993,20 +941,19 @@ const ApplicationForm: React.FC<{
 
 export default JobApplicationPipeline;
 
-
 const handleDownloadCv = async (cvPath: string) => {
   try {
     const filename = cvPath.split("/").pop() || "CV.pdf";
     const blob = await downloadCv(filename);
-    
+
     // Cria um link temporário para download
     const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
     a.download = filename; // Define o nome do arquivo
     document.body.appendChild(a);
     a.click();
-    
+
     // Limpeza
     window.URL.revokeObjectURL(url);
     document.body.removeChild(a);

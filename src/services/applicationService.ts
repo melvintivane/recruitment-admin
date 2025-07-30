@@ -117,3 +117,14 @@ export const updateApplicationStatus = async (
     throw new Error(errorBody.message || "Failed to update application status");
   }
 };
+
+export const getApplicationById = async (id: string): Promise<Application> => {
+  const response = await fetch(`${API_ENDPOINTS.JOB_APPLICATIONS}/${id}`);
+
+  if (!response.ok) {
+    const errorBody = await response.json();
+    throw new Error(errorBody.message || "Failed to fetch application");
+  }
+
+  return response.json();
+};

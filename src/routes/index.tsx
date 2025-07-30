@@ -1,3 +1,4 @@
+import ApplicationDetails from "@/pages/(admin)/applications/details/page";
 import JobApplicationPipeline from "@/pages/(admin)/applications/pipeline/page";
 import CategoriesCreate from "@/pages/(admin)/categories/create/page";
 import CategoriesEdit from "@/pages/(admin)/categories/edit/page";
@@ -177,6 +178,11 @@ const appsRoutes: RoutesProps[] = [
     name: "Applications List",
     path: "/applications",
     element: <ApplicationsList />,
+  },
+  {
+    name: "Application Details",
+    path: "/applications/:id/details",
+    element: <ApplicationDetails />,
   },
   {
     name:"Employer List",

@@ -2,6 +2,54 @@ import { API_ENDPOINTS } from "@/config/api";
 import { Application, ApplicationApiResponse, StatusType } from "@/types/application";
 
 
+export const downloadCv = async (filename: string): Promise<Blob> => {
+  const response = await fetch(`${API_ENDPOINTS.CV_DOWNLOAD}/${filename}`, {
+    method: "GET",
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(errorBody || "Failed to download CV");
+  }
+
+  return response.blob();
+};
+
+export const downloadCvWithProgress = async (
+  filename: string,
+  onProgress?: (progress: number) => void
+): Promise<Blob> => {
+  const response = await fetch(`${API_ENDPOINTS.CV_DOWNLOAD}/${filename}`);
+
+  if (!response.ok) {
+    throw new Error("Failed to download CV");
+  }
+
+  const contentLength = response.headers.get('Content-Length');
+  const total = contentLength ? parseInt(contentLength) : 0;
+  let loaded = 0;
+
+  const reader = response.body?.getReader();
+  const chunks: Uint8Array[] = [];
+  
+  if (reader) {
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      chunks.push(value);
+      loaded += value.length;
+      
+      if (onProgress && total > 0) {
+        onProgress(Math.round((loaded / total) * 100));
+      }
+    }
+  }
+
+  return new Blob(chunks);
+};
+
 export const getApplications = async (page: number = 0, size: number = 10): Promise<ApplicationApiResponse> => {
   const response = await fetch(
     `${API_ENDPOINTS.JOB_APPLICATIONS}?page=${page}&size=${size}&sort=createdAt,desc`

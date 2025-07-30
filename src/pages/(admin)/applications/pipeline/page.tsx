@@ -17,6 +17,7 @@ import { toast } from "react-toastify";
 import dayjs from "dayjs";
 import { useMutation, useQuery } from "react-query";
 import {
+  downloadCv,
   getApplicationsByJob,
   updateApplication,
   updateApplicationStatus,
@@ -441,7 +442,7 @@ const JobApplicationPipeline = withSwal(({ swal }: VacanciesListProps) => {
           onStatusChange={handleStatusChange}
           apiResponse={apiResponse}
           onPaginationChange={handlePaginationChange}
-          onDownloadCV={handleDownloadCV}
+          onDownloadCV={handleDownloadCv}
         />
       ) : (
         <KanbanView
@@ -471,7 +472,7 @@ const TableView: React.FC<{
   onStatusChange: (app: Application, status: StatusType) => void;
   apiResponse?: ApplicationApiResponse;
   onPaginationChange: (direction: "prev" | "next") => void;
-  onDownloadCV: (cvPath: string, candidateName: string) => void;
+  onDownloadCV: (cvPath: string) => void;
 }> = ({
   applications,
   isLoading,
@@ -565,10 +566,7 @@ const TableView: React.FC<{
                         {application.cvPath && (
                           <Dropdown.Item
                             onClick={() =>
-                              onDownloadCV(
-                                application.cvPath,
-                                `${application.candidate.user.firstName} ${application.candidate.user.lastName}`
-                              )
+                              onDownloadCV(application.cvPath)
                             }
                           >
                             <IconifyIcon icon="bx:download" className="me-2" />
@@ -759,10 +757,7 @@ const KanbanView: React.FC<{
                                       className="w-100"
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        handleDownloadCV(
-                                          app.cvPath,
-                                          `${app.candidate.user.firstName} ${app.candidate.user.lastName}`
-                                        );
+                                        handleDownloadCv(app.cvPath);
                                       }}
                                     >
                                       <IconifyIcon
@@ -998,28 +993,27 @@ const ApplicationForm: React.FC<{
 
 export default JobApplicationPipeline;
 
-// Utility function for downloading CV
-const handleDownloadCV = async (cvPath: string, candidateName: string) => {
+
+const handleDownloadCv = async (cvPath: string) => {
   try {
-    // Extrai apenas o nome do arquivo do caminho completo
-    const filename =
-      cvPath.split("/").pop() || `CV_${candidateName.replace(/\s+/g, "_")}.pdf`;
-
-    // Cria um link temporário para o download
-    const downloadUrl = `/cv/download?filename=${encodeURIComponent(filename)}`;
-
-    // Cria um link invisível e dispara o click
-    const link = document.createElement("a");
-    link.href = downloadUrl;
-    link.download = filename;
-    link.target = "_blank";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const filename = cvPath.split("/").pop() || "CV.pdf";
+    const blob = await downloadCv(filename);
+    
+    // Cria um link temporário para download
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename; // Define o nome do arquivo
+    document.body.appendChild(a);
+    a.click();
+    
+    // Limpeza
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
 
     toast.success(`Download do CV iniciado`);
   } catch (error) {
-    toast.error("Erro ao baixar o CV");
     console.error("Download error:", error);
+    toast.error("Erro ao baixar o CV");
   }
 };

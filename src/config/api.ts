@@ -15,5 +15,6 @@ export const API_ENDPOINTS = {
   BLOG_TAGS: `${API_BASE_URL}/blog-tags`,
   BLOG_COMMENTARIES: `${API_BASE_URL}/blog-commentaries`,
   BLOGGERS : `${API_BASE_URL}/bloggers`,
+  CV_DOWNLOAD: `${API_BASE_URL}/cv/download`,
 };
 

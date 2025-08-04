@@ -49,7 +49,7 @@ const BlogDetails = () => {
                     <CardTitle as="h4" className="mb-2">
                       {blog.title}
                     </CardTitle>
-                    <h5 className="text-muted">{blog.subtitle}</h5>
+                    <h5 className="text-muted">{blog.title}</h5>
                     {blog.author && (
                       <div className="mt-2">
                         <strong>Author:</strong> {blog.author}
@@ -77,11 +77,11 @@ const BlogDetails = () => {
                   </Col>
                 </Row>
 
-                {blog.quote && (
+                {blog.author && (
                   <Row className="mt-4">
                     <Col xs={12}>
                       <blockquote className="blockquote bg-light p-3 rounded">
-                        <p className="mb-0">{blog.quote}</p>
+                        <p className="mb-0">{blog.author}</p>
                       </blockquote>
                     </Col>
                   </Row>

@@ -479,7 +479,7 @@ const TableView: React.FC<{
   onStatusChange,
   apiResponse,
   onPaginationChange,
-  onDownloadCV,
+  // onDownloadCV,
 }) => (
   <Card className="border-0 shadow-sm">
     <Card.Body className="p-0">
@@ -562,14 +562,14 @@ const TableView: React.FC<{
                           View/Edit
                         </Dropdown.Item>
 
-                        {application.cvPath && (
+                        {/* {application.cvPath && (
                           <Dropdown.Item
                             onClick={() => onDownloadCV(application.cvPath)}
                           >
                             <IconifyIcon icon="bx:download" className="me-2" />
                             Download CV
                           </Dropdown.Item>
-                        )}
+                        )} */}
                         <Dropdown.Divider />
                         <Dropdown.Header>Move to Status</Dropdown.Header>
                         {STATUS_OPTIONS.filter(
@@ -714,21 +714,12 @@ const KanbanView: React.FC<{
                                         {app.candidate.user.firstName}{" "}
                                         {app.candidate.user.lastName}
                                       </small>
-                                      <small className="text-muted d-block">
-                                        <IconifyIcon
-                                          icon="bx:calendar"
-                                          className="me-1"
-                                        />
-                                        {dayjs(app.createdAt).format(
-                                          "MMM DD, YYYY"
-                                        )}
-                                      </small>
                                       <small className="text-muted">
                                         <IconifyIcon
                                           icon="bx:map"
                                           className="me-1"
                                         />
-                                        {app.job.country}
+                                        {app.candidate.country}
                                       </small>
                                     </div>
                                     <Link
@@ -756,7 +747,7 @@ const KanbanView: React.FC<{
                                       />
                                       Options
                                     </Button>
-                                    {app.candidate.cvPath && (
+                                    {/* {app.candidate.cvPath && (
                                       <Button
                                         variant="outline-success"
                                         size="sm"
@@ -772,7 +763,7 @@ const KanbanView: React.FC<{
                                         />
                                         Download CV
                                       </Button>
-                                    )}
+                                    )} */}
                                   </Card.Body>
                                 </Card>
                               </div>

@@ -174,11 +174,11 @@ const ApplicationDetails = () => {
                     {new Date(application.updatedAt).toLocaleDateString()}
                   </div>
                   <div className="mb-2">
-                    {application.cvPath && (
+                    {application.candidate.cvPath && (
                       <Button
                         variant="outline-primary"
                         className="text-decoration-none"
-                        onClick={() => handleDownloadCv(application.cvPath)}
+                        onClick={() => handleDownloadCv(application.candidate.cvPath)}
                       >
                         <IconifyIcon icon="bx:download" className="me-2" />
                         Download CV
